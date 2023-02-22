@@ -314,6 +314,39 @@ namespace SoulsFormats.Other
                 }
                 return converted.ToArray();
             }
+
+            /*public List<ushort[]> ToTriangleUshortArrayList()
+            {
+                var converted = new List<ushort[]>();
+                bool flip = false;
+                for (int i = 0; i < VertexIndices.Length - 2; i++)
+                {
+                    ushort vi1 = VertexIndices[i];
+                    ushort vi2 = VertexIndices[i + 1];
+                    ushort vi3 = VertexIndices[i + 2];
+
+                    if (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF)
+                    {
+                        flip = false;
+                    }
+                    else
+                    {
+                        if (vi1 != vi2 && vi1 != vi3 && vi2 != vi3)
+                        {
+                            if (!flip)
+                            {
+                                converted.Add(new ushort[3] { vi1, vi2, vi3 });
+                            }
+                            else
+                            {
+                                converted.Add(new ushort[3] { vi3, vi2, vi1});
+                            }
+                        }
+                        flip = !flip;
+                    }
+                }
+                return converted;
+            }*/
         }
 
         public class Vertex
