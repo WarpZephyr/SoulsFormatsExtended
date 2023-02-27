@@ -36,6 +36,63 @@ namespace SoulsFormats
         public List<Bucket> Buckets { get; set; }
 
         /// <summary>
+        /// Returns true if the file appears to be a BHD5 header file.
+        /// </summary>
+        public static bool IsBHD(string path)
+        {
+            using (FileStream fs = File.OpenRead(path))
+            {
+                BinaryReaderEx br = new BinaryReaderEx(false, fs);
+                return IsBHD(br);
+            }
+        }
+
+        /// <summary>
+        /// Checks whether the data appears to be a file of this format.
+        /// </summary>
+        public static bool IsBHD(BinaryReaderEx br)
+        {
+            if (br.Length < 4)
+                return false;
+
+            string magic = br.GetASCII(0, 4);
+            return magic == "BHD5";
+        }
+
+        /// <summary>
+        /// Returns true if the file appears to be a BDF3 BDT file.
+        /// </summary>
+        public static bool IsBDT(string path)
+        {
+            using (FileStream fs = File.OpenRead(path))
+            {
+                BinaryReaderEx br = new BinaryReaderEx(false, fs);
+                return IsBDT(br);
+            }
+        }
+
+        /// <summary>
+        /// Checks whether the data appears to be a file of this format.
+        /// </summary>
+        public static bool IsBDT(BinaryReaderEx br)
+        {
+            if (br.Length < 4)
+                return false;
+
+            string magic = br.GetASCII(0, 4);
+            return magic == "BDF3";
+        }
+
+        /// <summary>
+        /// Read a dvdbnd header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
+        /// </summary>
+        public static BHD5 Read(string path, Game game)
+        {
+            Stream stream = File.OpenRead(path);
+            return Read(stream, game);
+        }
+
+        /// <summary>
         /// Read a dvdbnd header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
         /// </summary>
         public static BHD5 Read(Stream bhdStream, Game game)
