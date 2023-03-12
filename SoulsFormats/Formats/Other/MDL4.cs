@@ -278,6 +278,22 @@ namespace SoulsFormats.Other
                 return faces;
             }
 
+            public List<int[]> GetFacesIndices()
+            {
+                ushort[] indices = ToTriangleList();
+                var faces = new List<int[]>();
+                for (int i = 0; i < indices.Length; i += 3)
+                {
+                    faces.Add(new int[]
+                    {
+                        indices[i + 0],
+                        indices[i + 1],
+                        indices[i + 2],
+                    });
+                }
+                return faces;
+            }
+
             public ushort[] ToTriangleList()
             {
                 var converted = new List<ushort>();
@@ -314,39 +330,6 @@ namespace SoulsFormats.Other
                 }
                 return converted.ToArray();
             }
-
-            /*public List<ushort[]> ToTriangleUshortArrayList()
-            {
-                var converted = new List<ushort[]>();
-                bool flip = false;
-                for (int i = 0; i < VertexIndices.Length - 2; i++)
-                {
-                    ushort vi1 = VertexIndices[i];
-                    ushort vi2 = VertexIndices[i + 1];
-                    ushort vi3 = VertexIndices[i + 2];
-
-                    if (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF)
-                    {
-                        flip = false;
-                    }
-                    else
-                    {
-                        if (vi1 != vi2 && vi1 != vi3 && vi2 != vi3)
-                        {
-                            if (!flip)
-                            {
-                                converted.Add(new ushort[3] { vi1, vi2, vi3 });
-                            }
-                            else
-                            {
-                                converted.Add(new ushort[3] { vi3, vi2, vi1});
-                            }
-                        }
-                        flip = !flip;
-                    }
-                }
-                return converted;
-            }*/
         }
 
         public class Vertex
@@ -355,7 +338,16 @@ namespace SoulsFormats.Other
             public Vector4 Normal;
             public Vector4 Tangent;
             public Vector4 Bitangent;
+
+            /// <summary>
+            /// Colors from vertex in a four byte array
+            /// </summary>
             public byte[] Color;
+
+            /// <summary>
+            /// Data used for alpha, blending, etc.
+            /// </summary>
+            public List<VertexColor> Colors; // Added for simplicity
             public List<Vector2> UVs;
             public short[] BoneIndices;
             public float[] BoneWeights;
@@ -374,6 +366,7 @@ namespace SoulsFormats.Other
                         Tangent = Read10BitVector4(br);
                         Bitangent = Read10BitVector4(br);
                         Color = br.ReadBytes(4);
+                        Colors.Add(new VertexColor(Color[1], Color[2], Color[3], Color[4])); // Added for simplicity
                         UVs.Add(br.ReadVector2());
                         UVs.Add(br.ReadVector2());
                         UVs.Add(br.ReadVector2());
@@ -455,6 +448,63 @@ namespace SoulsFormats.Other
                 int z = vector << 2 >> 22;
                 int w = vector << 0 >> 30;
                 return new Vector4(x / 511f, y / 511f, z / 511f, w);
+            }
+        }
+
+        /// <summary>
+        /// [TEST MAY NOT WORK]
+        /// A vertex color with ARGB components, typically from 0 to 1.
+        /// </summary>
+        public class VertexColor  // Added for simplicity
+        {
+            /// <summary>
+            /// Alpha component of the color.
+            /// </summary>
+            public float A;
+
+            /// <summary>
+            /// Red component of the color.
+            /// </summary>
+            public float R;
+
+            /// <summary>
+            /// Green component of the color.
+            /// </summary>
+            public float G;
+
+            /// <summary>
+            /// Blue component of the color.
+            /// </summary>
+            public float B;
+
+            /// <summary>
+            /// Creates a VertexColor with the given ARGB values.
+            /// </summary>
+            /// <param name="a">A float representing the alpha of a vertex color</param>
+            /// <param name="r">A float representing the red of a vertex color</param>
+            /// <param name="g">A float representing the green of a vertex color</param>
+            /// <param name="b">A float representing the blue of a vertex color</param>
+            public VertexColor(float a, float r, float g, float b)
+            {
+                A = a;
+                R = r;
+                G = g;
+                B = b;
+            }
+
+            /// <summary>
+            /// Creates a VertexColor with the given ARGB values in byte form.
+            /// </summary>
+            /// <param name="a">A byte representing the alpha of a vertex color</param>
+            /// <param name="r">A byte representing the red of a vertex color</param>
+            /// <param name="g">A byte representing the green of a vertex color</param>
+            /// <param name="b">A byte representing the blue of a vertex color</param>
+            public VertexColor(byte a, byte r, byte g, byte b)
+            {
+                A = a / 255f;
+                R = r / 255f;
+                G = g / 255f;
+                B = b / 255f;
             }
         }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

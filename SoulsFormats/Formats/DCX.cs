@@ -5,7 +5,7 @@ using System.IO.Compression;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A general-purpose single compressed file wrapper used in DS1, DSR, DS2, DS3, DeS, and BB.
+    /// A general-purpose single compressed file wrapper used in DS1, DSR, DS2, DS3, DeS, BB, ACV, and ACVD.
     /// </summary>
     public static class DCX
     {

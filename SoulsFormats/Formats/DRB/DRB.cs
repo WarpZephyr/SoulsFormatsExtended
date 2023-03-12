@@ -15,11 +15,6 @@ namespace SoulsFormats
         public enum DRBVersion
         {
             /// <summary>
-            /// Armored Core 4, and Armored Core: For Answer
-            /// </summary>
-            ArmoredCore4thgen,
-
-            /// <summary>
             /// Dark Souls, Demon's Souls, and Shadow Assault: Tenchu
             /// </summary>
             DarkSouls,

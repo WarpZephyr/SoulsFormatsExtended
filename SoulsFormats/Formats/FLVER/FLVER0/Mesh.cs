@@ -48,7 +48,7 @@ namespace SoulsFormats
 
             IReadOnlyList<FLVER.Vertex> IFlverMesh.Vertices => Vertices;
 
-            public List<VertexBuffer> vertexBuffers1 { get; set; }
+            public List<VertexBuffer> VertexBuffers1 { get; set; }
 
             public int LayoutIndex { get; set; }
 
@@ -65,7 +65,7 @@ namespace SoulsFormats
                     BoneIndices[i] = -1;
                 VertexIndices = new List<int>();
                 Vertices = new List<FLVER.Vertex>();
-                vertexBuffers1 = new List<VertexBuffer>() { new VertexBuffer() };
+                VertexBuffers1 = new List<VertexBuffer>() { new VertexBuffer() };
             }
             internal Mesh(BinaryReaderEx br, FLVER0 flv, int dataOffset)
             {
@@ -112,13 +112,13 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersHeaderOffset1);
                     {
-                        vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br);
-                        if (vertexBuffers1.Count == 0)
+                        VertexBuffers1 = VertexBuffer.ReadVertexBuffers(br);
+                        if (VertexBuffers1.Count == 0)
                             throw new NotSupportedException("First vertex buffer list is expected to contain at least 1 buffer.");
-                        for (int i = 1; i < vertexBuffers1.Count; i++)
-                            if (vertexBuffers1[i].BufferLength != 0)
+                        for (int i = 1; i < VertexBuffers1.Count; i++)
+                            if (VertexBuffers1[i].BufferLength != 0)
                                 throw new NotSupportedException("Vertex buffers after the first one in the first buffer list are expected to be empty.");
-                        buffer = vertexBuffers1[0];
+                        buffer = VertexBuffers1[0];
                     }
                     br.StepOut();
                 }
@@ -166,6 +166,22 @@ namespace SoulsFormats
                         Vertices[indices[i + 0]],
                         Vertices[indices[i + 1]],
                         Vertices[indices[i + 2]],
+                    });
+                }
+                return faces;
+            }
+
+            public List<int[]> GetFacesIndices(int version)
+            {
+                List<int> indices = Triangulate(version);
+                var faces = new List<int[]>();
+                for (int i = 0; i < indices.Count; i += 3)
+                {
+                    faces.Add(new int[]
+                    {
+                        indices[i + 0],
+                        indices[i + 1],
+                        indices[i + 2]
                     });
                 }
                 return faces;
@@ -267,14 +283,14 @@ namespace SoulsFormats
 
             internal void WriteVBuffers1(BinaryWriterEx bw, int meshIndex)
             {
-                bw.WriteInt32(vertexBuffers1.Count);
+                bw.WriteInt32(VertexBuffers1.Count);
                 bw.ReserveInt32($"BuffersOffset");
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
                 bw.FillInt32($"BuffersOffset", (int)bw.Position);
-                for (int i = 0; i < vertexBuffers1.Count; i++)
+                for (int i = 0; i < VertexBuffers1.Count; i++)
                 {
-                    vertexBuffers1[i].WriteVertexBuffers(bw, vertexBuffers1.Count, meshIndex);
+                    VertexBuffers1[i].WriteVertexBuffers(bw, VertexBuffers1.Count, meshIndex);
                 }
             }
 
