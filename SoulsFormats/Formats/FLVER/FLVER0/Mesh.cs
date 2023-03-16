@@ -171,7 +171,7 @@ namespace SoulsFormats
                 return faces;
             }
 
-            public List<int[]> GetFacesIndices(int version)
+            public List<int[]> GetFaceVertexIndices(int version)
             {
                 List<int> indices = Triangulate(version);
                 var faces = new List<int[]>();

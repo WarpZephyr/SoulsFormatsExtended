@@ -278,7 +278,7 @@ namespace SoulsFormats.Other
                 return faces;
             }
 
-            public List<int[]> GetFacesIndices()
+            public List<int[]> GetFaceVertexIndices()
             {
                 ushort[] indices = ToTriangleList();
                 var faces = new List<int[]>();
