@@ -19,7 +19,8 @@ namespace SoulsFormats
             Null,
             ScrollText,
             Sprite,
-            Text
+            Text,
+            ScriptCtrlDialog
         }
 
         /// <summary>
@@ -101,6 +102,8 @@ namespace SoulsFormats
                         result = new Sprite(br, version);
                     else if (type == "Text")
                         result = new Text(br, version, strings);
+                    else if (type == "ScriptCtrlDialog")
+                        result = new ScriptCtrlDialog(br, version);
                     else
                         throw new InvalidDataException($"Unknown shape type: {type}");
                 }
@@ -414,7 +417,12 @@ namespace SoulsFormats
                 internal TextBase(BinaryReaderEx br, DRBVersion version, Dictionary<int, string> strings) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-                    bool unk01 = br.ReadBoolean();
+
+                    bool unk01 = false;
+
+                    if (version == DRBVersion.ArmoredCoreForAnswer) br.ReadByte();
+                    else unk01 = br.ReadBoolean();
+
                     LineSpacing = br.ReadInt16();
                     PaletteColor = br.ReadInt32();
                     CustomColor = ReadColor(br);
@@ -627,10 +635,22 @@ namespace SoulsFormats
                     Unk03 = br.ReadByte();
                     PaletteColor = br.ReadInt32();
                     CustomColor = ReadColor(br);
-                    bool unk0C = br.ReadBoolean();
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    br.AssertByte(0);
+                    bool unk0C = false;
+
+                    if (version == DRBVersion.ArmoredCoreForAnswer)
+                    {
+                        br.ReadByte();
+                        br.ReadByte();
+                        br.ReadByte();
+                        br.ReadByte();
+                    }
+                    else
+                    {
+                        unk0C = br.ReadBoolean();
+                        br.AssertByte(0);
+                        br.AssertByte(0);
+                        br.AssertByte(0);
+                    }
 
                     if (unk0C)
                         Unknown = new UnknownA(br);
@@ -743,7 +763,10 @@ namespace SoulsFormats
                 internal GouraudFrame(BinaryReaderEx br, DRBVersion version) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-                    br.AssertInt16(0);
+
+                    if (version == DRBVersion.ArmoredCoreForAnswer) br.ReadInt16();
+                    else br.AssertInt16(0);
+
                     Thickness = br.ReadByte();
                     TopLeftColor = ReadColor(br);
                     TopRightColor = ReadColor(br);
@@ -810,8 +833,18 @@ namespace SoulsFormats
                 internal GouraudRect(BinaryReaderEx br, DRBVersion version) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-                    br.AssertInt16(0);
-                    br.AssertByte(0);
+
+                    if (version == DRBVersion.ArmoredCoreForAnswer)
+                    {
+                        br.ReadInt16();
+                        br.ReadByte();
+                    }
+                    else
+                    {
+                        br.AssertInt16(0);
+                        br.AssertByte(0);
+                    }
+
                     TopLeftColor = ReadColor(br);
                     TopRightColor = ReadColor(br);
                     BottomRightColor = ReadColor(br);
@@ -985,7 +1018,10 @@ namespace SoulsFormats
                 internal MonoFrame(BinaryReaderEx br, DRBVersion version) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-                    br.AssertInt16(0);
+
+                    if (version == DRBVersion.ArmoredCoreForAnswer) br.ReadInt16();
+                    else br.AssertInt16(0);
+
                     Thickness = br.ReadByte();
                     PaletteColor = br.ReadInt32();
                     CustomColor = ReadColor(br);
@@ -1035,8 +1071,18 @@ namespace SoulsFormats
                 internal MonoRect(BinaryReaderEx br, DRBVersion version) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-                    br.AssertInt16(0);
-                    br.AssertByte(0);
+
+                    if (version == DRBVersion.ArmoredCoreForAnswer)
+                    {
+                        br.ReadInt16();
+                        br.ReadByte();
+                    }
+                    else
+                    {
+                        br.AssertInt16(0);
+                        br.AssertByte(0);
+                    }
+
                     PaletteColor = br.ReadInt32();
                     CustomColor = ReadColor(br);
                 }
@@ -1188,6 +1234,83 @@ namespace SoulsFormats
                 public Text() : base() { }
 
                 internal Text(BinaryReaderEx br, DRBVersion version, Dictionary<int, string> strings) : base(br, version, strings) { }
+            }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public class ScriptCtrlDialog : Shape
+            {
+                internal override ShapeType Type => ShapeType.ScriptCtrlDialog;
+
+                /// <summary>
+                /// Unknown.
+                /// </summary>
+                public short Unk00 { get; set; }
+
+                /// <summary>
+                /// Unknown; always 0.
+                /// </summary>
+                public short Unk02 { get; set; }
+
+                /// <summary>
+                /// Unknown; always 0.
+                /// </summary>
+                public int Unk04 { get; set; }
+
+                /// <summary>
+                /// Unknown; always 0xFF, may be RGBA value
+                /// </summary>
+                public byte Unk08 { get; set; }
+
+                /// <summary>
+                /// Unknown; always 0xFF, may be RGBA value
+                /// </summary>
+                public byte Unk09 { get; set; }
+
+                /// <summary>
+                /// Unknown; always 0xFF, may be RGBA value
+                /// </summary>
+                public byte Unk0A { get; set; }
+
+                /// <summary>
+                /// Unknown; always 0xFF, may be RGBA value
+                /// </summary>
+                public byte Unk0B { get; set; }
+
+                /// <summary>
+                /// Unknown.
+                /// </summary>
+                public int Unk0C { get; set; }
+
+                /// <summary>
+                /// Creates a ScriptCtrlDialog with default values.
+                /// </summary>
+                public ScriptCtrlDialog() : base() { }
+
+                internal ScriptCtrlDialog(BinaryReaderEx br, DRBVersion version) : base(br, version)
+                {
+                    Unk00 = br.ReadInt16();
+                    Unk02 = br.ReadInt16();
+                    Unk04 = br.ReadInt32();
+                    Unk08 = br.ReadByte();
+                    Unk09 = br.ReadByte();
+                    Unk0A = br.ReadByte();
+                    Unk0B = br.ReadByte();
+                    Unk0C = br.ReadInt32();
+                }
+
+                internal override void WriteSpecific(BinaryWriterEx bw, Dictionary<string, int> stringOffsets)
+                {
+                    bw.WriteInt16(Unk00);
+                    bw.WriteInt16(Unk02);
+                    bw.WriteInt32(Unk04);
+                    bw.WriteByte(Unk08);
+                    bw.WriteByte(Unk09);
+                    bw.WriteByte(Unk0A);
+                    bw.WriteByte(Unk0B);
+                    bw.WriteInt32(Unk0C);
+                }
             }
         }
     }

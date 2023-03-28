@@ -77,7 +77,7 @@ namespace SoulsFormats
                 Unk1C = 1;
             }
 
-            internal Anim(BinaryReaderEx br, Dictionary<int, string> strings, Dictionary<int, Anio> anios)
+            internal Anim(BinaryReaderEx br, Dictionary<int, string> strings, Dictionary<int, Anio> anios, DRBVersion version)
             {
                 int nameOffset = br.ReadInt32();
                 int anioCount = br.ReadInt32();
@@ -87,10 +87,14 @@ namespace SoulsFormats
                 Unk14 = br.ReadInt32();
                 Unk18 = br.ReadInt32();
                 Unk1C = br.ReadInt32();
-                Unk20 = br.ReadInt32();
-                Unk24 = br.ReadInt32();
-                Unk28 = br.ReadInt32();
-                Unk2C = br.ReadInt32();
+
+                if (version != DRBVersion.ArmoredCoreForAnswer)
+                {
+                    Unk20 = br.ReadInt32();
+                    Unk24 = br.ReadInt32();
+                    Unk28 = br.ReadInt32();
+                    Unk2C = br.ReadInt32();
+                }
 
                 Name = strings[nameOffset];
                 Anios = new List<Anio>(anioCount);
@@ -102,7 +106,7 @@ namespace SoulsFormats
                 }
             }
 
-            internal void Write(BinaryWriterEx bw, Dictionary<string, int> stringOffsets, Queue<int> anioOffsets)
+            internal void Write(BinaryWriterEx bw, Dictionary<string, int> stringOffsets, Queue<int> anioOffsets, DRBVersion version)
             {
                 bw.WriteInt32(stringOffsets[Name]);
                 bw.WriteInt32(Anios.Count);
@@ -112,10 +116,13 @@ namespace SoulsFormats
                 bw.WriteInt32(Unk14);
                 bw.WriteInt32(Unk18);
                 bw.WriteInt32(Unk1C);
-                bw.WriteInt32(Unk20);
-                bw.WriteInt32(Unk24);
-                bw.WriteInt32(Unk28);
-                bw.WriteInt32(Unk2C);
+                if (version != DRBVersion.ArmoredCoreForAnswer)
+                {
+                    bw.WriteInt32(Unk20);
+                    bw.WriteInt32(Unk24);
+                    bw.WriteInt32(Unk28);
+                    bw.WriteInt32(Unk2C);
+                }
             }
 
             /// <summary>

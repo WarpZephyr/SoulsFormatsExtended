@@ -4,8 +4,17 @@ using EditFlags = SoulsFormats.PARAMDEF.EditFlags;
 
 namespace SoulsFormats
 {
+    /// <summary>
+    /// Utility methods for params.
+    /// </summary>
     public static class ParamUtil
     {
+        /// <summary>
+        /// Returns the string format the specified def type uses.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>A string containing the proper formatting for the specified def type.</returns>
+        /// <exception cref="NotImplementedException">The def type specified is not supported yet.</exception>
         public static string GetDefaultFormat(DefType type)
         {
             switch (type)
@@ -26,6 +35,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns the smallest value this def type can be.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>A float containing the smallest value this def type can be.</returns>
+        /// <exception cref="NotImplementedException">The def type specified is not supported yet.</exception>
         public static float GetDefaultMinimum(DefType type)
         {
             switch (type)
@@ -46,6 +61,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns the largest value this def type can be.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>A float containing the largest value this def type can be.</returns>
+        /// <exception cref="NotImplementedException">The def type specified is not supported yet.</exception>
         public static float GetDefaultMaximum(DefType type)
         {
             switch (type)
@@ -66,6 +87,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns a value representing how much the specified def type increments by.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>A float representing how much the specified def type increments by.</returns>
+        /// <exception cref="NotImplementedException">The def type specified is not supported yet.</exception>
         public static float GetDefaultIncrement(DefType type)
         {
             switch (type)
@@ -86,6 +113,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Gets the default EditFlags for the specified def type.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>The default EditFlags for the specified def type.</returns>
+        /// <exception cref="NotImplementedException">The def type specified is not supported yet.</exception>
         public static EditFlags GetDefaultEditFlags(DefType type)
         {
             switch (type)
@@ -106,6 +139,11 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns whether or not this def type appears to be an array type.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>A bool representing whether or not this def type is an array type.</returns>
         public static bool IsArrayType(DefType type)
         {
             switch (type)
@@ -120,6 +158,11 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns whether or not this def type appears to be a bit type.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>A bool representing if this def type appears to be a bit type.</returns>
         public static bool IsBitType(DefType type)
         {
             switch (type)
@@ -135,6 +178,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns how many bytes this def type can hold.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>An integer rperesenting how many bytes this def type can hold.</returns>
+        /// <exception cref="NotImplementedException">The def type specified is not supported yet.</exception>
         public static int GetValueSize(DefType type)
         {
             switch (type)
@@ -155,6 +204,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Casts a paramdef field's type back to the type set in its DisplayType.
+        /// </summary>
+        /// <param name="field">A paramdef field.</param>
+        /// <returns>The specified paramdef field casted to its DisplayType.</returns>
+        /// <exception cref="NotImplementedException">The DisplayType of the field specified is not supported yet.</exception>
         public static object CastDefaultValue(PARAMDEF.Field field)
         {
             switch (field.DisplayType)
@@ -179,6 +234,12 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// Returns how many bits a def type can hold.
+        /// </summary>
+        /// <param name="type">A def type.</param>
+        /// <returns>An integer representing how many bits a def type can hold.</returns>
+        /// <exception cref="InvalidOperationException">The def type specified is not supported yet.</exception>
         public static int GetBitLimit(DefType type)
         {
             if (type == DefType.u8)

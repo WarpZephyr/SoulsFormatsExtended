@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -36,6 +37,15 @@ namespace SoulsFormats
         public List<Bucket> Buckets { get; set; }
 
         /// <summary>
+        /// Returns true if the bytes appear to be a BHD5 header file.
+        /// </summary>
+        public static bool IsBHD(byte[] bytes)
+        {
+            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return IsBHD(SFUtil.GetDecompressedBR(br, out _));
+        }
+
+        /// <summary>
         /// Returns true if the file appears to be a BHD5 header file.
         /// </summary>
         public static bool IsBHD(string path)
@@ -60,7 +70,16 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Returns true if the file appears to be a BDF3 BDT file.
+        /// Returns true if the bytes appear to be a BHD5 data file.
+        /// </summary>
+        public static bool IsBDT(byte[] bytes)
+        {
+            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return IsBDT(SFUtil.GetDecompressedBR(br, out _));
+        }
+
+        /// <summary>
+        /// Returns true if the file appears to be a BHD5 data file.
         /// </summary>
         public static bool IsBDT(string path)
         {

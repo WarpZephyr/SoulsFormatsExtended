@@ -21,22 +21,27 @@ namespace SoulsFormats.AC3
         /// <summary>
         /// Unknown.
         /// </summary>
-        public int Unk5;
+        public ushort Unk5;
 
         /// <summary>
         /// Unknown.
         /// </summary>
-        public int Unk6;
+        public ushort Unk6;
+
+        /// <summary>
+        /// What offset to align to.
+        /// </summary>
+        public ushort DataPad;
 
         /// <summary>
         /// Unknown.
         /// </summary>
-        public int Unk9;
+        public int Unk8;
 
         /// <summary>
         /// Unknown.
         /// </summary>
-        public int Unk12;
+        public ushort Unk10;
 
         /// <summary>
         /// Checks whether the data appears to be a file of this format.
@@ -59,26 +64,28 @@ namespace SoulsFormats.AC3
 
             br.AssertASCII("BND\0");
             br.AssertInt32(0xFFFF);
-            Unk3 = br.AssertUInt16(0xD3, 0xCA);
-            br.AssertUInt16(0);
+            Unk3 = br.AssertInt32(0xD3, 0xCA);
             Unk5 = br.ReadUInt16();
             Unk6 = br.ReadUInt16();
-            ushort fileCount = br.ReadUInt16();
-            br.AssertUInt16(0);
-            Unk9 = br.ReadUInt16();
-            br.AssertUInt16(0);
-            ushort dataPad = br.ReadUInt16();
-            Unk12 = br.ReadUInt16();
-            br.AssertUInt16(0);
-            br.AssertUInt16(0);
-
-            //br.Pad(dataPad);
+            int fileCount = br.ReadInt32();
+            Unk8 = br.ReadInt32();
+            DataPad = br.ReadUInt16();
+            Unk10 = br.ReadUInt16();
+            br.AssertInt32(0);
 
             Files = new List<File>(fileCount);
             for (int i = 0; i < fileCount; i++)
             {
                 Files.Add(new File(br));
             }
+        }
+
+        /// <summary>
+        /// Serializes file data to a stream.
+        /// </summary>
+        protected override void Write(BinaryWriterEx bw)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -93,11 +100,12 @@ namespace SoulsFormats.AC3
 
             /// <summary>
             /// Name of this file.
+            /// Will be set to ID if name does not exist.
             /// </summary>
             public string Name;
 
             /// <summary>
-            /// File data.
+            /// The raw data of this file.
             /// </summary>
             public byte[] Bytes;
 
@@ -112,6 +120,14 @@ namespace SoulsFormats.AC3
                 else Name = br.GetShiftJIS(nameOffset);
 
                 Bytes = br.GetBytes(dataOffset, nextOffset);
+            }
+
+            /// <summary>
+            /// Serializes file data to a stream.
+            /// </summary>
+            internal void Write(BinaryWriterEx bw)
+            {
+                throw new NotImplementedException();
             }
         }
     }
