@@ -1,44 +1,52 @@
-﻿namespace SoulsFormats.Formats.Other.ACFA
+﻿namespace SoulsFormats
 {
-    /// <summary>
-    /// A part configuration format used in 4th generation Armored Core.
-    /// </summary>
-    public partial class ACPARTS
+    public partial class AcPartsFA
     {
         /// <summary>
         /// An Arm Unit part in an ACPARTS file.
         /// </summary>
-        public class ArmUnit
+        public class ArmUnit : IPart, IWeapon
         {
+            /// <summary>
+            /// The hangar requirements of an Arm Unit.
+            /// </summary>
+            public enum HangarType : byte
+            {
+                /// <summary>
+                /// The Arm Unit cannot be placed in a hangar.
+                /// </summary>
+                NotHangarable = 0,
+
+                /// <summary>
+                /// The Arm Unit requires a large hangar to be hangared.
+                /// </summary>
+                LargeHangarRequired = 1,
+
+                /// <summary>
+                /// The Arm Unit can be placed in any hangar size.
+                /// </summary>
+                AnyHangar = 2,
+            }
+
             /// <summary>
             /// A Component which contains common stats across all parts.
             /// </summary>
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains stats for projectiles.
+            /// A Component which contains stats for weapons.
             /// </summary>
-            public ProjectileComponent ProjectileComponent{ get; set; }
+            public WeaponComponent WeaponComponent{ get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// The hangar requirements of this Arm Unit.
             /// </summary>
-            public ushort Unk50 { get; set; }
+            public HangarType HangarRequirement { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Changes what stat descriptions are pulled from AssemMenu.bin, assumed to be an index of some kind.
             /// </summary>
-            public ushort Unk52 { get; set; }
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public byte Unk53 { get; set; }
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public byte Unk54 { get; set; }
+            public byte DescriptionGroupIndex { get; set; }
 
             /// <summary>
             /// Unknown.
@@ -52,12 +60,10 @@
             internal ArmUnit(BinaryReaderEx br)
             {
                 PartComponent = new PartComponent(br);
-                ProjectileComponent = new ProjectileComponent(br);
+                WeaponComponent = new WeaponComponent(br);
 
-                Unk50 = br.ReadUInt16();
-                Unk52 = br.ReadUInt16();
-                Unk53 = br.ReadByte();
-                Unk54 = br.ReadByte();
+                HangarRequirement = br.ReadEnum8<HangarType>();
+                DescriptionGroupIndex = br.ReadByte();
                 Unk56 = br.ReadUInt16();
             }
 
@@ -68,12 +74,10 @@
             public void Write(BinaryWriterEx bw)
             {
                 PartComponent.Write(bw);
-                ProjectileComponent.Write(bw);
+                WeaponComponent.Write(bw);
 
-                bw.WriteUInt16(Unk50);
-                bw.WriteUInt16(Unk52);
-                bw.WriteByte(Unk53);
-                bw.WriteByte(Unk54);
+                bw.WriteByte((byte)HangarRequirement);
+                bw.WriteByte(DescriptionGroupIndex);
                 bw.WriteUInt16(Unk56);
             }
         }
@@ -81,7 +85,7 @@
         /// <summary>
         /// A Back Unit part in an ACPARTS file.
         /// </summary>
-        public class BackUnit
+        public class BackUnit : IPart, IWeapon
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -89,19 +93,9 @@
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains stats for projectiles.
+            /// A Component which contains stats for weapons.
             /// </summary>
-            public ProjectileComponent ProjectileComponent { get; set; }
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public ushort Unk50 { get; set; }
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public ushort Unk52 { get; set; }
+            public WeaponComponent WeaponComponent { get; set; }
 
             /// <summary>
             /// Unknown.
@@ -134,9 +128,29 @@
             public AssaultCannonComponent AssaultCannonComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains Defense stats.
+            /// Changes how the Back Unit is used.
             /// </summary>
-            public DefenseComponent DefenseComponent { get; set; }
+            public byte BackUnitType { get; set; }
+
+            /// <summary>
+            /// Changes what stat descriptions are pulled from AssemMenu.bin, assumed to be an index of some kind.
+            /// </summary>
+            public byte DescriptionGroupIndex { get; set; }
+
+            /// <summary>
+            /// Whether or not this Back Unit takes both Back Unit slots.
+            /// </summary>
+            public bool TakesBothSlots { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk97 { get; set; }
+
+            /// <summary>
+            /// A Component which contains Primal Armor stats.
+            /// </summary>
+            public PAComponent PAComponent { get; set; }
 
             /// <summary>
             /// Reads a Back Unit part from a stream.
@@ -145,10 +159,8 @@
             internal BackUnit(BinaryReaderEx br)
             {
                 PartComponent = new PartComponent(br);
-                ProjectileComponent = new ProjectileComponent(br);
+                WeaponComponent = new WeaponComponent(br);
 
-                Unk50 = br.ReadUInt16();
-                Unk52 = br.ReadUInt16();
                 Unk54 = br.ReadUInt16();
                 Unk56 = br.ReadUInt16();
                 Unk58 = br.ReadUInt16();
@@ -156,7 +168,13 @@
                 RadarComponent = new RadarComponent(br);
                 WeaponBoosterComponent = new WeaponBoosterComponent(br);
                 AssaultCannonComponent = new AssaultCannonComponent(br);
-                DefenseComponent = new DefenseComponent(br);
+
+                BackUnitType = br.ReadByte();
+                DescriptionGroupIndex = br.ReadByte();
+                TakesBothSlots = br.ReadBoolean();
+                Unk97 = br.ReadByte();
+
+                PAComponent = new PAComponent(br);
             }
 
             /// <summary>
@@ -166,10 +184,8 @@
             public void Write(BinaryWriterEx bw)
             {
                 PartComponent.Write(bw);
-                ProjectileComponent.Write(bw);
+                WeaponComponent.Write(bw);
 
-                bw.WriteUInt16(Unk50);
-                bw.WriteUInt16(Unk52);
                 bw.WriteUInt16(Unk54);
                 bw.WriteUInt16(Unk56);
                 bw.WriteUInt16(Unk58);
@@ -177,14 +193,20 @@
                 RadarComponent.Write(bw);
                 WeaponBoosterComponent.Write(bw);
                 AssaultCannonComponent.Write(bw);
-                DefenseComponent.Write(bw);
+
+                bw.WriteByte(BackUnitType);
+                bw.WriteByte(DescriptionGroupIndex);
+                bw.WriteBoolean(TakesBothSlots);
+                bw.WriteByte(Unk97);
+
+                PAComponent.Write(bw);
             }
         }
 
         /// <summary>
         /// A Shoulder Unit part in an ACPARTS file.
         /// </summary>
-        public class ShoulderUnit
+        public class ShoulderUnit : IPart, IWeapon
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -192,9 +214,29 @@
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains Defense stats.
+            /// Unknown.
             /// </summary>
-            public DefenseComponent DefenseComponent { get; set; }
+            public byte Unk00 { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk01 { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk02 { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk03 { get; set; }
+
+            /// <summary>
+            /// A Component which contains Primal Armor stats.
+            /// </summary>
+            public PAComponent PAComponent { get; set; }
 
             /// <summary>
             /// Identifies whether or not a shoulder unit is a stealth shoulder unit; Likely for developers in developer tools at FromSoftware.
@@ -232,19 +274,9 @@
             public float AARangeBoost { get; set; }
 
             /// <summary>
-            /// A Component which contains stats for projectiles.
+            /// A Component which contains stats for weapons.
             /// </summary>
-            public ProjectileComponent ProjectileComponent { get; set; }
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public ushort Unk78 { get; set; }
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public ushort Unk7A { get; set; }
+            public WeaponComponent WeaponComponent { get; set; }
 
             /// <summary>
             /// A Component which contains Booster stats for Weapons.
@@ -258,8 +290,13 @@
             internal ShoulderUnit(BinaryReaderEx br)
             {
                 PartComponent = new PartComponent(br);
-                DefenseComponent = new DefenseComponent(br);
 
+                Unk00 = br.ReadByte();
+                Unk01 = br.ReadByte();
+                Unk02 = br.ReadByte();
+                Unk03 = br.ReadByte();
+
+                PAComponent = new PAComponent(br);
                 ShoulderType = br.ReadFixStr(0x10);
 
                 NumberofUses = br.ReadUInt16();
@@ -269,11 +306,7 @@
                 AAAttackPower = br.ReadSingle();
                 AARangeBoost = br.ReadSingle();
 
-                ProjectileComponent = new ProjectileComponent(br);
-
-                Unk78 = br.ReadUInt16();
-                Unk7A = br.ReadUInt16();
-
+                WeaponComponent = new WeaponComponent(br);
                 WeaponBoosterComponent = new WeaponBoosterComponent(br);
             }
 
@@ -284,8 +317,13 @@
             public void Write(BinaryWriterEx bw)
             {
                 PartComponent.Write(bw);
-                DefenseComponent.Write(bw);
 
+                bw.WriteByte(Unk00);
+                bw.WriteByte(Unk01);
+                bw.WriteByte(Unk02);
+                bw.WriteByte(Unk03);
+
+                PAComponent.Write(bw);
                 bw.WriteFixStr(ShoulderType, 0x10);
 
                 bw.WriteUInt16(NumberofUses);
@@ -295,11 +333,7 @@
                 bw.WriteSingle(AAAttackPower);
                 bw.WriteSingle(AARangeBoost);
 
-                ProjectileComponent.Write(bw);
-
-                bw.WriteUInt16(Unk78);
-                bw.WriteUInt16(Unk7A);
-
+                WeaponComponent.Write(bw);
                 WeaponBoosterComponent.Write(bw);
             }
         }

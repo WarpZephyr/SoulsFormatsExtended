@@ -58,7 +58,7 @@ namespace SoulsFormats
             bool wide = Version == FMGVersion.DarkSouls3;
 
             int fileSize = br.ReadInt32();
-            br.AssertByte(1);
+            byte unk08 = br.ReadByte();
             br.AssertByte((byte)(Version == FMGVersion.DemonsSouls ? 0xFF : 0x00));
             br.AssertByte(0);
             br.AssertByte(0);
@@ -100,7 +100,9 @@ namespace SoulsFormats
                             stringOffset = br.ReadInt32();
 
                         int id = firstID + j;
-                        string text = stringOffset != 0 ? br.GetUTF16(stringOffset) : null;
+                        string text;
+                        if (unk08 == 0) text = stringOffset != 0 ? br.GetASCII(stringOffset) : null;
+                        else text = stringOffset != 0 ? br.GetUTF16(stringOffset) : null;
                         Entries.Add(new Entry(id, text));
                     }
                 }

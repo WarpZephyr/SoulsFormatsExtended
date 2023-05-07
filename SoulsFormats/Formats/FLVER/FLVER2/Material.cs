@@ -29,6 +29,10 @@ namespace SoulsFormats
             /// Textures used by this material.
             /// </summary>
             public List<Texture> Textures { get; set; }
+
+            /// <summary>
+            /// A readonly list of textures used by a material.
+            /// </summary>
             IReadOnlyList<IFlverTexture> IFlverMaterial.Textures => Textures;
 
             /// <summary>
@@ -41,6 +45,9 @@ namespace SoulsFormats
             /// </summary>
             public int Unk18 { get; set; }
 
+            /// <summary>
+            /// The texture index and count for this material.
+            /// </summary>
             private int textureIndex, textureCount;
 
             /// <summary>
@@ -67,6 +74,9 @@ namespace SoulsFormats
                 Unk18 = 0;
             }
 
+            /// <summary>
+            /// Reads a material from a BinaryReaderEx.
+            /// </summary>
             internal Material(BinaryReaderEx br, FLVERHeader header, List<GXList> gxLists, Dictionary<int, int> gxListIndices)
             {
                 int nameOffset = br.ReadInt32();
@@ -108,6 +118,9 @@ namespace SoulsFormats
                 }
             }
 
+            /// <summary>
+            /// Gets textures using a created texture dictionary.
+            /// </summary>
             internal void TakeTextures(Dictionary<int, Texture> textureDict)
             {
                 Textures = new List<Texture>(textureCount);
@@ -124,6 +137,9 @@ namespace SoulsFormats
                 textureCount = -1;
             }
 
+            /// <summary>
+            /// Writes a material to a BinaryWriterEx.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
                 bw.ReserveInt32($"MaterialName{index}");
@@ -136,6 +152,9 @@ namespace SoulsFormats
                 bw.WriteInt32(0);
             }
 
+            /// <summary>
+            /// Fills the offset for GX elements.
+            /// </summary>
             internal void FillGXOffset(BinaryWriterEx bw, int index, List<int> gxOffsets)
             {
                 if (GXIndex == -1)
@@ -144,6 +163,9 @@ namespace SoulsFormats
                     bw.FillInt32($"GXOffset{index}", gxOffsets[GXIndex]);
             }
 
+            /// <summary>
+            /// Writes textures for materials to a BinaryWriterEx.
+            /// </summary>
             internal void WriteTextures(BinaryWriterEx bw, int index, int textureIndex)
             {
                 bw.FillInt32($"TextureIndex{index}", textureIndex);
@@ -151,6 +173,9 @@ namespace SoulsFormats
                     Textures[i].Write(bw, textureIndex + i);
             }
 
+            /// <summary>
+            /// Writes strings for materials to a BinaryWriterEx.
+            /// </summary>
             internal void WriteStrings(BinaryWriterEx bw, FLVERHeader header, int index)
             {
                 bw.FillInt32($"MaterialName{index}", (int)bw.Position);

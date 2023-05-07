@@ -1,14 +1,11 @@
-﻿namespace SoulsFormats.Formats.Other.ACFA
+﻿namespace SoulsFormats
 {
-    /// <summary>
-    /// A part configuration format used in 4th generation Armored Core.
-    /// </summary>
-    public partial class ACPARTS
+    public partial class AcPartsFA
     {
         /// <summary>
         /// A Stabilizer on top of Head parts in an ACPARTS file.
         /// </summary>
-        public class HeadTopStabilizer
+        public class HeadTopStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -44,7 +41,7 @@
         /// <summary>
         /// A Stabilizer on the sides of Head parts in an ACPARTS file.
         /// </summary>
-        public class HeadSideStabilizer
+        public class HeadSideStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -80,7 +77,7 @@
         /// <summary>
         /// A Stabilizer on the upper sides of Core parts in an ACPARTS file.
         /// </summary>
-        public class CoreUpperSideStabilizer
+        public class CoreUpperSideStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -116,7 +113,7 @@
         /// <summary>
         /// A Stabilizer on the lower sides of Core parts in an ACPARTS file.
         /// </summary>
-        public class CoreLowerSideStabilizer
+        public class CoreLowerSideStabilizer : IPart
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -152,7 +149,7 @@
         /// <summary>
         /// A Stabilizer on Arm parts in an ACPARTS file
         /// </summary>
-        public class ArmStabilizer
+        public class ArmStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -188,7 +185,7 @@
         /// <summary>
         /// A Stabilizer on the back of Leg parts in an ACPARTS file.
         /// </summary>
-        public class LegBackStabilizer
+        public class LegBackStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -224,7 +221,7 @@
         /// <summary>
         /// A Stabilizer on the upper end of Leg parts in an ACPARTS file.
         /// </summary>
-        public class LegUpperStabilizer
+        public class LegUpperStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -260,7 +257,7 @@
         /// <summary>
         /// A Stabilizer in the middle of Leg parts in an ACPARTS file.
         /// </summary>
-        public class LegMiddleStabilizer
+        public class LegMiddleStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -296,7 +293,7 @@
         /// <summary>
         /// A Stabilizer on the lower end of Leg parts in an ACPARTS file.
         /// </summary>
-        public class LegLowerStabilizer
+        public class LegLowerStabilizer : IPart, IStabilizer
         {
             /// <summary>
             /// A Component which contains common stats across all parts.

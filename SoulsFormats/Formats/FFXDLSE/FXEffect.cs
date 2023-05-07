@@ -40,7 +40,7 @@ namespace SoulsFormats
                 ID = br.ReadInt32();
                 br.AssertInt32(0);
                 br.AssertInt32(0);
-                br.AssertInt32(2); // Param list count?
+                br.AssertInt32(2); // MATParam list count?
                 br.AssertInt16(0);
                 br.AssertInt16(2); // Judging by the order of class names, this must be an always-empty DLVector
                 br.AssertInt32(0);

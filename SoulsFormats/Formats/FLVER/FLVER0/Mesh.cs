@@ -281,7 +281,7 @@ namespace SoulsFormats
                 bw.WriteInt32(0);
             }
 
-            internal void WriteVBuffers1(BinaryWriterEx bw, int meshIndex)
+            internal void WriteVertexBuffers1(BinaryWriterEx bw, int meshIndex)
             {
                 bw.WriteInt32(VertexBuffers1.Count);
                 bw.ReserveInt32($"BuffersOffset");

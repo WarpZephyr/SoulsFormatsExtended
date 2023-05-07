@@ -21,6 +21,9 @@ namespace SoulsFormats
             /// </summary>
             public BufferLayout() : base() { }
 
+            /// <summary>
+            /// Reads a BufferLayout from a BinaryReaderEx.
+            /// </summary>
             internal BufferLayout(BinaryReaderEx br) : base()
             {
                 int memberCount = br.ReadInt32();
@@ -42,6 +45,9 @@ namespace SoulsFormats
                 br.StepOut();
             }
 
+            /// <summary>
+            /// Writes a BufferLayout to a BinaryWriterEx.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
                 bw.WriteInt32(Count);
@@ -50,6 +56,9 @@ namespace SoulsFormats
                 bw.ReserveInt32($"VertexStructLayout{index}");
             }
 
+            /// <summary>
+            /// Writes the members of a BufferLayout to a BinaryWriterEx.
+            /// </summary>
             internal void WriteMembers(BinaryWriterEx bw, int index)
             {
                 bw.FillInt32($"VertexStructLayout{index}", (int)bw.Position);

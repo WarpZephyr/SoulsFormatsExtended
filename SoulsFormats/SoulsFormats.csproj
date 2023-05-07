@@ -15,4 +15,11 @@
   <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Formats\ACPARTS\AC4\" />
+    <Folder Include="Formats\ACPARTS\ACV\" />
+    <Folder Include="Formats\ACPARTS\ACVD\" />
+    <Folder Include="Formats\ACPARTS\ACLR\" />
+  </ItemGroup>
 </Project>

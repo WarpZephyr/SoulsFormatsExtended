@@ -6,7 +6,7 @@ namespace SoulsFormats
     public partial class DRB
     {
         /// <summary>
-        /// An individual UI element.
+        /// Dialog object, an individual UI element.
         /// </summary>
         public class Dlgo
         {

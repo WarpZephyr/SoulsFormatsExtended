@@ -6,7 +6,9 @@ namespace SoulsFormats
 {
     public partial class FLVER0
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// Determines which properties of a vertex are read and written, and in what order and format.
+        /// </summary>
         public class BufferLayout : List<FLVER.LayoutMember>
         {
             /// <summary>
@@ -14,10 +16,14 @@ namespace SoulsFormats
             /// </summary>
             public int Size => this.Sum(member => member.Size);
 
-            public BufferLayout()
-            {
-                
-            }
+            /// <summary>
+            /// Creates a new empty BufferLayout.
+            /// </summary>
+            public BufferLayout() { }
+
+            /// <summary>
+            /// Reads a BufferLayout from a BinaryReaderEx.
+            /// </summary>
             internal BufferLayout(BinaryReaderEx br) : base()
             {
                 short memberCount = br.ReadInt16();
@@ -39,6 +45,5 @@ namespace SoulsFormats
                     throw new InvalidDataException("Mismatched buffer layout size.");
             }
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

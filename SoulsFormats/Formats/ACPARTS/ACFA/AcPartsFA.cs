@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SoulsFormats.Formats.Other.ACFA
+namespace SoulsFormats
 {
     /// <summary>
     /// A part configuration format used in 4th generation Armored Core.
+    /// Only Armored Core For Answer is currently supported.
     /// </summary>
-    public partial class ACPARTS : SoulsFile<ACPARTS>
+    public partial class AcPartsFA : SoulsFile<AcPartsFA>
     {
         /// <summary>
         /// Heads in this ACPARTS file.
@@ -119,6 +120,51 @@ namespace SoulsFormats.Formats.Other.ACFA
         public List<LegLowerStabilizer> LegLowerStabilizers { get; set; }
 
         /// <summary>
+        /// Returns true if the data appears to be an ACPARTS file.
+        /// Not entirely foolproof, probably slow, probably eats more memory, only checks size in a range.
+        /// </summary>
+        public static bool Match(BinaryReaderEx br)
+        {
+            br.BigEndian = true;
+            if (br.Length < 0x30)
+                return false;
+
+            long headLength = br.ReadUInt16() * 420;
+            long coreLength = br.ReadUInt16() * 416;
+            long armLength = br.ReadUInt16() * 536;
+            long legLength = br.ReadUInt16() * 564;
+            long fcsLength = br.ReadUInt16() * 416;
+            long generatorLength = br.ReadUInt16() * 404;
+            long mainBoosterLength = br.ReadUInt16() * 420;
+            long backBoosterLength = br.ReadUInt16() * 404;
+            long sideBoosterLength = br.ReadUInt16() * 404;
+            long overedBoosterLength = br.ReadUInt16() * 432;
+            long armUnitLength = br.ReadUInt16() * 456;
+            long backUnitLength = br.ReadUInt16() * 524;
+            long shoulderUnitLength = br.ReadUInt16() * 524;
+            long headTopStabilizerLength = br.ReadUInt16() * 376;
+            long headSideStabilizerLength = br.ReadUInt16() * 376;
+            long coreUpperSideStabilizerLength = br.ReadUInt16() * 376;
+            long coreLowerSideStabilizerLength = br.ReadUInt16() * 376;
+            long armStabilizerLength = br.ReadUInt16() * 376;
+            long legBackStabilizerLength = br.ReadUInt16() * 376;
+            long legUpperStabilizerLength = br.ReadUInt16() * 376;
+            long legMiddleStabilizerLength = br.ReadUInt16() * 376;
+            long legLowerStabilizerLength = br.ReadUInt16() * 376;
+
+            // 0x30 is header length
+            long totalLength = 0x30 + headLength + coreLength + armLength + legLength + fcsLength
+                + generatorLength + mainBoosterLength + backBoosterLength + sideBoosterLength + overedBoosterLength
+                + armUnitLength + backUnitLength + shoulderUnitLength + headTopStabilizerLength + headSideStabilizerLength
+                + coreUpperSideStabilizerLength + coreLowerSideStabilizerLength + armStabilizerLength + legBackStabilizerLength
+                + legUpperStabilizerLength + legMiddleStabilizerLength + legLowerStabilizerLength;
+
+            if (br.Length < totalLength || br.Length > totalLength * 1.1) // * 1.1 To handle extra garbage data that is on the end occasionally
+                return false;
+            else return true;
+        }
+
+        /// <summary>
         /// Deserializes file data from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
@@ -151,136 +197,91 @@ namespace SoulsFormats.Formats.Other.ACFA
 
             Heads = new List<Head>(headCount);
             for (int i = 0; i < headCount; i++)
-            {
-
                 Heads.Add(new Head(br));
-            }
 
             Cores = new List<Core>(coreCount);
             for (int i = 0; i < coreCount; i++)
-            {
                 Cores.Add(new Core(br));
-            }
-
+            
             Arms = new List<Arm>(armCount);
             for (int i = 0; i < armCount; i++)
-            {
                 Arms.Add(new Arm(br));
-            }
-
+            
             Legs = new List<Leg>(legCount);
             for (int i = 0; i < legCount; i++)
-            {
                 Legs.Add(new Leg(br));
-            }
-
+            
             FCSs = new List<FCS>(fcsCount);
             for (int i = 0; i < fcsCount; i++)
-            {
                 FCSs.Add(new FCS(br));
-            }
-
+            
             Generators = new List<Generator>(generatorCount);
             for (int i = 0; i < generatorCount; i++)
-            {
                 Generators.Add(new Generator(br));
-            }
 
             MainBoosters = new List<MainBooster>(mainBoosterCount);
             for (int i = 0; i < mainBoosterCount; i++)
-            {
                 MainBoosters.Add(new MainBooster(br));
-            }
 
             BackBoosters = new List<BackBooster>(backBoosterCount);
             for (int i = 0; i < backBoosterCount; i++)
-            {
                 BackBoosters.Add(new BackBooster(br));
-            }
 
             SideBoosters = new List<SideBooster>(sideBoosterCount);
             for (int i = 0; i < sideBoosterCount; i++)
-            {
                 SideBoosters.Add(new SideBooster(br));
-            }
-
+            
             OveredBoosters = new List<OveredBooster>(overedBoosterCount);
             for (int i = 0; i < overedBoosterCount; i++)
-            {
                 OveredBoosters.Add(new OveredBooster(br));
-            }
 
             ArmUnits = new List<ArmUnit>(armUnitCount);
             for (int i = 0; i < armUnitCount; i++)
-            {
                 ArmUnits.Add(new ArmUnit(br));
-            }
 
             BackUnits = new List<BackUnit>(backUnitCount);
             for (int i = 0; i < backUnitCount; i++)
-            {
                 BackUnits.Add(new BackUnit(br));
-            }
 
             ShoulderUnits = new List<ShoulderUnit>(shoulderUnitCount);
             for (int i = 0; i < shoulderUnitCount; i++)
-            {
                 ShoulderUnits.Add(new ShoulderUnit(br));
-            }
 
             HeadTopStabilizers = new List<HeadTopStabilizer>(headTopStabilizerCount);
             for (int i = 0; i < headTopStabilizerCount; i++)
-            {
                 HeadTopStabilizers.Add(new HeadTopStabilizer(br));
-            }
 
             HeadSideStabilizers = new List<HeadSideStabilizer>(headSideStabilizerCount);
             for (int i = 0; i < headSideStabilizerCount; i++)
-            {
                 HeadSideStabilizers.Add(new HeadSideStabilizer(br));
-            }
 
             CoreUpperSideStabilizers = new List<CoreUpperSideStabilizer>(coreUpperSideStabilizerCount);
             for (int i = 0; i < coreUpperSideStabilizerCount; i++)
-            {
                 CoreUpperSideStabilizers.Add(new CoreUpperSideStabilizer(br));
-            }
 
             CoreLowerSideStabilizers = new List<CoreLowerSideStabilizer>(coreLowerSideStabilizerCount);
             for (int i = 0; i < coreLowerSideStabilizerCount; i++)
-            {
                 CoreLowerSideStabilizers.Add(new CoreLowerSideStabilizer(br));
-            }
 
             ArmStabilizers = new List<ArmStabilizer>(armStabilizerCount);
             for (int i = 0; i < armStabilizerCount; i++)
-            {
                 ArmStabilizers.Add(new ArmStabilizer(br));
-            }
 
             LegBackStabilizers = new List<LegBackStabilizer>(legBackStabilizerCount);
             for (int i = 0; i < legBackStabilizerCount; i++)
-            {
                 LegBackStabilizers.Add(new LegBackStabilizer(br));
-            }
 
             LegUpperStabilizers = new List<LegUpperStabilizer>(legUpperStabilizerCount);
             for (int i = 0; i < legUpperStabilizerCount; i++)
-            {
                 LegUpperStabilizers.Add(new LegUpperStabilizer(br));
-            }
 
             LegMiddleStabilizers = new List<LegMiddleStabilizer>(legMiddleStabilizerCount);
             for (int i = 0; i < legMiddleStabilizerCount; i++)
-            {
                 LegMiddleStabilizers.Add(new LegMiddleStabilizer(br));
-            }
 
             LegLowerStabilizers = new List<LegLowerStabilizer>(legLowerStabilizerCount);
             for (int i = 0; i < legLowerStabilizerCount; i++)
-            {
                 LegLowerStabilizers.Add(new LegLowerStabilizer(br));
-            }
         }
 
         /// <summary>
@@ -288,8 +289,10 @@ namespace SoulsFormats.Formats.Other.ACFA
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
+            bw.BigEndian = true;
             bw.WriteUInt32(0);
             bw.WriteUInt16((ushort)Heads.Count);
+            bw.WriteUInt16((ushort)Cores.Count);
             bw.WriteUInt16((ushort)Arms.Count);
             bw.WriteUInt16((ushort)Legs.Count);
             bw.WriteUInt16((ushort)FCSs.Count);
@@ -300,7 +303,7 @@ namespace SoulsFormats.Formats.Other.ACFA
             bw.WriteUInt16((ushort)OveredBoosters.Count);
             bw.WriteUInt16((ushort)ArmUnits.Count);
             bw.WriteUInt16((ushort)BackUnits.Count);
-            bw.WriteUInt16((ushort)ShoulderUnits.Count) ;
+            bw.WriteUInt16((ushort)ShoulderUnits.Count);
             bw.WriteUInt16((ushort)HeadTopStabilizers.Count);
             bw.WriteUInt16((ushort)HeadSideStabilizers.Count);
             bw.WriteUInt16((ushort)CoreUpperSideStabilizers.Count);
@@ -312,114 +315,70 @@ namespace SoulsFormats.Formats.Other.ACFA
             bw.WriteUInt16((ushort)LegLowerStabilizers.Count);
 
             for (int i = 0; i < Heads.Count; i++)
-            {
                 Heads[i].Write(bw);
-            }
 
             for (int i = 0; i < Cores.Count; i++)
-            {
                 Cores[i].Write(bw);
-            }
 
             for (int i = 0; i < Arms.Count; i++)
-            {
                 Arms[i].Write(bw);
-            }
 
             for (int i = 0; i < Legs.Count; i++)
-            {
                 Legs[i].Write(bw);
-            }
 
             for (int i = 0; i < FCSs.Count; i++)
-            {
                 FCSs[i].Write(bw);
-            }
 
             for (int i = 0; i < Generators.Count; i++)
-            {
                 Generators[i].Write(bw);
-            }
 
             for (int i = 0; i < MainBoosters.Count; i++)
-            {
                 MainBoosters[i].Write(bw);
-            }
 
             for (int i = 0; i < BackBoosters.Count; i++)
-            {
                 BackBoosters[i].Write(bw);
-            }
 
             for (int i = 0; i < SideBoosters.Count; i++)
-            {
                 SideBoosters[i].Write(bw);
-            }
 
             for (int i = 0; i < OveredBoosters.Count; i++)
-            {
                 OveredBoosters[i].Write(bw);
-            }
 
             for (int i = 0; i < ArmUnits.Count; i++)
-            {
                 ArmUnits[i].Write(bw);
-            }
 
             for (int i = 0; i < BackUnits.Count; i++)
-            {
                 BackUnits[i].Write(bw);
-            }
 
             for (int i = 0; i < ShoulderUnits.Count; i++)
-            {
                 ShoulderUnits[i].Write(bw);
-            }
 
             for (int i = 0; i < HeadTopStabilizers.Count; i++)
-            {
                 HeadTopStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < HeadSideStabilizers.Count; i++)
-            {
                 HeadSideStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < CoreUpperSideStabilizers.Count; i++)
-            {
                 CoreUpperSideStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < CoreLowerSideStabilizers.Count; i++)
-            {
                 CoreLowerSideStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < ArmStabilizers.Count; i++)
-            {
                 ArmStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < LegBackStabilizers.Count; i++)
-            {
                 LegBackStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < LegUpperStabilizers.Count; i++)
-            {
                 LegUpperStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < LegMiddleStabilizers.Count; i++)
-            {
                 LegMiddleStabilizers[i].Write(bw);
-            }
 
             for (int i = 0; i < LegLowerStabilizers.Count; i++)
-            {
                 LegLowerStabilizers[i].Write(bw);
-            }
         }
 
         /// <summary>
@@ -428,36 +387,68 @@ namespace SoulsFormats.Formats.Other.ACFA
         /// <returns>An int representing the number of parts in an ACPARTS file.</returns>
         public int Count()
         {
-            try 
+            try
             {
-                   return Heads.Count +
-                   Cores.Count +
-                   Arms.Count +
-                   Legs.Count +
-                   FCSs.Count +
-                   Generators.Count +
-                   MainBoosters.Count +
-                   BackBoosters.Count +
-                   SideBoosters.Count +
-                   OveredBoosters.Count +
-                   ArmUnits.Count +
-                   BackUnits.Count +
-                   ShoulderUnits.Count +
-                   HeadTopStabilizers.Count +
-                   HeadSideStabilizers.Count +
-                   CoreUpperSideStabilizers.Count +
-                   CoreLowerSideStabilizers.Count +
-                   ArmStabilizers.Count +
-                   LegBackStabilizers.Count +
-                   LegUpperStabilizers.Count +
-                   LegMiddleStabilizers.Count +
-                   LegLowerStabilizers.Count;
-            } 
+                return Heads.Count +
+                Cores.Count +
+                Arms.Count +
+                Legs.Count +
+                FCSs.Count +
+                Generators.Count +
+                MainBoosters.Count +
+                BackBoosters.Count +
+                SideBoosters.Count +
+                OveredBoosters.Count +
+                ArmUnits.Count +
+                BackUnits.Count +
+                ShoulderUnits.Count +
+                HeadTopStabilizers.Count +
+                HeadSideStabilizers.Count +
+                CoreUpperSideStabilizers.Count +
+                CoreLowerSideStabilizers.Count +
+                ArmStabilizers.Count +
+                LegBackStabilizers.Count +
+                LegUpperStabilizers.Count +
+                LegMiddleStabilizers.Count +
+                LegLowerStabilizers.Count;
+            }
             catch (NullReferenceException e)
             {
                 Console.WriteLine($"{e.Message} occurred, there is likely no parts read yet.");
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Get all the parts in this ACPARTS as a list of IPart.
+        /// </summary>
+        /// <returns>A list of IPart.</returns>
+        public List<IPart> GetParts()
+        {
+            List<IPart> parts = new List<IPart>();
+            parts.AddRange(Heads);
+            parts.AddRange(Cores);
+            parts.AddRange(Arms);
+            parts.AddRange(Legs);
+            parts.AddRange(FCSs);
+            parts.AddRange(Generators);
+            parts.AddRange(MainBoosters);
+            parts.AddRange(BackBoosters);
+            parts.AddRange(SideBoosters);
+            parts.AddRange(OveredBoosters);
+            parts.AddRange(ArmUnits);
+            parts.AddRange(BackUnits);
+            parts.AddRange(ShoulderUnits);
+            parts.AddRange(HeadTopStabilizers);
+            parts.AddRange(HeadSideStabilizers);
+            parts.AddRange(CoreUpperSideStabilizers);
+            parts.AddRange(CoreLowerSideStabilizers);
+            parts.AddRange(ArmStabilizers);
+            parts.AddRange(LegBackStabilizers);
+            parts.AddRange(LegUpperStabilizers);
+            parts.AddRange(LegMiddleStabilizers);
+            parts.AddRange(LegLowerStabilizers);
+            return parts;
         }
     }
 }

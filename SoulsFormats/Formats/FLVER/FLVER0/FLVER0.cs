@@ -10,8 +10,6 @@ namespace SoulsFormats
     /// </summary>
     public partial class FLVER0 : SoulsFile<FLVER0>, IFlver
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
         /// <summary>
         /// General values for this model.
         /// </summary>
@@ -41,6 +39,9 @@ namespace SoulsFormats
         public List<Mesh> Meshes { get; set; }
         IReadOnlyList<IFlverMesh> IFlver.Meshes => Meshes;
 
+        /// <summary>
+        /// Creates a FLVER0 with a default header and empty lists.
+        /// </summary>
         public FLVER0()
         {
             Header = new FLVERHeader();
@@ -50,6 +51,9 @@ namespace SoulsFormats
             Meshes = new List<Mesh>();
         }
 
+        /// <summary>
+        /// Returns true if the data appears to be a FLVER0 model.
+        /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
             if (br.Length < 0xC)
@@ -64,6 +68,10 @@ namespace SoulsFormats
             int version = br.ReadInt32();
             return magic == "FLVER\0" && version >= 0x00000 && version < 0x20000;
         }
+
+        /// <summary>
+        /// Reads FLVER0 data from a BinaryReaderEx.
+        /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
             br.AssertASCII("FLVER\0");
@@ -115,6 +123,9 @@ namespace SoulsFormats
                 Meshes.Add(new Mesh(br, this, dataOffset));
         }
 
+        /// <summary>
+        /// Writes FLVER0 data to a BinaryWriterEx.
+        /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
             bw.BigEndian = Header.BigEndian;
@@ -186,7 +197,7 @@ namespace SoulsFormats
             for (int i = 0; i < Meshes.Count; i++)
             {
                 bw.FillInt32($"vertexBuffersHeaderOffset1_{i}", (int)bw.Position);
-                Meshes[i].WriteVBuffers1(bw, i);
+                Meshes[i].WriteVertexBuffers1(bw, i);
             }
             bw.Pad(0x20);
             int dataOffset = (int)bw.Position;
@@ -208,6 +219,9 @@ namespace SoulsFormats
             bw.FillInt32($"DataSize", (int)bw.Position - dataOffset);
         }
 
+        /// <summary>
+        /// An FLVER0 header containing general values for this model.
+        /// </summary>
         public class FLVERHeader
         {
             /// <summary>

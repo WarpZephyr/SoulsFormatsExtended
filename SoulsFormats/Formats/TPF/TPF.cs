@@ -368,7 +368,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Type of texture in a TPF.
+        /// Category of texture in a TPF.
         /// </summary>
         public enum TexType : byte
         {

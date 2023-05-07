@@ -15,6 +15,122 @@ namespace SoulsFormats
     public static class SFUtil
     {
         /// <summary>
+        /// Guesses the path a file should be in based on it's extension.
+        /// </summary>
+        /// <returns></returns>
+        public static string GuessFolder(byte[] bytes, string ext)
+        {
+            switch (ext)
+            {
+                case ".aisd": return "_unknown/aisd/";
+                case ".bdt": return "bind/";
+                case ".bhd": return "bind/";
+                case ".dds": return "image/texture/dds/";
+                case ".dlse": return "sfx/";
+                case ".drb": return "lang/menu/";
+                case ".edf": return "_unknown/edf/";
+                case ".eld": return "_unknown/eld/";
+                case ".entryfilelist": return "_unknown/entryfilelist/";
+                case ".esd": return "state/";
+                case ".evd": return "script/evd/";
+                case ".fev": return "sound/";
+                case ".flver": return "model/";
+                case ".fsb": return "sound/";
+                case ".gfx": return "_unknown/gfx/";
+                case ".itl": return "_unknown/itl/";
+                case ".lc": return "script/lua/compiled/";
+                case ".lua": return "script/lua/";
+                case ".msb": return "model/map/";
+                case ".mtd": return "material/";
+                case ".nfd": return "_unknown/nfd/";
+                case ".param": return "param/";
+                case ".png": return "image/";
+                case ".sib": return "model/map/sib/";
+                case ".tae": return "tae/";
+                case ".tdf": return "_unknown/tdf/";
+                case ".tpf": return "image/texture/tpf/";
+                case ".txt": return "text/";
+                case ".blf": return "system/";
+                case ".xml": return "text/xml/";
+                case ".ani": return "bind/motion/ani/";
+                case ".nva": return "model/map/ch_nav/";
+                case ".hnav": return "model/map/ch_nav/";
+                case ".htr": return "model/map/ch_nav/";
+                case ".fmg": return "lang/";
+                case ".luainfo": return "script/lua/info/";
+                case ".anc": return "bind/motion/anc/";
+                case ".ane": return "bind/motion/ane/";
+                case ".mqb": return "movie/mqb/";
+                case ".pam": return "movie/";
+                case ".fxr": return "sfx/fxr/";
+                case ".clm": return "_unknown/clm/";
+                case ".acb": return "_unknown/acb/";
+            }
+
+            if (ext == ".bnd")
+            {
+                IBinder bnd = ReadBinder(bytes);
+                if (bnd == null)
+                    throw new InvalidDataException("Extension was guessed to be BND, but it failed to be read as a BND.");
+
+                string folder = GuessFolderBinder(bnd);
+                return folder;
+            }
+
+            if (ext.EndsWith(".dcx"))
+            {
+                byte[] decompressedBytes = DCX.Decompress(bytes);
+                string bindExt = GuessExtension(decompressedBytes);
+                string folder = GuessFolder(decompressedBytes, bindExt);
+                return $"{folder}/dcx/";
+            }
+
+            return "_unknown/_unknown/";
+        }
+
+        private static string GuessFolderBinder(IBinder bnd)
+        {
+            if (bnd.Files.Count == 0)
+            {
+                return "bind/empty/";
+            }
+
+            string nowload = bnd.Files[0].Name.Substring(bnd.Files[0].Name.LastIndexOf("\\") + 1);
+
+            string folder;
+            if (bnd.Files.NamesContains("event\\mission\\", "mission\\battlefeild", "model\\map\\ch_nav\\battlefeild_", "mission\\mission_"))
+                folder = "mission/";
+            else if (bnd.Files.NamesContains("a0") && bnd.Files.NamesContains(".ani"))
+                folder = "model/motion/";
+            else if (bnd.Files.NamesContains("b") && bnd.Files.NamesContains(".flv", ".tpf"))
+                folder = "model/break/";
+            else if (nowload.Length == 6 && nowload.EndsWith(".tpf"))
+                folder = "lang/nowload/";
+            else
+            {
+                string bindExt = GuessExtension(bnd.Files[0].Bytes);
+                folder = GuessFolder(bnd.Files[0].Bytes, bindExt);
+            }
+            return $"bind/{folder}";
+        }
+
+        private static bool NamesContains(this List<BinderFile> files, params string[] strs)
+        {
+            foreach (BinderFile file in files)
+                foreach (string str in strs)
+                    if (file.Name.Contains(str))
+                        return true;
+            return false;
+        }
+
+        private static IBinder ReadBinder(byte[] bytes)
+        {
+            if (BND3.IsRead(bytes, out BND3 bnd3)) return bnd3;
+            else if (BND4.IsRead(bytes, out BND4 bnd4)) return bnd4;
+            else return null;
+        }
+
+        /// <summary>
         /// Guesses the extension of a file based on its contents.
         /// </summary>
         public static string GuessExtension(byte[] bytes, bool bigEndian = false)
@@ -115,6 +231,8 @@ namespace SoulsFormats
                     ext = ".gfx";
                 else if (br.Length >= 0x19 && br.GetASCII(0xC, 0xE) == "ITLIMITER_INFO")
                     ext = ".itl";
+                else if (br.Length >= 5 && br.GetASCII(1, 4) == "LuaP")
+                    ext = ".lc";
                 else if (br.Length >= 4 && br.GetASCII(1, 3) == "Lua")
                     ext = ".lua";
                 else if (checkMsb(br))
@@ -135,10 +253,34 @@ namespace SoulsFormats
                     ext = ".tdf";
                 else if (magic == "TPF\0")
                     ext = ".tpf";
-                else if (magic == "#BOM")
+                else if (magic == "#BOM" || magic == "TEXT")
                     ext = ".txt";
+                else if (magic == "BLF\0")
+                    ext = ".blf";
                 else if (br.Length >= 5 && br.GetASCII(0, 5) == "<?xml")
                     ext = ".xml";
+                else if (magic == "NVMA")
+                    ext = ".nva";
+                else if (magic == "HNAV")
+                    ext = ".hnav";
+                else if (magic == "HTR\0")
+                    ext = ".ht";
+                else if (magic == "LUAI")
+                    ext = ".luainfo";
+                else if (br.Length > 4 && br.Length >= br.GetInt32(0) + 8 && br.GetInt32(0) > 0 && br.GetASCII(br.GetInt32(0), 8) == "#ANIEDIT")
+                    ext = ".anc";
+                else if (magic == "ANE\0")
+                    ext = ".ane";
+                else if (magic == "MQB ")
+                    ext = ".mqb";
+                else if (br.Length >= 4 && br.GetASCII(0, 3) == "PAM")
+                    ext = ".pam";
+                else if (magic == "FXR\0")
+                    ext = ".fxr";
+                else if (magic == "CLM2")
+                    ext = ".clm";
+                else if (magic == "ACB\0")
+                    ext = ".acb";
                 // This is pretty sketchy
                 else if (br.Length >= 0xC && br.GetByte(0) == 0 && br.GetByte(3) == 0 && br.GetInt32(4) == br.Length && br.GetInt16(0xA) == 0)
                     ext = ".fmg";

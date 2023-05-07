@@ -4,7 +4,9 @@ namespace SoulsFormats
 {
     public partial class FLVER0
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// A reference to an MTD file, specifying textures to use.
+        /// </summary>
         public class Material : IFlverMaterial
         {
             /// <summary>
@@ -17,9 +19,19 @@ namespace SoulsFormats
             /// </summary>
             public string MTD { get; set; }
 
+            /// <summary>
+            /// Textures used by this material.
+            /// </summary>
             public List<Texture> Textures { get; set; }
+
+            /// <summary>
+            /// A readonly list of textures used by a material.
+            /// </summary>
             IReadOnlyList<IFlverTexture> IFlverMaterial.Textures => Textures;
 
+            /// <summary>
+            /// Layouts determining how to write vertex information.
+            /// </summary>
             public List<BufferLayout> Layouts { get; set; }
 
             /// <summary>
@@ -44,6 +56,9 @@ namespace SoulsFormats
                 Layouts = new List<BufferLayout>();
             }
 
+            /// <summary>
+            /// Reads a material from a BinaryReaderEx.
+            /// </summary>
             internal Material(BinaryReaderEx br, FLVER0 flv)
             {
                 int nameOffset = br.ReadInt32();
@@ -106,6 +121,9 @@ namespace SoulsFormats
                 }
             }
 
+            /// <summary>
+            /// Writes a material to a BinaryWriterEx.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
                 bw.ReserveInt32($"nameOffset{index}");
@@ -118,6 +136,9 @@ namespace SoulsFormats
                 bw.WriteInt32(0);
             }
 
+            /// <summary>
+            /// Writes strings for materials to a BinaryWriterEx.
+            /// </summary>
             internal void WriteStrings(BinaryWriterEx bw, bool Unicode, int index)
             {
                 bw.FillInt32($"nameOffset{index}", (int)bw.Position);
@@ -133,6 +154,9 @@ namespace SoulsFormats
                     bw.WriteShiftJIS(MTD, true);
             }
 
+            /// <summary>
+            /// Writes textures for materials to a BinaryWriterEx.
+            /// </summary>
             internal void WriteTextures(BinaryWriterEx bw, bool Unicode, int index)
             {
                 bw.FillInt32($"texturesOffset{index}", (int)bw.Position);
@@ -149,6 +173,9 @@ namespace SoulsFormats
                     Textures[i].WriteStrings(bw, Unicode, i);
             }
 
+            /// <summary>
+            /// Writes layouts for materials to a BinaryWriterEx.
+            /// </summary>
             internal void WriteLayouts(BinaryWriterEx bw, int index)
             {
                 bw.FillInt32($"layoutHeaderOffset{index}", (int)bw.Position);
@@ -179,6 +206,5 @@ namespace SoulsFormats
                 bw.FillInt32($"layoutsOffset{index}", layoutsOffset);
             }
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

@@ -97,6 +97,9 @@ namespace SoulsFormats
                 return Name;
             }
 
+            /// <summary>
+            /// Reads a bone from a BinaryReaderEx.
+            /// </summary>
             internal Bone(BinaryReaderEx br, bool unicode)
             {
                 Translation = br.ReadVector3();
@@ -118,6 +121,9 @@ namespace SoulsFormats
                     Name = br.GetShiftJIS(nameOffset);
             }
 
+            /// <summary>
+            /// Writes a bone to a BinaryWriterEx.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
                 bw.WriteVector3(Translation);
@@ -134,6 +140,9 @@ namespace SoulsFormats
                 bw.WritePattern(0x34, 0x00);
             }
 
+            /// <summary>
+            /// Writes strings for FLVER bones.
+            /// </summary>
             internal void WriteStrings(BinaryWriterEx bw, bool unicode, int index)
             {
                 bw.FillInt32($"BoneNameOffset{index}", (int)bw.Position);

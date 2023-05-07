@@ -131,6 +131,106 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Write a dvdbnd header to the given path.
+        /// </summary>
+        public void Write(string bhdPath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(bhdPath));
+            using (FileStream stream = File.Create(bhdPath))
+            {
+                BinaryWriterEx bw = new BinaryWriterEx(false, stream);
+                Write(bw);
+                bw.Finish();
+            }
+        }
+
+        /*
+        /// <summary>
+        /// Write a dvdbnd header and data to the given paths.
+        /// </summary>
+        public void Write(string bhdPath, string bdtPath, string bdtDataDirPath)
+        {
+            // Write the BHD header.
+            Write(bhdPath);
+
+            // If the data path for BDT does not exist throw.
+            if (!Directory.Exists(bdtDataDirPath))
+                throw new DirectoryNotFoundException("BDT data must be in specified directory to have BDT written, but no directory was found on provided path.");
+
+            // Get the files to repack into BDT.
+            string[] dirPaths = Directory.GetFiles(bdtDataDirPath, "*", SearchOption.AllDirectories);
+
+            // Remove bdt extract directory name from path.
+            for (int i = 0; i < dirPaths.Length; i++)
+                dirPaths[i] = dirPaths[i].Substring(dirPaths[i].IndexOf("\\"));
+
+            // Get the number of hashes we need to repack.
+            int hashCount = HashCount();
+            Console.WriteLine($"Hash count is {hashCount}");
+
+            // Verify there are enough files to repack to begin with.
+            if (dirPaths.Length < hashCount)
+                throw new Exception("There is not enough files to fill all the hashes in the BHD.");
+
+            using (var bdtStream = File.Create(bdtPath))
+            {
+                // Search each bucket
+                foreach (var bucket in Buckets)
+                {
+                    Console.WriteLine($"Checking next Bucket");
+                    // Search each hash in bucket
+                    foreach (var hash in bucket)
+                    {
+                        Console.WriteLine($"Checking hash {hash.FileNameHash}");
+                        bool matched = false;
+                        // Search for a hash to match in each path
+                        foreach (string path in dirPaths)
+                        {
+                            // If the file name is the hash already, use it instead of hashing it
+                            if (Path.GetFileNameWithoutExtension(path) == hash.FileNameHash.ToString())
+                            {
+                                Console.WriteLine($"Hash {hash.FileNameHash} matched with path {path}");
+                                matched = true;
+                                byte[] bytes = File.ReadAllBytes(path);
+                                if (bytes.Length > hash.PaddedFileSize)
+                                    throw new ArgumentOutOfRangeException($"The path {path} byte length is longer than the hash PaddedFileSize, this may lead to overflowing into other files.");
+                                bdtStream.Write(bytes, (int)hash.FileOffset, bytes.Length);
+                            }
+                            // If the path being hashed is the file name hash we have a match.
+                            else if (SFUtil.FromPathHash(path) == hash.FileNameHash)
+                            {
+                                Console.WriteLine($"Hash {hash.FileNameHash} matched with path {path}");
+                                matched = true;
+                                byte[] bytes = File.ReadAllBytes(path);
+                                if (bytes.Length > hash.PaddedFileSize)
+                                    throw new ArgumentOutOfRangeException($"The path {path} byte length is longer than the hash PaddedFileSize, this may lead to overflowing into other files.");
+                                bdtStream.Write(bytes, (int)hash.FileOffset, bytes.Length);
+                            }
+                        }
+                        // We did not find a match for this hash.
+                        if (matched == false)
+                            throw new Exception($"No paths matched hash {hash.FileNameHash} in the given BDT data directory.");
+                    }
+                }
+                bdtStream.Close();
+            }
+        }
+        */
+
+        /// <summary>
+        /// Get the total count of all the hashes in the BHD5.
+        /// </summary>
+        /// <returns>The total number of hashes in the BHD5.</returns>
+        public int HashCount()
+        {
+            int count = 0;
+            foreach (var bucket in Buckets)
+                foreach (var hash in bucket)
+                    count++;
+            return count;
+        }
+
+        /// <summary>
         /// Creates an empty BHD5.
         /// </summary>
         public BHD5(Game game)

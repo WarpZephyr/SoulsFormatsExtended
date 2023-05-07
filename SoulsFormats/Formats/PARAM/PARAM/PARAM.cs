@@ -54,7 +54,7 @@ namespace SoulsFormats
         public List<Row> Rows { get; set; }
 
         /// <summary>
-        /// The current applied PARAMDEF.
+        /// The currently applied PARAMDEF.
         /// </summary>
         public PARAMDEF AppliedParamdef { get; private set; }
 
@@ -241,6 +241,32 @@ namespace SoulsFormats
             {
                 if (ApplyParamdefCarefully(paramdef))
                     return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Applies the first paramdef in the sequence whose param type, and data version match this param's, if any. Returns true if applied. 
+        /// </summary>
+        public bool ApplyParamdefSomewhatCarefully(IEnumerable<PARAMDEF> paramdefs)
+        {
+            foreach (PARAMDEF paramdef in paramdefs)
+            {
+                if (ApplyParamdefSomewhatCarefully(paramdef))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Applies a paramdef only if its param type, and data version match this param's. Returns true if applied.
+        /// </summary>
+        public bool ApplyParamdefSomewhatCarefully(PARAMDEF paramdef)
+        {
+            if (ParamType == paramdef.ParamType && ParamdefDataVersion == paramdef.DataVersion)
+            {
+                ApplyParamdef(paramdef);
+                return true;
             }
             return false;
         }

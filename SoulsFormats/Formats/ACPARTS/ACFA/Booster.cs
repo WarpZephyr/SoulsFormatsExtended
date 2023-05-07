@@ -1,14 +1,11 @@
-﻿namespace SoulsFormats.Formats.Other.ACFA
+﻿namespace SoulsFormats
 {
-    /// <summary>
-    /// A part configuration format used in 4th generation Armored Core.
-    /// </summary>
-    public partial class ACPARTS
+    public partial class AcPartsFA
     {
         /// <summary>
         /// A Main Booster part in an ACPARTS file.
         /// </summary>
-        public class MainBooster
+        public class MainBooster : IPart, IBooster
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -16,19 +13,34 @@
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains Horizontal Booster stats.
+            /// Horizontal Booster stats.
             /// </summary>
-            public HorizontalBoosterComponent HorizontalBoosterComponent { get; set; }
+            public BoosterComponent HorizontalBoost { get; set; }
 
             /// <summary>
-            /// A Component which contains Vertical Booster Stats.
+            /// Vertical Booster stats.
             /// </summary>
-            public VerticalBoosterComponent VerticalBoosterComponent { get; set; }
+            public BoosterComponent VerticalBoost { get; set; }
 
             /// <summary>
-            /// A Component which contains Quick Booster Stats.
+            /// Quick Booster stats.
             /// </summary>
-            public QuickBoosterComponent QuickBoosterComponent { get; set; }
+            public BoosterComponent QuickBoost { get; set; }
+
+            /// <summary>
+            /// After using the quick boost, indicates the amount of time before it becomes available again.
+            /// </summary>
+            public byte QuickReloadTime { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk31 { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public ushort Unk32 { get; set; }
 
             /// <summary>
             /// Reads a Main Booster part from a stream.
@@ -37,9 +49,9 @@
             internal MainBooster(BinaryReaderEx br)
             {
                 PartComponent = new PartComponent(br);
-                HorizontalBoosterComponent = new HorizontalBoosterComponent(br);
-                VerticalBoosterComponent = new VerticalBoosterComponent(br);
-                QuickBoosterComponent = new QuickBoosterComponent(br);
+                HorizontalBoost = new BoosterComponent(br);
+                VerticalBoost = new BoosterComponent(br);
+                QuickBoost = new BoosterComponent(br);
             }
 
             /// <summary>
@@ -49,16 +61,16 @@
             public void Write(BinaryWriterEx bw)
             {
                 PartComponent.Write(bw);
-                HorizontalBoosterComponent.Write(bw);
-                VerticalBoosterComponent.Write(bw);
-                QuickBoosterComponent.Write(bw);
+                HorizontalBoost.Write(bw);
+                VerticalBoost.Write(bw);
+                QuickBoost.Write(bw);
             }
         }
 
         /// <summary>
         /// A Back Booster part in an ACPARTS file.
         /// </summary>
-        public class BackBooster
+        public class BackBooster : IPart, IBooster
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -66,14 +78,29 @@
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains Horizontal Booster stats.
+            /// Horizontal Booster stats.
             /// </summary>
-            public HorizontalBoosterComponent HorizontalBoosterComponent { get; set; }
+            public BoosterComponent HorizontalBoost { get; set; }
 
             /// <summary>
-            /// A Component which contains Quick Booster Stats.
+            /// Quick Booster Stats.
             /// </summary>
-            public QuickBoosterComponent QuickBoosterComponent { get; set; }
+            public BoosterComponent QuickBooster { get; set; }
+
+            /// <summary>
+            /// After using quick boost, indicates the amount of time before it becomes available again.
+            /// </summary>
+            public byte QuickReloadTime { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk31 { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public ushort Unk32 { get; set; }
 
             /// <summary>
             /// Reads a Back Booster part from a stream.
@@ -82,8 +109,11 @@
             internal BackBooster(BinaryReaderEx br)
             {
                 PartComponent = new PartComponent(br);
-                HorizontalBoosterComponent = new HorizontalBoosterComponent(br);
-                QuickBoosterComponent = new QuickBoosterComponent(br);
+                HorizontalBoost = new BoosterComponent(br);
+                QuickBooster = new BoosterComponent(br);
+                QuickReloadTime = br.ReadByte();
+                Unk31 = br.ReadByte();
+                Unk32 = br.ReadUInt16();
             }
 
             /// <summary>
@@ -93,15 +123,18 @@
             public void Write(BinaryWriterEx bw)
             {
                 PartComponent.Write(bw);
-                HorizontalBoosterComponent.Write(bw);
-                QuickBoosterComponent.Write(bw);
+                HorizontalBoost.Write(bw);
+                QuickBooster.Write(bw);
+                bw.WriteByte(QuickReloadTime);
+                bw.WriteByte(Unk31);
+                bw.WriteUInt16(Unk32);
             }
         }
 
         /// <summary>
         /// A Side Booster part in an ACPARTS file.
         /// </summary>
-        public class SideBooster
+        public class SideBooster : IPart, IBooster
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -109,14 +142,29 @@
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// A Component which contains Horizontal Booster stats.
+            /// Horizontal Booster stats.
             /// </summary>
-            public HorizontalBoosterComponent HorizontalBoosterComponent { get; set; }
+            public BoosterComponent HorizontalBoost { get; set; }
 
             /// <summary>
-            /// A Component which contains Quick Booster Stats.
+            /// Quick Booster Stats.
             /// </summary>
-            public QuickBoosterComponent QuickBoosterComponent { get; set; }
+            public BoosterComponent QuickBooster { get; set; }
+
+            /// <summary>
+            /// After using quick boost, indicates the amount of time before it becomes available again.
+            /// </summary>
+            public byte QuickReloadTime { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public byte Unk31 { get; set; }
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            public ushort Unk32 { get; set; }
 
             /// <summary>
             /// Reads a Side Booster part from a stream.
@@ -125,8 +173,11 @@
             internal SideBooster(BinaryReaderEx br)
             {
                 PartComponent = new PartComponent(br);
-                HorizontalBoosterComponent = new HorizontalBoosterComponent(br);
-                QuickBoosterComponent = new QuickBoosterComponent(br);
+                HorizontalBoost = new BoosterComponent(br);
+                QuickBooster = new BoosterComponent(br);
+                QuickReloadTime = br.ReadByte();
+                Unk31 = br.ReadByte();
+                Unk32 = br.ReadUInt16();
             }
 
             /// <summary>
@@ -136,15 +187,18 @@
             public void Write(BinaryWriterEx bw)
             {
                 PartComponent.Write(bw);
-                HorizontalBoosterComponent.Write(bw);
-                QuickBoosterComponent.Write(bw);
+                HorizontalBoost.Write(bw);
+                QuickBooster.Write(bw);
+                bw.WriteByte(QuickReloadTime);
+                bw.WriteByte(Unk31);
+                bw.WriteUInt16(Unk32);
             }
         }
 
         /// <summary>
         /// An Overed Booster part in an ACPARTS file.
         /// </summary>
-        public class OveredBooster
+        public class OveredBooster : IPart, IBooster
         {
             /// <summary>
             /// A Component which contains common stats across all parts.
@@ -152,32 +206,13 @@
             public PartComponent PartComponent { get; set; }
 
             /// <summary>
-            /// How much Horizontal Thrust this booster adds.
+            /// Overed Booster stats.
             /// </summary>
-            public uint OveredBoostThrust;
+            public BoosterComponent HorizontalBoost { get; set; }
 
             /// <summary>
-            /// Unknown.
-            /// </summary>
-            public uint Unk04;
-
-            /// <summary>
-            /// Unknown; Is always 1.
-            /// </summary>
-            public ushort Unk08;
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public ushort Unk0A;
-
-            /// <summary>
-            /// How much Energy Horizontal movement with this Booster will cost.
-            /// </summary>
-            public uint OveredBoostENCost;
-
-            /// <summary>
-            /// How much Kojima Particles Horizontal movement with this Booster will cost Primal Armor.
+            /// Kojima Particle (Primal Armor Gauge) consumed when Overed Boost is engaged.
+            /// Larger values indicate a greater Kojima Particle cost requirement for use.
             /// </summary>
             public ushort OveredBoostKPCost;
 
@@ -197,52 +232,57 @@
             public uint Unk18;
 
             /// <summary>
-            /// How much push this Booster adds after Overboost activation.
+            /// Thrust power during OB activation.
+            /// The larger the value, the more powerful the Overed Boost activation thrust.
             /// </summary>
             public uint OBActivationThrust;
 
             /// <summary>
-            /// How much Energy Overboost Activation with this Booster will cost.
+            /// Energy consumed upon activating Overed Boost.
+            /// Larger values indicate a greater EN cost requirement for use.
             /// </summary>
             public uint OBActivationENCost;
 
             /// <summary>
-            /// How much Kojima Particles Overboost Activation with this Booster will cost Primal Armor.
+            /// Kojima Particle (Primal Armor Gauge) consumed upon activating Overed Boost.
+            /// Larger values indicate a greater Kojima Particle cost requirement for use.
             /// </summary>
             public uint OBActivationKPCost;
 
             /// <summary>
-            /// The Overboost Activation Limit for this Booster.
+            /// Amount of time Overed Boost activation thrust is enabled.
+            /// The larger the value, the longer the thrust, but the more EN and KP consumed.
             /// </summary>
             public uint OBActivationLimit;
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; Is always 0.
             /// </summary>
             public uint Unk2C;
 
             /// <summary>
-            /// The damage Assault Armor from this Overed Booster will do.
+            /// Attack power of Assault Armor.
+            /// Considered energy weaponry.
             /// </summary>
-            public ushort AssaultArmorAttack;
+            public ushort AssaultArmorAttackPower;
 
             /// <summary>
-            /// The range Assault Armor from this Overed Booster will affect.
+            /// Effective range of Assault Armor.
             /// </summary>
             public ushort AssaultArmorRange;
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; Is always 0.
             /// </summary>
             public uint Unk34;
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; Is always 0.
             /// </summary>
             public uint Unk38;
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; Is always 0.
             /// </summary>
             public uint Unk3C;
 
@@ -254,15 +294,9 @@
             {
                 PartComponent = new PartComponent(br);
 
-                OveredBoostThrust = br.ReadUInt32();
-                Unk04 = br.ReadUInt16();
-
-                Unk08 = br.ReadUInt16();
-                Unk0A = br.ReadUInt16();
-
-                OveredBoostENCost = br.ReadUInt32();
+                HorizontalBoost = new BoosterComponent(br);
                 OveredBoostKPCost = br.ReadUInt16();
-                Unk12 = br.ReadUInt16();
+                Unk12 = br.AssertUInt16(0);
                 Unk14 = br.ReadUInt32();
                 Unk18 = br.ReadUInt32();
 
@@ -270,13 +304,13 @@
                 OBActivationENCost = br.ReadUInt32();
                 OBActivationKPCost = br.ReadUInt32();
                 OBActivationLimit = br.ReadUInt32();
-                Unk2C = br.ReadUInt32();
+                Unk2C = br.AssertUInt32(0);
 
-                AssaultArmorAttack = br.ReadUInt16();
+                AssaultArmorAttackPower = br.ReadUInt16();
                 AssaultArmorRange = br.ReadUInt16();
-                Unk34 = br.ReadUInt32();
-                Unk38 = br.ReadUInt32();
-                Unk3C = br.ReadUInt32();
+                Unk34 = br.AssertUInt32(0);
+                Unk38 = br.AssertUInt32(0);
+                Unk3C = br.AssertUInt32(0);
             }
 
             /// <summary>
@@ -287,13 +321,7 @@
             {
                 PartComponent.Write(bw);
 
-                bw.WriteUInt32(OveredBoostThrust);
-                bw.WriteUInt32(Unk04);
-
-                bw.WriteUInt16(Unk08);
-                bw.WriteUInt16(Unk0A);
-
-                bw.WriteUInt32(OveredBoostENCost);
+                HorizontalBoost.Write(bw);
                 bw.WriteUInt16(OveredBoostKPCost);
                 bw.WriteUInt16(Unk12);
                 bw.WriteUInt32(Unk14);
@@ -305,8 +333,8 @@
                 bw.WriteUInt32(OBActivationLimit);
                 bw.WriteUInt32(Unk2C);
 
-                bw.WriteUInt32(AssaultArmorAttack);
-                bw.WriteUInt32(AssaultArmorRange);
+                bw.WriteUInt16(AssaultArmorAttackPower);
+                bw.WriteUInt16(AssaultArmorRange);
                 bw.WriteUInt32(Unk34);
                 bw.WriteUInt32(Unk38);
                 bw.WriteUInt32(Unk3C);

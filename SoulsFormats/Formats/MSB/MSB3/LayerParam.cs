@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SoulsFormats
@@ -10,7 +11,7 @@ namespace SoulsFormats
         /// </summary>
         private class LayerParam : Param<Layer>
         {
-            internal override int Version => 3;
+            internal override int Version => throw new NotImplementedException();
             internal override string Type => "LAYER_PARAM_ST";
 
             /// <summary>

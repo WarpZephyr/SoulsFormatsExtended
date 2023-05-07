@@ -69,7 +69,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Returns true if the data appears to be a FLVER.
+        /// Returns true if the data appears to be a FLVER2 model.
         /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
@@ -84,7 +84,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads FLVER data from a BinaryReaderEx.
+        /// Reads FLVER2 data from a BinaryReaderEx.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {

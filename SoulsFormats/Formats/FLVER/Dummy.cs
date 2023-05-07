@@ -82,6 +82,9 @@ namespace SoulsFormats
                 return $"{ReferenceID}";
             }
 
+            /// <summary>
+            /// Reads a dummy point from a BinaryReaderEx using the version found in the FLVER.
+            /// </summary>
             internal Dummy(BinaryReaderEx br, int version)
             {
                 Position = br.ReadVector3();
@@ -103,6 +106,9 @@ namespace SoulsFormats
                 br.AssertInt32(0);
             }
 
+            /// <summary>
+            /// Writes a dummy point to a BinaryWriterEx using the version found in the FLVER.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int version)
             {
                 bw.WriteVector3(Position);
