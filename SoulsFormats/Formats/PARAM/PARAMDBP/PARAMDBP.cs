@@ -144,6 +144,7 @@ namespace SoulsFormats
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
+            br.BigEndian = true;
             int fieldCount = br.ReadInt32();
             br.AssertInt32(0);
             br.AssertInt32(0);
@@ -156,7 +157,10 @@ namespace SoulsFormats
             }
             for (int i = 0; i < fieldCount; i++)
             {
-                Fields[i].Description = br.ReadShiftJIS();
+                string description = br.ReadShiftJIS();
+                if (string.IsNullOrEmpty(description))
+                    description = "%NULL%";
+                Fields[i].Description = description;
                 Fields[i].DisplayFormat = br.ReadShiftJIS();
             }
         }
@@ -166,6 +170,7 @@ namespace SoulsFormats
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
+            bw.BigEndian = true;
             bw.WriteInt32(Fields.Count);
             bw.WriteInt32(0);
             bw.WriteInt32(0);
@@ -240,7 +245,7 @@ namespace SoulsFormats
             /// <summary>
             /// Supported primitive field types.
             /// </summary>
-            public enum FieldType : int
+            public enum FieldType : uint
             {
                 /// <summary>
                 /// Signed 1-byte integer.

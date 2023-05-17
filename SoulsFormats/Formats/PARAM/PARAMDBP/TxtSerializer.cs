@@ -12,7 +12,7 @@ namespace SoulsFormats
         /// <summary>
         /// Serializes PARAMDBP to TXT.
         /// </summary>
-        private class TxtSerializer
+        public class TxtSerializer
         {
             /// <summary>
             /// Serialize a PARAMDBP to TXT.
@@ -59,7 +59,7 @@ namespace SoulsFormats
                 Directory.CreateDirectory(Path.GetDirectoryName(outPath));
                 List<string> lines = new List<string>();
                 for (int i = 0; i < param.Cells.Count; i++)
-                    lines.Add($"{param.Cells[i]}\n");
+                    lines.Add($"{param.Cells[i]}");
                 var encoding = Encoding.GetEncoding(932); // Shift-JIS
                 File.WriteAllLines(outPath, lines, encoding);
             }
@@ -85,6 +85,13 @@ namespace SoulsFormats
                 File.WriteAllLines(outPath, descriptions, encoding);
             }
 
+            /// <summary>
+            /// Deserialize a TXT DBP to a PARAMDBP.
+            /// </summary>
+            /// <param name="path">A path to a TXT file with DBP data.</param>
+            /// <returns>A new PARAMDBP.</returns>
+            /// <exception cref="InvalidDataException">Something is wrong with the provided data.</exception>
+            /// <exception cref="FileNotFoundException">The provided path had no file to deserialize.</exception>
             public static PARAMDBP Deserialize(string path)
             {
                 if (Directory.Exists(path))
@@ -101,7 +108,7 @@ namespace SoulsFormats
                 dbp.Fields = new List<Field>();
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    // Skip "[i]" line.
+                    // Skip the "[i]" line.
                     i++;
 
                     // Create a new field.

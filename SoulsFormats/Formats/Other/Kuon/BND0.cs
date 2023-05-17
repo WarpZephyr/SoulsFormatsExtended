@@ -53,6 +53,36 @@ namespace SoulsFormats.Kuon
         }
 
         /// <summary>
+        /// Serializes file data to a stream.
+        /// </summary>
+        protected override void Write(BinaryWriterEx bw)
+        {
+            bw.BigEndian = false;
+
+            bw.WriteASCII("BND\0");
+            bw.WriteInt32(Unk04);
+            bw.ReserveInt32("FileSize");
+            bw.WriteInt32(Files.Count);
+
+            for (int i = 0; i < Files.Count; i++)
+                Files[i].Write(bw, i);
+
+            // This makes an assumpation based on things I've seen before
+            // I need a sample to actually finish this.
+            for (int i = 0; i < Files.Count; i++)
+            {
+                bw.FillInt32($"NameOffset_{i}", (int)bw.Position);
+                bw.WriteShiftJIS(Files[i].Name);
+            }
+
+            for (int i = 0; i < Files.Count; i++)
+            {
+                bw.FillInt32($"DataOffset_{i}", (int)bw.Position);
+                bw.WriteBytes(Files[i].Bytes);
+            }
+        }
+
+        /// <summary>
         /// A file in a BND0.
         /// </summary>
         public class File
@@ -72,6 +102,55 @@ namespace SoulsFormats.Kuon
             /// </summary>
             public byte[] Bytes;
 
+            /// <summary>
+            /// Creates a new blank File.
+            /// </summary>
+            public File() { }
+
+            /// <summary>
+            /// Creates a new file with an ID.
+            /// </summary>
+            public File(int id)
+            {
+                ID = id;
+            }
+
+            /// <summary>
+            /// Creates a new file with a name.
+            /// </summary>
+            /// <param name="name"></param>
+            public File(string name)
+            {
+                Name = name;
+            }
+
+            /// <summary>
+            /// Creates a new file with bytes.
+            /// </summary>
+            public File(byte[] bytes)
+            {
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a new File with an ID and bytes.
+            /// </summary>
+            public File(int id, byte[] bytes)
+            {
+                ID = id;
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a new File with an id, name, and bytes.
+            /// </summary>
+            public File(int id, string name, byte[] bytes)
+            {
+                ID = id;
+                Name = name;
+                Bytes = bytes;
+            }
+
             internal File(BinaryReaderEx br, int nextOffset)
             {
                 ID = br.ReadInt32();
@@ -80,6 +159,16 @@ namespace SoulsFormats.Kuon
 
                 Name = br.GetShiftJIS(nameOffset);
                 Bytes = br.GetBytes(dataOffset, nextOffset - dataOffset);
+            }
+
+            /// <summary>
+            /// Serializes file data to a stream.
+            /// </summary>
+            internal void Write(BinaryWriterEx bw, int index)
+            {
+                bw.WriteInt32(ID);
+                bw.ReserveInt32($"DataOffset_{index}");
+                bw.ReserveInt32($"NameOffset_{index}");
             }
         }
     }

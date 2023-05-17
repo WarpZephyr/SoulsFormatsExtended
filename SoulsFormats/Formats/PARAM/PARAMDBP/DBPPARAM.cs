@@ -50,6 +50,7 @@ namespace SoulsFormats
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
+            br.BigEndian = true;
             CellReader = br;
         }
 
@@ -58,6 +59,7 @@ namespace SoulsFormats
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
+            bw.BigEndian = true;
             foreach (var cell in Cells)
             {
                 switch (cell.Dbp.DisplayType)
@@ -169,17 +171,18 @@ namespace SoulsFormats
                 get => _Value;
                 set
                 {
-                    if (_Value == null)
+                    if (value == null)
                         throw new NullReferenceException($"Cell value may not be null.");
 
                     switch (Dbp.DisplayType)
                     {
-                        case PARAMDBP.Field.FieldType.u8: _Value = Convert.ToByte(_Value); break;
-                        case PARAMDBP.Field.FieldType.s16: _Value = Convert.ToInt16(_Value); break;
-                        case PARAMDBP.Field.FieldType.u16: _Value = Convert.ToUInt16(_Value); break;
-                        case PARAMDBP.Field.FieldType.s32: _Value = Convert.ToInt32(_Value); break;
-                        case PARAMDBP.Field.FieldType.u32: _Value = Convert.ToUInt32(_Value); break;
-                        case PARAMDBP.Field.FieldType.f32: _Value = Convert.ToSingle(_Value); break;
+                        case PARAMDBP.Field.FieldType.s8: _Value = Convert.ToSByte(value); break;
+                        case PARAMDBP.Field.FieldType.u8: _Value = Convert.ToByte(value); break;
+                        case PARAMDBP.Field.FieldType.s16: _Value = Convert.ToInt16(value); break;
+                        case PARAMDBP.Field.FieldType.u16: _Value = Convert.ToUInt16(value); break;
+                        case PARAMDBP.Field.FieldType.s32: _Value = Convert.ToInt32(value); break;
+                        case PARAMDBP.Field.FieldType.u32: _Value = Convert.ToUInt32(value); break;
+                        case PARAMDBP.Field.FieldType.f32: _Value = Convert.ToSingle(value); break;
                         default:
                             throw new NotImplementedException($"Conversion not specified for type {Dbp.DisplayType}");
                     }

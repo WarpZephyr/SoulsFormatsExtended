@@ -1,11 +1,11 @@
-﻿using static SoulsFormats.AcPartsFA;
+﻿using static SoulsFormats.AcParts4.Component;
 
 namespace SoulsFormats
 {
     /// <summary>
-    /// An interface for stabilizer parts in acparts.
+    /// An interface for booster parts in ACPARTS.
     /// </summary>
-    public interface IStabilizer
+    public interface IBooster
     {
         /// <summary>
         /// A Component which contains common stats across all parts.
@@ -13,8 +13,8 @@ namespace SoulsFormats
         PartComponent PartComponent { get; set; }
 
         /// <summary>
-        /// A Component which contains Stabilizer stats.
+        /// Horizontal Booster stats.
         /// </summary>
-        StabilizerComponent StabilizerComponent { get; set; }
+        BoosterComponent HorizontalBoost { get; set; }
     }
 }

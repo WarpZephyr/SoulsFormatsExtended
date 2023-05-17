@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace SoulsFormats
 {
@@ -74,6 +75,35 @@ namespace SoulsFormats
              || videoOffset < subtitleCount * 0x10 + subtitleEntriesOffset)
                 return false;
             else return true;
+        }
+
+        /// <summary>
+        /// Returns true if the data appears to be a Debriefing Subtitle container.
+        /// Not entirely foolproof as it relies on size and offset validation.
+        /// </summary>
+        public static bool Match(byte[] bytes)
+        {
+            if (bytes.Length == 0)
+                return false;
+
+            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return Match(SFUtil.GetDecompressedBR(br, out _));
+        }
+
+        /// <summary>
+        /// Returns true if the data appears to be a Debriefing Subtitle container.
+        /// Not entirely foolproof as it relies on size and offset validation.
+        /// </summary>
+        public static bool Match(string path)
+        {
+            using (FileStream stream = File.OpenRead(path))
+            {
+                if (stream.Length == 0)
+                    return false;
+
+                BinaryReaderEx br = new BinaryReaderEx(false, stream);
+                return Match(SFUtil.GetDecompressedBR(br, out _));
+            }
         }
 
         /// <summary>

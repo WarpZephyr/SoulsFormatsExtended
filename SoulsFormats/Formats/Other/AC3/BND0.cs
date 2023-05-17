@@ -43,6 +43,7 @@ namespace SoulsFormats.AC3
         /// <summary>
         /// Unknown; 0xD3 or 0xCA.
         /// Something similar seen in Kuon BND0 Unk04.
+        /// Is likely a format indicator.
         /// </summary>
         public int Unk08;
 
@@ -87,7 +88,7 @@ namespace SoulsFormats.AC3
         }
 
         /// <summary>
-        /// Creates a new BND0 with the specified list of files.
+        /// Creates a new BND0 with the specified list of files and options.
         /// </summary>
         public BND0(List<File> files, int unk08, NameVersion version, byte unk1B, ushort alignment = 2048, string path = null)
         {
@@ -104,10 +105,10 @@ namespace SoulsFormats.AC3
         /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
-            if (br.Length < 4)
+            if (br.Length < 32)
                 return false;
 
-            string magic = br.ReadASCII();
+            string magic = br.GetASCII(0, 3); br.Position = 4;
             uint unk04 = br.ReadUInt32();
             int unk08 = br.ReadInt32();
             int fileSize = br.ReadInt32();
@@ -261,7 +262,32 @@ namespace SoulsFormats.AC3
             public File(){}
 
             /// <summary>
-            /// Creates a new File with given information.
+            /// Creates a new file with an ID.
+            /// </summary>
+            public File(int id)
+            {
+                ID = id;
+            }
+
+            /// <summary>
+            /// Creates a new file with a name.
+            /// </summary>
+            /// <param name="name"></param>
+            public File(string name)
+            {
+                Name = name;
+            }
+
+            /// <summary>
+            /// Creates a new file with bytes.
+            /// </summary>
+            public File(byte[] bytes)
+            {
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a new File with an ID and bytes.
             /// </summary>
             public File(int id, byte[] bytes)
             {
@@ -270,7 +296,7 @@ namespace SoulsFormats.AC3
             }
 
             /// <summary>
-            /// Creates a new File with given information including name.
+            /// Creates a new File with an id, name, and bytes.
             /// </summary>
             public File(int id, string name, byte[] bytes)
             {

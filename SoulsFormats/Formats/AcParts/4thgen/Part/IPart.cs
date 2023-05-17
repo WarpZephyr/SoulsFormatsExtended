@@ -1,4 +1,4 @@
-﻿using static SoulsFormats.AcPartsFA;
+﻿using static SoulsFormats.AcParts4.Component;
 
 namespace SoulsFormats
 {
