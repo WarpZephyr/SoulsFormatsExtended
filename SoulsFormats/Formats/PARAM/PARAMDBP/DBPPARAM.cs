@@ -27,7 +27,7 @@ namespace SoulsFormats
         /// <summary>
         /// Create a new, empty DBPPARAM.
         /// </summary>
-        public DBPPARAM(){}
+        public DBPPARAM() { }
 
         /// <summary>
         /// Create a DBPPARAM using its DBP.

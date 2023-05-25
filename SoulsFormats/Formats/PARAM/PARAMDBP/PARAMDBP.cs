@@ -16,7 +16,7 @@ namespace SoulsFormats
         /// <summary>
         /// Creates a new, empty PARAMDBP.
         /// </summary>
-        public PARAMDBP(){}
+        public PARAMDBP() { }
 
         /// <summary>
         /// Creates a new PARAMDBP with the specified number of fields all set to the specified DisplayType and DisplayFormat and empty Descriptions.
@@ -321,7 +321,7 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a new, empty Field.
             /// </summary>
-            public Field(){}
+            public Field() { }
 
             /// <summary>
             /// Create a new Field with default values using the specified options.

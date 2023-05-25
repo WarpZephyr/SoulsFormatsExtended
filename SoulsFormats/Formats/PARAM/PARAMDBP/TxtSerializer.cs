@@ -77,7 +77,7 @@ namespace SoulsFormats
                     throw new InvalidDataException("DBP fields list has no fields, cannot serialize nothing.");
 
                 string[] descriptions = new string[dbp.Fields.Count];
-                for (int i = 0; i < dbp.Fields.Count; )
+                for (int i = 0; i < dbp.Fields.Count;)
                 {
                     descriptions[i] = dbp.Fields[i].Description;
                 }
