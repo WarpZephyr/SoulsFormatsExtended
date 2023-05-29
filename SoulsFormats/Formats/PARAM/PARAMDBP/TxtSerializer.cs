@@ -33,7 +33,7 @@ namespace SoulsFormats
                     Field field = dbp.Fields[i];
                     lines.Add($"[{i}]");
                     lines.Add($"Description: {field.Description}");
-                    lines.Add($"DisplayType: {field.FieldTypeToString()}");
+                    lines.Add($"DisplayType: {field.DisplayTypeToString()}");
                     lines.Add($"DisplayFormat: {field.DisplayFormat}");
                     lines.Add($"Default: {field.Default}");
                     lines.Add($"Increment: {field.Increment}");
@@ -116,7 +116,7 @@ namespace SoulsFormats
 
                     // Skip to the colon delimiter and past its whitespace, then get the value of and advance after each line in the entry.
                     var description = lines[i].Substring(lines[i].IndexOf(":") + 2); i++;
-                    var type = Field.GetFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2)); i++;
+                    var type = Field.GetDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2)); i++;
                     var format = lines[i].Substring(lines[i].IndexOf(":") + 2); i++;
                     var @default = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
                     var increment = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;

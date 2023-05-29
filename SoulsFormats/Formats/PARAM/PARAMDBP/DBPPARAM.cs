@@ -64,29 +64,29 @@ namespace SoulsFormats
             {
                 switch (cell.Dbp.DisplayType)
                 {
-                    case PARAMDBP.Field.FieldType.s8:
+                    case PARAMDEF.DefType.s8:
                         bw.WriteSByte(Convert.ToSByte(cell.Value));
                         break;
-                    case PARAMDBP.Field.FieldType.u8:
+                    case PARAMDEF.DefType.u8:
                         bw.WriteByte(Convert.ToByte(cell.Value));
                         break;
-                    case PARAMDBP.Field.FieldType.s16:
+                    case PARAMDEF.DefType.s16:
                         bw.WriteInt16(Convert.ToInt16(cell.Value));
                         break;
-                    case PARAMDBP.Field.FieldType.u16:
+                    case PARAMDEF.DefType.u16:
                         bw.WriteUInt16(Convert.ToUInt16(cell.Value));
                         break;
-                    case PARAMDBP.Field.FieldType.s32:
+                    case PARAMDEF.DefType.s32:
                         bw.WriteInt32(Convert.ToInt32(cell.Value));
                         break;
-                    case PARAMDBP.Field.FieldType.u32:
+                    case PARAMDEF.DefType.u32:
                         bw.WriteUInt32(Convert.ToUInt32(cell.Value));
                         break;
-                    case PARAMDBP.Field.FieldType.f32:
+                    case PARAMDEF.DefType.f32:
                         bw.WriteSingle(Convert.ToSingle(cell.Value));
                         break;
                     default:
-                        throw new NotImplementedException($"Field Type: {cell.Dbp.DisplayType} invalid or not implemented.");
+                        throw new NotImplementedException($"Display Type: {cell.Dbp.DisplayType} invalid or not implemented.");
                 }
             }
         }
@@ -115,40 +115,40 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Read the value of a cell using its field type.
+        /// Read the value of a cell using its display type.
         /// </summary>
         /// <param name="br">A BinaryReaderEx stream representing the DBPPARAM.</param>
-        /// <param name="type">The field type of the cell.</param>
+        /// <param name="type">The display type of the cell.</param>
         /// <returns>The value of the cell as an object.</returns>
-        /// <exception cref="NotImplementedException">If the provided field type does is not supported or does not exist.</exception>
-        private object ReadCellValue(BinaryReaderEx br, PARAMDBP.Field.FieldType type)
+        /// <exception cref="NotImplementedException">If the provided display type does is not supported or does not exist.</exception>
+        private object ReadCellValue(BinaryReaderEx br, PARAMDEF.DefType type)
         {
             object value;
             switch (type)
             {
-                case PARAMDBP.Field.FieldType.s8:
+                case PARAMDEF.DefType.s8:
                     value = br.ReadSByte();
                     break;
-                case PARAMDBP.Field.FieldType.u8:
+                case PARAMDEF.DefType.u8:
                     value = br.ReadByte();
                     break;
-                case PARAMDBP.Field.FieldType.s16:
+                case PARAMDEF.DefType.s16:
                     value = br.ReadInt16();
                     break;
-                case PARAMDBP.Field.FieldType.u16:
+                case PARAMDEF.DefType.u16:
                     value = br.ReadUInt16();
                     break;
-                case PARAMDBP.Field.FieldType.s32:
+                case PARAMDEF.DefType.s32:
                     value = br.ReadInt32();
                     break;
-                case PARAMDBP.Field.FieldType.u32:
+                case PARAMDEF.DefType.u32:
                     value = br.ReadUInt32();
                     break;
-                case PARAMDBP.Field.FieldType.f32:
+                case PARAMDEF.DefType.f32:
                     value = br.ReadSingle();
                     break;
                 default:
-                    throw new NotImplementedException($"Field Type: {type} invalid or not implemented.");
+                    throw new NotImplementedException($"Display Type: {type} invalid or not implemented.");
             }
             return value;
         }
@@ -176,13 +176,13 @@ namespace SoulsFormats
 
                     switch (Dbp.DisplayType)
                     {
-                        case PARAMDBP.Field.FieldType.s8: _Value = Convert.ToSByte(value); break;
-                        case PARAMDBP.Field.FieldType.u8: _Value = Convert.ToByte(value); break;
-                        case PARAMDBP.Field.FieldType.s16: _Value = Convert.ToInt16(value); break;
-                        case PARAMDBP.Field.FieldType.u16: _Value = Convert.ToUInt16(value); break;
-                        case PARAMDBP.Field.FieldType.s32: _Value = Convert.ToInt32(value); break;
-                        case PARAMDBP.Field.FieldType.u32: _Value = Convert.ToUInt32(value); break;
-                        case PARAMDBP.Field.FieldType.f32: _Value = Convert.ToSingle(value); break;
+                        case PARAMDEF.DefType.s8: _Value = Convert.ToSByte(value); break;
+                        case PARAMDEF.DefType.u8: _Value = Convert.ToByte(value); break;
+                        case PARAMDEF.DefType.s16: _Value = Convert.ToInt16(value); break;
+                        case PARAMDEF.DefType.u16: _Value = Convert.ToUInt16(value); break;
+                        case PARAMDEF.DefType.s32: _Value = Convert.ToInt32(value); break;
+                        case PARAMDEF.DefType.u32: _Value = Convert.ToUInt32(value); break;
+                        case PARAMDEF.DefType.f32: _Value = Convert.ToSingle(value); break;
                         default:
                             throw new NotImplementedException($"Conversion not specified for type {Dbp.DisplayType}");
                     }
