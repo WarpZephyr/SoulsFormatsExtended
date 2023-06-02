@@ -108,7 +108,7 @@ namespace SoulsFormats
                 return false;
             if (CellReader.Length > dbpParamSize)
                 return false;
-            AppliedParamDbp = dbp;
+            CellReader.Position = 0;
 
             var cells = new Cell[dbp.Fields.Count];
             for (int i = 0; i < dbp.Fields.Count; i++)
@@ -118,6 +118,8 @@ namespace SoulsFormats
                 cells[i] = new Cell(field, value);
             }
             Cells = cells;
+
+            AppliedParamDbp = dbp;
             return true;
         }
 

@@ -25,30 +25,6 @@ namespace SoulsFormats
         public byte[] AneData { get; set; }
 
         /// <summary>
-        /// Checks whether the data appears to be a file of this format.
-        /// </summary>
-        protected override bool Is(BinaryReaderEx br)
-        {
-            br.BigEndian = true;
-            if (br.Length < 64)
-                return false;
-
-            int aniEditOffset = br.ReadInt32();
-            int aneNameOffset = br.GetInt32(0xC);
-            int aneOffset = br.GetInt32(0x10);
-            int aneSize = br.GetInt32(0x14);
-
-            if (aniEditOffset > br.Length || aneNameOffset > br.Length || aneOffset > br.Length || aneSize > br.Length)
-                return false;
-
-            string aniEdit = br.GetASCII(aniEditOffset, 8);
-            return aniEdit == "#ANIEDIT" &&
-                   aniEditOffset < aneNameOffset &&
-                   aneNameOffset < aneOffset &&
-                   br.Length - aneOffset == aneSize;
-        }
-
-        /// <summary>
         /// Deserializes file data from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
@@ -85,6 +61,30 @@ namespace SoulsFormats
             bw.WriteFixStr(AniEdit, 0x10);
             bw.WriteFixStr(AneName, 0x10);
             bw.WriteBytes(AneData);
+        }
+
+        /// <summary>
+        /// Checks whether the data appears to be a file of this format.
+        /// </summary>
+        protected override bool Is(BinaryReaderEx br)
+        {
+            br.BigEndian = true;
+            if (br.Length < 64)
+                return false;
+
+            int aniEditOffset = br.ReadInt32();
+            int aneNameOffset = br.GetInt32(0xC);
+            int aneOffset = br.GetInt32(0x10);
+            int aneSize = br.GetInt32(0x14);
+
+            if (aniEditOffset > br.Length || aneNameOffset > br.Length || aneOffset > br.Length || aneSize > br.Length)
+                return false;
+
+            string aniEdit = br.GetASCII(aniEditOffset, 8);
+            return aniEdit == "#ANIEDIT" &&
+                   aniEditOffset < aneNameOffset &&
+                   aneNameOffset < aneOffset &&
+                   br.Length - aneOffset == aneSize;
         }
     }
 }

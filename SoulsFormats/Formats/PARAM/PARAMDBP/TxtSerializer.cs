@@ -283,7 +283,8 @@ namespace SoulsFormats
                 if (!File.Exists(path))
                     throw new FileNotFoundException("There must be a file to deserialize.");
 
-                string[] descriptions = File.ReadAllLines(path);
+                var encoding = Encoding.GetEncoding(932); // Shift-JIS
+                string[] descriptions = File.ReadAllLines(path, encoding);
 
                 if (descriptions == null)
                     throw new InvalidDataException("Descriptions were null.");
@@ -292,7 +293,7 @@ namespace SoulsFormats
                 if (descriptions.Length != dbp.Fields.Count)
                     throw new InvalidDataException("The number of descriptions does not match the number of fields.");
 
-                for (int i = 0; i < dbp.Fields.Count;)
+                for (int i = 0; i < dbp.Fields.Count; i++)
                     dbp.Fields[i].Description = descriptions[i];
             }
 
