@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using DefType = SoulsFormats.PARAMDEF.DefType;
 using EditFlags = SoulsFormats.PARAMDEF.EditFlags;
 
 namespace SoulsFormats

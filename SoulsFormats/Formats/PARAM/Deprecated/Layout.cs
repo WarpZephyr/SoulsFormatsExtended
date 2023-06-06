@@ -138,25 +138,25 @@ namespace SoulsFormats
                 var def = new PARAMDEF { ParamType = paramType, Unicode = true, FormatVersion = 201 };
                 foreach (Entry entry in this)
                 {
-                    PARAMDEF.DefType fieldType;
+                    DefType fieldType;
                     switch (entry.Type)
                     {
-                        case CellType.dummy8: fieldType = PARAMDEF.DefType.dummy8; break;
+                        case CellType.dummy8: fieldType = DefType.dummy8; break;
                         case CellType.b8:
                         case CellType.u8:
-                        case CellType.x8: fieldType = PARAMDEF.DefType.u8; break;
-                        case CellType.s8: fieldType = PARAMDEF.DefType.s8; break;
+                        case CellType.x8: fieldType = DefType.u8; break;
+                        case CellType.s8: fieldType = DefType.s8; break;
                         case CellType.b16:
                         case CellType.u16:
-                        case CellType.x16: fieldType = PARAMDEF.DefType.u16; break;
-                        case CellType.s16: fieldType = PARAMDEF.DefType.s16; break;
+                        case CellType.x16: fieldType = DefType.u16; break;
+                        case CellType.s16: fieldType = DefType.s16; break;
                         case CellType.b32:
                         case CellType.u32:
-                        case CellType.x32: fieldType = PARAMDEF.DefType.u32; break;
-                        case CellType.s32: fieldType = PARAMDEF.DefType.s32; break;
-                        case CellType.f32: fieldType = PARAMDEF.DefType.f32; break;
-                        case CellType.fixstr: fieldType = PARAMDEF.DefType.fixstr; break;
-                        case CellType.fixstrW: fieldType = PARAMDEF.DefType.fixstrW; break;
+                        case CellType.x32: fieldType = DefType.u32; break;
+                        case CellType.s32: fieldType = DefType.s32; break;
+                        case CellType.f32: fieldType = DefType.f32; break;
+                        case CellType.fixstr: fieldType = DefType.fixstr; break;
+                        case CellType.fixstrW: fieldType = DefType.fixstrW; break;
 
                         default:
                             throw new NotImplementedException($"DefType not specified for CellType {entry.Type}.");

@@ -42,18 +42,18 @@ namespace SoulsFormats
             /// </summary>
             public PARAMTDF ToParamtdf(string name)
             {
-                PARAMDEF.DefType tdfType;
+                DefType tdfType;
                 switch (Type)
                 {
                     case CellType.u8:
-                    case CellType.x8: tdfType = PARAMDEF.DefType.u8; break;
-                    case CellType.s8: tdfType = PARAMDEF.DefType.s8; break;
+                    case CellType.x8: tdfType = DefType.u8; break;
+                    case CellType.s8: tdfType = DefType.s8; break;
                     case CellType.u16:
-                    case CellType.x16: tdfType = PARAMDEF.DefType.u16; break;
-                    case CellType.s16: tdfType = PARAMDEF.DefType.s16; break;
+                    case CellType.x16: tdfType = DefType.u16; break;
+                    case CellType.s16: tdfType = DefType.s16; break;
                     case CellType.u32:
-                    case CellType.x32: tdfType = PARAMDEF.DefType.u32; break;
-                    case CellType.s32: tdfType = PARAMDEF.DefType.s32; break;
+                    case CellType.x32: tdfType = DefType.u32; break;
+                    case CellType.s32: tdfType = DefType.s32; break;
 
                     default:
                         throw new InvalidDataException($"Layout.Enum type {Type} may not be used in a TDF.");

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -8,11 +9,38 @@ namespace SoulsFormats
     public partial class PARAMDBP : SoulsFile<PARAMDBP>
     {
         /// <summary>
+        /// The default, ShiftJIS encoding.
+        /// </summary>
+        public static Encoding DefaultEncoding = Encoding.GetEncoding("shift-jis");
+
+        /// <summary>
         /// Serializes params and dbps to txt.
         /// </summary>
         public class TxtSerializer
         {
             #region Serialize
+
+            /// <summary>
+            /// Serialize a dbp to a txt and return a byte array.
+            /// </summary>
+            /// <param name="dbp">A dbp.</param>
+            /// <returns>A byte array.</returns>
+            public static byte[] Serialize(PARAMDBP dbp)
+            {
+                var encoding = Encoding.GetEncoding(932); // Shift-JIS
+                string[] lines = SerializeDbp(dbp);
+
+                using (var ms = new MemoryStream())
+                {
+                    using (var tw = new StreamWriter(ms, encoding))
+                    {
+                        foreach (var line in lines)
+                            tw.WriteLine(line);
+                    }
+                    ms.Seek(0, SeekOrigin.Begin);
+                    return ms.ToArray();
+                }
+            }
 
             /// <summary>
             /// Serialize a dbp to a txt file.
@@ -21,18 +49,32 @@ namespace SoulsFormats
             /// <param name="path">The path to create a new txt file on containing the serialized dbp.</param>
             public static void Serialize(PARAMDBP dbp, string path)
             {
+                var encoding = Encoding.GetEncoding(932); // Shift-JIS
+                string directory = Path.GetDirectoryName(path);
+                string name = $"{Path.GetFileNameWithoutExtension(path)}.txt";
+                string[] lines = SerializeDbp(dbp);
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllLines($"{directory}\\{name}", lines, encoding);
+            }
+
+            /// <summary>
+            /// Serialize a dbp to a txt as a string array.
+            /// </summary>
+            /// <param name="dbp">A dbp.</param>
+            /// <returns>A string array.</returns>
+            public static string[] SerializeDbp(PARAMDBP dbp)
+            {
                 if (dbp.Fields == null)
                     throw new InvalidDataException("Dbp fields were null.");
                 if (dbp.Fields.Count == 0)
                     throw new InvalidDataException("Dbp had no fields.");
 
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
                 List<string> lines = new List<string>();
                 for (int i = 0; i < dbp.Fields.Count; i++)
                 {
                     Field field = dbp.Fields[i];
                     lines.Add($"[{i}]");
-                    lines.Add($"Description   : {(field.Description == "" ? "%NULL%" : field.Description)}");
+                    lines.Add($"DisplayName   : {(field.DisplayName == "" ? "%NULL%" : field.DisplayName)}");
                     lines.Add($"DisplayFormat : {field.DisplayFormat}");
                     lines.Add($"DisplayType   : {field.DisplayType}");
                     lines.Add($"Default       : {field.Default}");
@@ -40,10 +82,8 @@ namespace SoulsFormats
                     lines.Add($"Minimum       : {field.Minimum}");
                     lines.Add($"Maximum       : {field.Maximum}");
                 }
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
-                string directory = Path.GetDirectoryName(path);
-                string name = $"{Path.GetFileNameWithoutExtension(path)}.txt";
-                File.WriteAllLines($"{directory}\\{name}", lines, encoding);
+
+                return lines.ToArray();
             }
 
             /// <summary>
@@ -64,7 +104,7 @@ namespace SoulsFormats
                 {
                     var cell = param.Cells[i];
                     lines.Add($"[{i}]");
-                    lines.Add($"Description   : {(cell.Description == "" ? "%NULL%" : cell.Description)}");
+                    lines.Add($"DisplayName   : {(cell.DisplayName == "" ? "%NULL%" : cell.DisplayName)}");
                     lines.Add($"DisplayFormat : {cell.DisplayFormat}");
                     lines.Add($"DisplayType   : {cell.DisplayType}");
                     lines.Add($"Default       : {cell.Default}");
@@ -73,10 +113,9 @@ namespace SoulsFormats
                     lines.Add($"Maximum       : {cell.Maximum}");
                     lines.Add($"Value         : {cell.Value}");
                 }
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
                 string directory = Path.GetDirectoryName(path);
                 string name = $"{Path.GetFileNameWithoutExtension(path)}.txt";
-                File.WriteAllLines($"{directory}\\{name}", lines, encoding);
+                File.WriteAllLines($"{directory}\\{name}", lines, DefaultEncoding);
             }
 
             /// <summary>
@@ -93,11 +132,10 @@ namespace SoulsFormats
 
                 string[] descriptions = new string[dbp.Fields.Count];
                 for (int i = 0; i < dbp.Fields.Count; i++)
-                    descriptions[i] = dbp.Fields[i].Description == "" ? "%NULL%" : dbp.Fields[i].Description;
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
+                    descriptions[i] = dbp.Fields[i].DisplayName == "" ? "%NULL%" : dbp.Fields[i].DisplayName;
                 string directory = Path.GetDirectoryName(path);
                 string name = $"{Path.GetFileNameWithoutExtension(path)}.descriptions.txt";
-                File.WriteAllLines($"{directory}\\{name}", descriptions, encoding);
+                File.WriteAllLines($"{directory}\\{name}", descriptions, DefaultEncoding);
             }
 
             /// <summary>
@@ -115,10 +153,9 @@ namespace SoulsFormats
                 string[] values = new string[param.Cells.Count];
                 for (int i = 0; i < param.Cells.Count; i++)
                     values[i] = param.Cells[i].Value.ToString();
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
                 string directory = Path.GetDirectoryName(path);
                 string name = $"{Path.GetFileNameWithoutExtension(path)}.values.txt";
-                File.WriteAllLines($"{directory}\\{name}", values, encoding);
+                File.WriteAllLines($"{directory}\\{name}", values, DefaultEncoding);
             }
 
             /// <summary>
@@ -154,6 +191,27 @@ namespace SoulsFormats
             #region Deserialize
 
             /// <summary>
+            /// Deserialize a byte array containing txt data to a dbp.
+            /// </summary>
+            /// <param name="bytes">A byte array.</param>
+            /// <returns>A new dbp.</returns>
+            public static PARAMDBP DeserializeDbp(byte[] bytes)
+            {
+                using (var stream = new StreamReader(new MemoryStream(bytes), DefaultEncoding))
+                {
+                    List<string> lines = new List<string>();
+                    string line = "";
+                    do
+                    {
+                        line = stream.ReadLine();
+                        if (line != null)
+                            lines.Add(line);
+                    } while (line != null);
+                    return DeserializeDbp(lines.ToArray());
+                }
+            }
+
+            /// <summary>
             /// Deserialize a txt file to a dbp.
             /// </summary>
             /// <param name="path">A path to a txt file with dbp data.</param>
@@ -167,8 +225,17 @@ namespace SoulsFormats
                 if (!File.Exists(path))
                     throw new FileNotFoundException("There must be a file to deserialize.");
 
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
-                string[] lines = File.ReadAllLines(path, encoding);
+                return DeserializeDbp(File.ReadAllLines(path, DefaultEncoding));
+            }
+
+            /// <summary>
+            /// Deserialize a dbp from a string array.
+            /// </summary>
+            /// <param name="lines">An array of strings.</param>
+            /// <returns>A dbp.</returns>
+            /// <exception cref="InvalidDataException">Something is wrong with the provided data.</exception>
+            public static PARAMDBP DeserializeDbp(string[] lines)
+            {
                 if (lines.Length == 0)
                     throw new InvalidDataException("File is empty.");
                 if (lines.Length % 8 != 0)
@@ -187,13 +254,13 @@ namespace SoulsFormats
                     var description = lines[i].Substring(lines[i].IndexOf(":") + 2); i++;
                     var format = lines[i].Substring(lines[i].IndexOf(":") + 2); i++;
                     var type = Field.GetDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2)); i++;
-                    var @default = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var increment = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var minimum = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var maximum = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type);
+                    var @default = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var increment = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var minimum = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var maximum = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type);
 
                     // Set the field values.
-                    field.Description = description;
+                    field.DisplayName = description;
                     field.DisplayFormat = format;
                     field.DisplayType = type;
                     field.Default = @default;
@@ -221,8 +288,7 @@ namespace SoulsFormats
                 if (!File.Exists(path))
                     throw new FileNotFoundException("There must be a file to deserialize.");
 
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
-                string[] lines = File.ReadAllLines(path, encoding);
+                string[] lines = File.ReadAllLines(path, DefaultEncoding);
                 if (lines.Length == 0)
                     throw new InvalidDataException("File is empty.");
                 if (lines.Length % 9 != 0)
@@ -242,14 +308,14 @@ namespace SoulsFormats
                     var description = lines[i].Substring(lines[i].IndexOf(":") + 2); i++;
                     var format = lines[i].Substring(lines[i].IndexOf(":") + 2); i++;
                     var type = Field.GetDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2)); i++;
-                    var @default = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var increment = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var minimum = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var maximum = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
-                    var value = Field.ConvertToFieldType(lines[i].Substring(lines[i].IndexOf(":") + 2), type);
+                    var @default = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var increment = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var minimum = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var maximum = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type); i++;
+                    var value = Field.ConvertToDisplayType(lines[i].Substring(lines[i].IndexOf(":") + 2), type);
 
                     // Set the field values.
-                    field.Description = description;
+                    field.DisplayName = description;
                     field.DisplayFormat = format;
                     field.DisplayType = type;
                     field.Default = @default;
@@ -283,8 +349,7 @@ namespace SoulsFormats
                 if (!File.Exists(path))
                     throw new FileNotFoundException("There must be a file to deserialize.");
 
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
-                string[] descriptions = File.ReadAllLines(path, encoding);
+                string[] descriptions = File.ReadAllLines(path, DefaultEncoding);
 
                 if (descriptions == null)
                     throw new InvalidDataException("Descriptions were null.");
@@ -294,7 +359,7 @@ namespace SoulsFormats
                     throw new InvalidDataException("The number of descriptions does not match the number of fields.");
 
                 for (int i = 0; i < dbp.Fields.Count; i++)
-                    dbp.Fields[i].Description = descriptions[i];
+                    dbp.Fields[i].DisplayName = descriptions[i];
             }
 
             /// <summary>
@@ -402,8 +467,7 @@ namespace SoulsFormats
                 if (!File.Exists(path))
                     return null;
 
-                var encoding = Encoding.GetEncoding(932); // Shift-JIS
-                string[] lines = File.ReadAllLines(path, encoding);
+                string[] lines = File.ReadAllLines(path, DefaultEncoding);
                 if (lines.Length == 0)
                     return null;
                 if (lines.Length % 9 != 0)

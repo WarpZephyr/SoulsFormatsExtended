@@ -12,17 +12,17 @@ namespace SoulsFormats
         /// <summary>
         /// The strings contained in this FMG.
         /// </summary>
-        public List<Entry> Entries;
+        public List<Entry> Entries { get; set; }
 
         /// <summary>
         /// Indicates file format; 0 - DeS, 1 - DS1/DS2, 2 - DS3/BB.
         /// </summary>
-        public FMGVersion Version;
+        public FMGVersion Version { get; set; }
 
         /// <summary>
         /// FMG file endianness. (Big = true)
         /// </summary>
-        public bool BigEndian;
+        public bool BigEndian { get; set; }
 
         /// <summary>
         /// Creates an empty FMG configured for DS1/DS2.
@@ -70,14 +70,15 @@ namespace SoulsFormats
 
             long stringOffsetsOffset;
             if (wide)
+            {
                 stringOffsetsOffset = br.ReadInt64();
-            else
-                stringOffsetsOffset = br.ReadInt32();
-
-            if (wide)
                 br.AssertInt64(0);
+            }
             else
+            {
+                stringOffsetsOffset = br.ReadInt32();
                 br.AssertInt32(0);
+            }    
 
             Entries = new List<Entry>(groupCount);
             for (int i = 0; i < groupCount; i++)
@@ -214,12 +215,12 @@ namespace SoulsFormats
             /// <summary>
             /// The ID of this entry.
             /// </summary>
-            public int ID;
+            public int ID { get; set; }
 
             /// <summary>
             /// The text of this entry.
             /// </summary>
-            public string Text;
+            public string Text { get; set; }
 
             /// <summary>
             /// Creates a new entry with the specified ID and text.

@@ -17,29 +17,60 @@ namespace SoulsFormats
             #region Serialize
 
             /// <summary>
+            /// Serialize a dbp to an xml an return a byte array.
+            /// </summary>
+            /// <param name="dbp">A dbp.</param>
+            /// <returns>A byte array.</returns>
+            public static byte[] Serialize(PARAMDBP dbp)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    var xws = new XmlWriterSettings();
+                    xws.Indent = true;
+                    xws.Encoding = DefaultEncoding;
+                    var xw = XmlWriter.Create(stream, xws);
+                    Serialize(dbp, xw);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    return stream.ToArray();
+                }
+            }
+
+            /// <summary>
             /// Serialize a dbp to an xml file.
             /// </summary>
             /// <param name="dbp">A dbp to serialize to xml.</param>
             /// <param name="outPath">The path to create a new xml file on containing the serialized dbp.</param>
             public static void Serialize(PARAMDBP dbp, string outPath)
             {
+                Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+                var xws = new XmlWriterSettings();
+                xws.Indent = true;
+                xws.Encoding = DefaultEncoding;
+                var xw = XmlWriter.Create($"{Path.GetDirectoryName(outPath)}\\{Path.GetFileNameWithoutExtension(outPath)}.xml", xws);
+                Serialize(dbp, xw, $"{Path.GetFileNameWithoutExtension(outPath)}.dbp");
+            }
+
+            /// <summary>
+            /// Serialize a dbp to an xml writer.
+            /// </summary>
+            /// <param name="dbp">A dbp.</param>
+            /// <param name="xw">An xml writer.</param>
+            /// <param name="dbpname">The name of the dbp if applicable.</param>
+            public static void Serialize(PARAMDBP dbp, XmlWriter xw, string dbpname = null)
+            {
                 if (dbp.Fields == null)
                     throw new InvalidDataException("Dbp fields were null.");
                 if (dbp.Fields.Count == 0)
                     throw new InvalidDataException("Dbp had no fields.");
 
-                Directory.CreateDirectory(Path.GetDirectoryName(outPath));
-                var xws = new XmlWriterSettings();
-                xws.Indent = true;
-                var xw = XmlWriter.Create($"{Path.GetDirectoryName(outPath)}\\{Path.GetFileNameWithoutExtension(outPath)}.xml", xws);
                 xw.WriteStartElement("dbp");
                 xw.WriteElementString("BigEndian", dbp.WriteBigEndian.ToString());
-                xw.WriteElementString("Name", $"{Path.GetFileNameWithoutExtension(outPath)}.dbp");
+                xw.WriteElementString("Name", dbpname ?? "NoName");
                 xw.WriteStartElement("Fields");
                 foreach (var field in dbp.Fields)
                 {
                     xw.WriteStartElement("Field");
-                    xw.WriteElementString("Description", field.Description == "" ? "%NULL%" : field.Description);
+                    xw.WriteElementString("DisplayName", field.DisplayName == "" ? "%NULL%" : field.DisplayName);
                     xw.WriteElementString("DisplayFormat", field.DisplayFormat);
                     xw.WriteElementString("DisplayType", field.DisplayType.ToString());
                     xw.WriteElementString("Default", field.Default.ToString());
@@ -69,6 +100,7 @@ namespace SoulsFormats
                 Directory.CreateDirectory(Path.GetDirectoryName(outPath));
                 var xws = new XmlWriterSettings();
                 xws.Indent = true;
+                xws.Encoding = DefaultEncoding;
                 var xw = XmlWriter.Create($"{Path.GetDirectoryName(outPath)}\\{Path.GetFileNameWithoutExtension(outPath)}.xml", xws);
                 xw.WriteStartElement("dbpparam");
                 xw.WriteElementString("Name", $"{Path.GetFileNameWithoutExtension(outPath)}.bin");
@@ -76,7 +108,7 @@ namespace SoulsFormats
                 foreach (var cell in param.Cells)
                 {
                     xw.WriteStartElement("Cell");
-                    xw.WriteElementString("Description", cell.Description == "" ? "%NULL%" : cell.Description);
+                    xw.WriteElementString("DisplayName", cell.DisplayName == "" ? "%NULL%" : cell.DisplayName);
                     xw.WriteElementString("DisplayFormat", cell.DisplayFormat);
                     xw.WriteElementString("DisplayType", cell.DisplayType.ToString());
                     xw.WriteElementString("Default", cell.Default.ToString());
@@ -124,7 +156,24 @@ namespace SoulsFormats
             #region Deserialize
 
             /// <summary>
-            /// Deserialize an xml file to a dbp.
+            /// Deserialize an xml file from a byte array to a dbp.
+            /// </summary>
+            /// <param name="bytes">A byte array</param>
+            /// <returns>A new dbp.</returns>
+            public static PARAMDBP DeserializeDbp(byte[] bytes)
+            {
+                XmlDocument xml = new XmlDocument();
+
+                using (var ms = new MemoryStream(bytes))
+                {
+                    xml.Load(ms);
+                }
+
+                return DeserializeDbp(xml);
+            }
+
+            /// <summary>
+            /// Deserialize an xml file from a path to a dbp.
             /// </summary>
             /// <param name="path">A path to an xml file with dbp data.</param>
             /// <returns>A new dbp.</returns>
@@ -137,27 +186,37 @@ namespace SoulsFormats
                 if (!File.Exists(path))
                     throw new FileNotFoundException("There must be a file to deserialize.");
 
-                var dbp = new PARAMDBP();
                 XmlDocument xml = new XmlDocument();
                 xml.Load(path);
 
+                return DeserializeDbp(xml);
+            }
+
+            /// <summary>
+            /// Deserialize an xml file from an xml document to dbp.
+            /// </summary>
+            /// <param name="xml">An xml document.</param>
+            /// <returns>A new dbp.</returns>
+            public static PARAMDBP DeserializeDbp(XmlDocument xml)
+            {
+                var dbp = new PARAMDBP();
                 bool bigendian = bool.Parse(xml.SelectSingleNode("dbp/BigEndian").InnerText);
-                string name = xml.SelectSingleNode("dbp/Name").InnerText;
+                string dbpname = xml.SelectSingleNode("dbp/Name").InnerText;
 
                 var fieldsNode = xml.SelectSingleNode("dbp/Fields");
                 foreach (XmlNode fieldNode in fieldsNode.SelectNodes("Field"))
                 {
                     var field = new Field();
-                    string description = fieldNode.SelectSingleNode("Description").InnerText;
+                    string name = fieldNode.SelectSingleNode("DisplayName").InnerText;
                     string format = fieldNode.SelectSingleNode("DisplayFormat").InnerText;
-                    var type = (Field.FieldType)Enum.Parse(typeof(Field.FieldType), fieldNode.SelectSingleNode("DisplayType").InnerText);
-                    object @default = Field.ConvertToFieldType(fieldNode.SelectSingleNode("Default").InnerText, type);
-                    object minimum = Field.ConvertToFieldType(fieldNode.SelectSingleNode("Minimum").InnerText, type);
-                    object maximum = Field.ConvertToFieldType(fieldNode.SelectSingleNode("Maximum").InnerText, type);
-                    
-                    object increment = Field.ConvertToFieldType(fieldNode.SelectSingleNode("Increment").InnerText, type);
+                    var type = (DefType)Enum.Parse(typeof(DefType), fieldNode.SelectSingleNode("DisplayType").InnerText);
+                    object @default = Field.ConvertToDisplayType(fieldNode.SelectSingleNode("Default").InnerText, type);
+                    object minimum = Field.ConvertToDisplayType(fieldNode.SelectSingleNode("Minimum").InnerText, type);
+                    object maximum = Field.ConvertToDisplayType(fieldNode.SelectSingleNode("Maximum").InnerText, type);
 
-                    field.Description = description;
+                    object increment = Field.ConvertToDisplayType(fieldNode.SelectSingleNode("Increment").InnerText, type);
+
+                    field.DisplayName = name;
                     field.DisplayFormat = format;
                     field.DisplayType = type;
                     field.Default = @default;
@@ -190,23 +249,23 @@ namespace SoulsFormats
                 XmlDocument xml = new XmlDocument();
                 xml.Load(path);
 
-                string name = xml.SelectSingleNode("dbpparam/Name").InnerText;
+                string paramname = xml.SelectSingleNode("dbpparam/Name").InnerText;
 
                 var cellsNode = xml.SelectSingleNode("dbpparam/Cells");
                 var paramValues = new List<object>();
                 foreach (XmlNode cellNode in cellsNode.SelectNodes("Cell"))
                 {
                     var field = new Field();
-                    string description = cellNode.SelectSingleNode("Description").InnerText;
+                    string name = cellNode.SelectSingleNode("DisplayName").InnerText;
                     string format = cellNode.SelectSingleNode("DisplayFormat").InnerText;
-                    var type = (Field.FieldType)Enum.Parse(typeof(Field.FieldType), cellNode.SelectSingleNode("DisplayType").InnerText);
-                    object @default = Field.ConvertToFieldType(cellNode.SelectSingleNode("Default").InnerText, type);
-                    object minimum = Field.ConvertToFieldType(cellNode.SelectSingleNode("Minimum").InnerText, type);
-                    object maximum = Field.ConvertToFieldType(cellNode.SelectSingleNode("Maximum").InnerText, type);
-                    object increment = Field.ConvertToFieldType(cellNode.SelectSingleNode("Increment").InnerText, type);
-                    object value = Field.ConvertToFieldType(cellNode.SelectSingleNode("Value").InnerText, type);
+                    var type = (DefType)Enum.Parse(typeof(DefType), cellNode.SelectSingleNode("DisplayType").InnerText);
+                    object @default = Field.ConvertToDisplayType(cellNode.SelectSingleNode("Default").InnerText, type);
+                    object minimum = Field.ConvertToDisplayType(cellNode.SelectSingleNode("Minimum").InnerText, type);
+                    object maximum = Field.ConvertToDisplayType(cellNode.SelectSingleNode("Maximum").InnerText, type);
+                    object increment = Field.ConvertToDisplayType(cellNode.SelectSingleNode("Increment").InnerText, type);
+                    object value = Field.ConvertToDisplayType(cellNode.SelectSingleNode("Value").InnerText, type);
 
-                    field.Description = description;
+                    field.DisplayName = name;
                     field.DisplayFormat = format;
                     field.DisplayType = type;
                     field.Default = @default;

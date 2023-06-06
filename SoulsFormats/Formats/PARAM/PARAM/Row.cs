@@ -112,7 +112,7 @@ namespace SoulsFormats
                 var cells = new Cell[paramdef.Fields.Count];
 
                 int bitOffset = -1;
-                PARAMDEF.DefType bitType = PARAMDEF.DefType.u8;
+                DefType bitType = DefType.u8;
                 ulong bitValue = 0; // This is ulong so checkOrphanedBits doesn't fail on offsets of 32
                 const int BIT_VALUE_SIZE = 64;
 
@@ -128,33 +128,33 @@ namespace SoulsFormats
                 {
                     PARAMDEF.Field field = paramdef.Fields[i];
                     object value = null;
-                    PARAMDEF.DefType type = field.DisplayType;
+                    DefType type = field.DisplayType;
 
-                    if (type == PARAMDEF.DefType.s8)
+                    if (type == DefType.s8)
                         value = br.ReadSByte();
-                    else if (type == PARAMDEF.DefType.s16)
+                    else if (type == DefType.s16)
                         value = br.ReadInt16();
-                    else if (type == PARAMDEF.DefType.s32 || type == PARAMDEF.DefType.b32)
+                    else if (type == DefType.s32 || type == DefType.b32)
                         value = br.ReadInt32();
-                    else if (type == PARAMDEF.DefType.f32 || type == PARAMDEF.DefType.angle32)
+                    else if (type == DefType.f32 || type == DefType.angle32)
                         value = br.ReadSingle();
-                    else if (type == PARAMDEF.DefType.f64)
+                    else if (type == DefType.f64)
                         value = br.ReadDouble();
-                    else if (type == PARAMDEF.DefType.fixstr)
+                    else if (type == DefType.fixstr)
                         value = br.ReadFixStr(field.ArrayLength);
-                    else if (type == PARAMDEF.DefType.fixstrW)
+                    else if (type == DefType.fixstrW)
                         value = br.ReadFixStrW(field.ArrayLength * 2);
                     else if (ParamUtil.IsBitType(type))
                     {
                         if (field.BitSize == -1)
                         {
-                            if (type == PARAMDEF.DefType.u8)
+                            if (type == DefType.u8)
                                 value = br.ReadByte();
-                            else if (type == PARAMDEF.DefType.u16)
+                            else if (type == DefType.u16)
                                 value = br.ReadUInt16();
-                            else if (type == PARAMDEF.DefType.u32)
+                            else if (type == DefType.u32)
                                 value = br.ReadUInt32();
-                            else if (type == PARAMDEF.DefType.dummy8)
+                            else if (type == DefType.dummy8)
                                 value = br.ReadBytes(field.ArrayLength);
                         }
                     }
@@ -168,7 +168,7 @@ namespace SoulsFormats
                     }
                     else
                     {
-                        PARAMDEF.DefType newBitType = type == PARAMDEF.DefType.dummy8 ? PARAMDEF.DefType.u8 : type;
+                        DefType newBitType = type == DefType.dummy8 ? DefType.u8 : type;
                         int bitLimit = ParamUtil.GetBitLimit(newBitType);
 
                         if (field.BitSize == 0)
@@ -181,21 +181,21 @@ namespace SoulsFormats
                             checkOrphanedBits();
                             bitOffset = 0;
                             bitType = newBitType;
-                            if (bitType == PARAMDEF.DefType.u8)
+                            if (bitType == DefType.u8)
                                 bitValue = br.ReadByte();
-                            else if (bitType == PARAMDEF.DefType.u16)
+                            else if (bitType == DefType.u16)
                                 bitValue = br.ReadUInt16();
-                            else if (bitType == PARAMDEF.DefType.u32)
+                            else if (bitType == DefType.u32)
                                 bitValue = br.ReadUInt32();
                         }
 
                         ulong shifted = bitValue << (BIT_VALUE_SIZE - field.BitSize - bitOffset) >> (BIT_VALUE_SIZE - field.BitSize);
                         bitOffset += field.BitSize;
-                        if (bitType == PARAMDEF.DefType.u8)
+                        if (bitType == DefType.u8)
                             value = (byte)shifted;
-                        else if (bitType == PARAMDEF.DefType.u16)
+                        else if (bitType == DefType.u16)
                             value = (ushort)shifted;
-                        else if (bitType == PARAMDEF.DefType.u32)
+                        else if (bitType == DefType.u32)
                             value = (uint)shifted;
                     }
 
@@ -231,7 +231,7 @@ namespace SoulsFormats
                     bw.FillUInt32($"RowOffset{index}", (uint)bw.Position);
 
                 int bitOffset = -1;
-                PARAMDEF.DefType bitType = PARAMDEF.DefType.u8;
+                DefType bitType = DefType.u8;
                 ulong bitValue = 0;
                 const int BIT_VALUE_SIZE = 64;
 
@@ -240,33 +240,33 @@ namespace SoulsFormats
                     Cell cell = Cells[i];
                     object value = cell.Value;
                     PARAMDEF.Field field = cell.Def;
-                    PARAMDEF.DefType type = field.DisplayType;
+                    DefType type = field.DisplayType;
 
-                    if (type == PARAMDEF.DefType.s8)
+                    if (type == DefType.s8)
                         bw.WriteSByte((sbyte)value);
-                    else if (type == PARAMDEF.DefType.s16)
+                    else if (type == DefType.s16)
                         bw.WriteInt16((short)value);
-                    else if (type == PARAMDEF.DefType.s32 || type == PARAMDEF.DefType.b32)
+                    else if (type == DefType.s32 || type == DefType.b32)
                         bw.WriteInt32((int)value);
-                    else if (type == PARAMDEF.DefType.f32 || type == PARAMDEF.DefType.angle32)
+                    else if (type == DefType.f32 || type == DefType.angle32)
                         bw.WriteSingle((float)value);
-                    else if (type == PARAMDEF.DefType.f64)
+                    else if (type == DefType.f64)
                         bw.WriteDouble((double)value);
-                    else if (type == PARAMDEF.DefType.fixstr)
+                    else if (type == DefType.fixstr)
                         bw.WriteFixStr((string)value, field.ArrayLength);
-                    else if (type == PARAMDEF.DefType.fixstrW)
+                    else if (type == DefType.fixstrW)
                         bw.WriteFixStrW((string)value, field.ArrayLength * 2);
                     else if (ParamUtil.IsBitType(type))
                     {
                         if (field.BitSize == -1)
                         {
-                            if (type == PARAMDEF.DefType.u8)
+                            if (type == DefType.u8)
                                 bw.WriteByte((byte)value);
-                            else if (type == PARAMDEF.DefType.u16)
+                            else if (type == DefType.u16)
                                 bw.WriteUInt16((ushort)value);
-                            else if (type == PARAMDEF.DefType.u32)
+                            else if (type == DefType.u32)
                                 bw.WriteUInt32((uint)value);
-                            else if (type == PARAMDEF.DefType.dummy8)
+                            else if (type == DefType.dummy8)
                                 bw.WriteBytes((byte[])value);
                         }
                         else
@@ -274,16 +274,16 @@ namespace SoulsFormats
                             if (bitOffset == -1)
                             {
                                 bitOffset = 0;
-                                bitType = type == PARAMDEF.DefType.dummy8 ? PARAMDEF.DefType.u8 : type;
+                                bitType = type == DefType.dummy8 ? DefType.u8 : type;
                                 bitValue = 0;
                             }
 
                             uint shifted = 0;
-                            if (bitType == PARAMDEF.DefType.u8)
+                            if (bitType == DefType.u8)
                                 shifted = (byte)value;
-                            else if (bitType == PARAMDEF.DefType.u16)
+                            else if (bitType == DefType.u16)
                                 shifted = (ushort)value;
-                            else if (bitType == PARAMDEF.DefType.u32)
+                            else if (bitType == DefType.u32)
                                 shifted = (uint)value;
                             // Shift left first to clear any out-of-range bits
                             shifted = shifted << (BIT_VALUE_SIZE - field.BitSize) >> (BIT_VALUE_SIZE - field.BitSize - bitOffset);
@@ -298,10 +298,10 @@ namespace SoulsFormats
                             else
                             {
                                 PARAMDEF.Field nextField = Cells[i + 1].Def;
-                                PARAMDEF.DefType nextType = nextField.DisplayType;
+                                DefType nextType = nextField.DisplayType;
                                 int bitLimit = ParamUtil.GetBitLimit(bitType);
                                 if (!ParamUtil.IsBitType(nextType) || nextField.BitSize == -1 || bitOffset + nextField.BitSize > bitLimit
-                                    || (nextType == PARAMDEF.DefType.dummy8 ? PARAMDEF.DefType.u8 : nextType) != bitType)
+                                    || (nextType == DefType.dummy8 ? DefType.u8 : nextType) != bitType)
                                 {
                                     write = true;
                                 }
@@ -310,11 +310,11 @@ namespace SoulsFormats
                             if (write)
                             {
                                 bitOffset = -1;
-                                if (bitType == PARAMDEF.DefType.u8)
+                                if (bitType == DefType.u8)
                                     bw.WriteByte((byte)bitValue);
-                                else if (bitType == PARAMDEF.DefType.u16)
+                                else if (bitType == DefType.u16)
                                     bw.WriteUInt16((ushort)bitValue);
-                                else if (bitType == PARAMDEF.DefType.u32)
+                                else if (bitType == DefType.u32)
                                     bw.WriteUInt32((uint)bitValue);
                             }
                         }

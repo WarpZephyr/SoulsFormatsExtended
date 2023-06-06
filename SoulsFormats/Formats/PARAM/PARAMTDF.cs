@@ -17,19 +17,19 @@ namespace SoulsFormats
         /// <summary>
         /// The type of values in this TDF; must be an integral type.
         /// </summary>
-        public PARAMDEF.DefType Type
+        public DefType Type
         {
             get => type;
             set
             {
-                if (value != PARAMDEF.DefType.s8 && value != PARAMDEF.DefType.u8
-                    && value != PARAMDEF.DefType.s16 && value != PARAMDEF.DefType.u16
-                    && value != PARAMDEF.DefType.s32 && value != PARAMDEF.DefType.u32)
+                if (value != DefType.s8 && value != DefType.u8
+                    && value != DefType.s16 && value != DefType.u16
+                    && value != DefType.s32 && value != DefType.u32)
                     throw new ArgumentException($"TDF type may only be s8, u8, s16, u16, s32, or u32, but {value} was given.");
                 type = value;
             }
         }
-        private PARAMDEF.DefType type;
+        private DefType type;
 
         /// <summary>
         /// Named values in this TDF.
@@ -52,7 +52,7 @@ namespace SoulsFormats
         public PARAMTDF()
         {
             Name = "UNSPECIFIED";
-            Type = PARAMDEF.DefType.s32;
+            Type = DefType.s32;
             Entries = new List<Entry>();
         }
 
@@ -63,7 +63,7 @@ namespace SoulsFormats
         {
             string[] lines = text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             Name = lines[0].Trim('"');
-            Type = (PARAMDEF.DefType)Enum.Parse(typeof(PARAMDEF.DefType), lines[1].Trim('"'));
+            Type = (DefType)Enum.Parse(typeof(DefType), lines[1].Trim('"'));
 
             Entries = new List<Entry>(lines.Length - 2);
             for (int i = 2; i < lines.Length; i++)
@@ -73,12 +73,12 @@ namespace SoulsFormats
                 object value;
                 switch (Type)
                 {
-                    case PARAMDEF.DefType.s8: value = sbyte.Parse(valueStr); break;
-                    case PARAMDEF.DefType.u8: value = byte.Parse(valueStr); break;
-                    case PARAMDEF.DefType.s16: value = short.Parse(valueStr); break;
-                    case PARAMDEF.DefType.u16: value = ushort.Parse(valueStr); break;
-                    case PARAMDEF.DefType.s32: value = int.Parse(valueStr); break;
-                    case PARAMDEF.DefType.u32: value = uint.Parse(valueStr); break;
+                    case DefType.s8: value = sbyte.Parse(valueStr); break;
+                    case DefType.u8: value = byte.Parse(valueStr); break;
+                    case DefType.s16: value = short.Parse(valueStr); break;
+                    case DefType.u16: value = ushort.Parse(valueStr); break;
+                    case DefType.s32: value = int.Parse(valueStr); break;
+                    case DefType.u32: value = uint.Parse(valueStr); break;
 
                     default:
                         throw new NotImplementedException($"Parsing not implemented for type {Type}.");

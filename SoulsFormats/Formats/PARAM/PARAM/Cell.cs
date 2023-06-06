@@ -27,19 +27,19 @@ namespace SoulsFormats
 
                     switch (Def.DisplayType)
                     {
-                        case PARAMDEF.DefType.s8: this.value = Convert.ToSByte(value); break;
-                        case PARAMDEF.DefType.u8: this.value = Convert.ToByte(value); break;
-                        case PARAMDEF.DefType.s16: this.value = Convert.ToInt16(value); break;
-                        case PARAMDEF.DefType.u16: this.value = Convert.ToUInt16(value); break;
-                        case PARAMDEF.DefType.s32: this.value = Convert.ToInt32(value); break;
-                        case PARAMDEF.DefType.u32: this.value = Convert.ToUInt32(value); break;
-                        case PARAMDEF.DefType.b32: this.value = Convert.ToInt32(value); break;
-                        case PARAMDEF.DefType.f32: this.value = Convert.ToSingle(value); break;
-                        case PARAMDEF.DefType.angle32: this.value = Convert.ToSingle(value); break;
-                        case PARAMDEF.DefType.f64: this.value = Convert.ToDouble(value); break;
-                        case PARAMDEF.DefType.fixstr: this.value = Convert.ToString(value); break;
-                        case PARAMDEF.DefType.fixstrW: this.value = Convert.ToString(value); break;
-                        case PARAMDEF.DefType.dummy8:
+                        case DefType.s8: this.value = Convert.ToSByte(value); break;
+                        case DefType.u8: this.value = Convert.ToByte(value); break;
+                        case DefType.s16: this.value = Convert.ToInt16(value); break;
+                        case DefType.u16: this.value = Convert.ToUInt16(value); break;
+                        case DefType.s32: this.value = Convert.ToInt32(value); break;
+                        case DefType.u32: this.value = Convert.ToUInt32(value); break;
+                        case DefType.f32: this.value = Convert.ToSingle(value); break;
+                        case DefType.b32: this.value = Convert.ToInt32(value); break;
+                        case DefType.angle32: this.value = Convert.ToSingle(value); break;
+                        case DefType.f64: this.value = Convert.ToDouble(value); break;
+                        case DefType.fixstr: this.value = Convert.ToString(value); break;
+                        case DefType.fixstrW: this.value = Convert.ToString(value); break;
+                        case DefType.dummy8:
                             if (Def.BitSize == -1)
                                 this.value = (byte[])value;
                             else
