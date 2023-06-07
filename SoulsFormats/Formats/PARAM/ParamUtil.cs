@@ -299,6 +299,33 @@ namespace SoulsFormats
             }
         }
 
+        public static object ConvertValue(DefType type, object value, int bitsize = -1, int arraylength = 1)
+        {
+            switch (type)
+            {
+                case DefType.s8: return Convert.ToSByte(value);
+                case DefType.u8: return Convert.ToByte(value);
+                case DefType.s16: return Convert.ToInt16(value);
+                case DefType.u16: return Convert.ToUInt16(value);
+                case DefType.s32: return Convert.ToInt32(value);
+                case DefType.u32: return Convert.ToUInt32(value);
+                case DefType.b32: return Convert.ToInt32(value);
+                case DefType.f32: return Convert.ToSingle(value);
+                case DefType.angle32: return Convert.ToSingle(value);
+                case DefType.f64: return Convert.ToDouble(value);
+                case DefType.fixstr: return "";
+                case DefType.fixstrW: return "";
+                case DefType.dummy8:
+                    if (bitsize == -1)
+                        return new byte[arraylength];
+                    else
+                        return (byte)0;
+
+                default:
+                    throw new NotImplementedException($"Conversion not implemented for type {type}");
+            }
+        }
+
         public static int GetBitLimit(DefType type)
         {
             if (type == DefType.u8)

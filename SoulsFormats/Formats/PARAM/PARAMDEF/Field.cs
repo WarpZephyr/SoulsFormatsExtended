@@ -133,6 +133,11 @@ namespace SoulsFormats
             public Field() : this(null, DefType.f32, "placeholder") { }
 
             /// <summary>
+            /// Creates a Field with placeholder values and the chosen parent.
+            /// </summary>
+            public Field(PARAMDEF def) : this(def, DefType.f32, "placeholder") { }
+
+            /// <summary>
             /// Creates a Field with the given type, name, and appropriate default values.
             /// </summary>
             public Field(PARAMDEF def, DefType displayType, string internalName)
