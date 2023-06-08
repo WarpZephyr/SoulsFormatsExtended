@@ -64,7 +64,7 @@ namespace SoulsFormats
                     throw new InvalidDataException("Dbp had no fields.");
 
                 xw.WriteStartElement("dbp");
-                xw.WriteElementString("BigEndian", dbp.WriteBigEndian.ToString());
+                xw.WriteElementString("BigEndian", dbp.BigEndian.ToString());
                 xw.WriteElementString("Name", dbpname ?? "NoName");
                 xw.WriteStartElement("Fields");
                 foreach (var field in dbp.Fields)
@@ -226,7 +226,7 @@ namespace SoulsFormats
                     dbp.Fields.Add(field);
                 }
 
-                dbp.WriteBigEndian = bigendian;
+                dbp.BigEndian = bigendian;
 
                 return dbp;
             }

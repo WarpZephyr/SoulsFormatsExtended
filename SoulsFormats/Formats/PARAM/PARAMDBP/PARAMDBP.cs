@@ -11,7 +11,7 @@ namespace SoulsFormats
         /// <summary>
         /// Whether or not the dbp should be written in bigendian.
         /// </summary>
-        public bool WriteBigEndian = true;
+        public bool BigEndian = true;
 
         /// <summary>
         /// The fields in this PARAMDBP.
@@ -24,6 +24,35 @@ namespace SoulsFormats
         public PARAMDBP()
         {
             Fields = new List<Field>();
+        }
+
+        /// <summary>
+        /// Create a new PARAMDBP from PARAMDEF.
+        /// </summary>
+        /// <param name="def">A PARAMDEF.</param>
+        public PARAMDBP(PARAMDEF def)
+        {
+            var dbp = new PARAMDBP
+            {
+                BigEndian = def.BigEndian,
+                Compression = def.Compression,
+                Fields = new List<Field>(def.Fields.Count)
+            };
+
+            foreach (var field in def.Fields)
+            {
+                var dbpfield = new Field
+                {
+                    DisplayType = field.DisplayType,
+                    DisplayName = field.DisplayName,
+                    DisplayFormat = field.DisplayFormat ?? ParamUtil.GetDefaultFormat(field.DisplayType),
+                    Default = field.Default,
+                    Minimum = field.Minimum,
+                    Maximum = field.Maximum,
+                    Increment = field.Increment
+                };
+                dbp.Fields.Add(dbpfield);
+            }
         }
 
         /// <summary>
@@ -186,7 +215,7 @@ namespace SoulsFormats
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
-            bw.BigEndian = WriteBigEndian;
+            bw.BigEndian = BigEndian;
             bw.WriteInt32(Fields.Count);
             bw.WriteInt32(0);
             bw.WriteInt32(0);
@@ -258,10 +287,21 @@ namespace SoulsFormats
         /// </summary>
         public class Field
         {
+            private DefType _DisplayType;
+
             /// <summary>
             /// Type of value to display in the editor.
             /// </summary>
-            public DefType DisplayType { get; set; }
+            public DefType DisplayType
+            {   get => _DisplayType;
+                set
+                {
+                    if (!IsValidDisplayType(value))
+                        throw new NotSupportedException($"{nameof(DefType)} {DisplayType} is not supported by {nameof(PARAMDBP)}.");
+                    else
+                        _DisplayType = value;
+                }
+            }
 
             /// <summary>
             /// The description for this field describing what it is in the DBP param.
@@ -322,6 +362,9 @@ namespace SoulsFormats
             /// <param name="displayFormat">The display format of this field.</param>
             public Field(DefType displayType, string displayName, string displayFormat)
             {
+                if (!IsValidDisplayType(displayType))
+                    throw new NotSupportedException($"{nameof(DefType)} {displayType} is not supported by PARAMDBP.");
+
                 DisplayType = displayType;
                 DisplayName = displayName;
                 DisplayFormat = displayFormat;
@@ -357,7 +400,7 @@ namespace SoulsFormats
             /// </summary>
             internal Field(BinaryReaderEx br)
             {
-                DisplayType = br.ReadEnum32<DefType>();
+                DisplayType = (DefType)br.ReadUInt32();
                 br.AssertInt32(0);
                 br.AssertInt32(0);
                 switch (DisplayType)
@@ -548,6 +591,28 @@ namespace SoulsFormats
                     case DefType.f32: return Convert.ToSingle(str);
                     default:
                         throw new NotImplementedException($"Display Type: {type} invalid or not implemented.");
+                }
+            }
+
+            /// <summary>
+            /// Check if a DisplayType is valid for dbp.
+            /// </summary>
+            /// <param name="type">A DefType.</param>
+            /// <returns>Whether or not the provided DefType is valid for dbp.</returns>
+            public static bool IsValidDisplayType(DefType type)
+            {
+                switch (type)
+                {
+                    case DefType.s8:
+                    case DefType.u8:
+                    case DefType.s16:
+                    case DefType.u16:
+                    case DefType.s32:
+                    case DefType.u32:
+                    case DefType.f32:
+                        return true;
+                    default:
+                        return false;
                 }
             }
 
