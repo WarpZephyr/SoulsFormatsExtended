@@ -255,6 +255,32 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Applies a paramdef only if its param type, and data version match this param's. Returns true if applied.
+        /// </summary>
+        public bool ApplyParamdefSomewhatCarefully(PARAMDEF paramdef)
+        {
+            if (ParamType == paramdef.ParamType && ParamdefDataVersion == paramdef.DataVersion)
+            {
+                ApplyParamdef(paramdef);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Applies the first paramdef in the sequence whose param type, and data version match this param's, if any. Returns true if applied. 
+        /// </summary>
+        public bool ApplyParamdefSomewhatCarefully(IEnumerable<PARAMDEF> paramdefs)
+        {
+            foreach (PARAMDEF paramdef in paramdefs)
+            {
+                if (ApplyParamdefSomewhatCarefully(paramdef))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Returns the first row with the given ID, or null if not found.
         /// </summary>
         public Row this[int id] => Rows.Find(row => row.ID == id);

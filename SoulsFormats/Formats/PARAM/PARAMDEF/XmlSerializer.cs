@@ -187,6 +187,9 @@ namespace SoulsFormats
 
             private static void SerializeField(PARAMDEF def, Field field, XmlWriter xw)
             {
+                if (field.InternalName == null || field.InternalName == "")
+                    field.InternalName = field.DisplayName;
+
                 string fieldDef = $"{field.DisplayType} {field.InternalName}";
                 if (ParamUtil.IsBitType(field.DisplayType) && field.BitSize != -1)
                     fieldDef += $":{field.BitSize}";
@@ -197,7 +200,8 @@ namespace SoulsFormats
                     fieldDef += $" = {VariableValueToString(def, field.DisplayType, field.Default)}";
 
                 xw.WriteAttributeString("Def", fieldDef);
-                xw.WriteDefaultElement("DisplayName", field.DisplayName, field.InternalName);
+                //xw.WriteDefaultElement("InternalName", field.DisplayName, field.InternalName);
+                xw.WriteDefaultElement("DisplayName", field.DisplayName, null);
                 xw.WriteDefaultElement("Enum", field.InternalType, field.DisplayType.ToString());
                 xw.WriteDefaultElement("Description", field.Description, null);
                 xw.WriteDefaultElement("DisplayFormat", field.DisplayFormat, ParamUtil.GetDefaultFormat(field.DisplayType));

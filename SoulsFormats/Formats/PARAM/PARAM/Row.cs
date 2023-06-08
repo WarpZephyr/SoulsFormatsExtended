@@ -88,7 +88,7 @@ namespace SoulsFormats
                     nameOffset = br.ReadUInt32();
                 }
 
-                if (nameOffset != 0)
+                if (nameOffset != 0 && nameOffset != br.Length)
                 {
                     if (actualStringsOffset == 0 || nameOffset < actualStringsOffset)
                         actualStringsOffset = nameOffset;
