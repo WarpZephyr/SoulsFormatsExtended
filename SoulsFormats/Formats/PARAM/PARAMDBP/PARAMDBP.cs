@@ -463,10 +463,10 @@ namespace SoulsFormats
                 switch (DisplayType)
                 {
                     case DefType.s8:
-                        bw.WriteByte((byte)Default);
-                        bw.WriteByte((byte)Increment);
-                        bw.WriteByte((byte)Minimum);
-                        bw.WriteByte((byte)Maximum);
+                        bw.WriteSByte((sbyte)Default);
+                        bw.WriteSByte((sbyte)Increment);
+                        bw.WriteSByte((sbyte)Minimum);
+                        bw.WriteSByte((sbyte)Maximum);
                         break;
                     case DefType.u8:
                         bw.WriteByte((byte)Default);
