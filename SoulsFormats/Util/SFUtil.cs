@@ -49,7 +49,6 @@ namespace SoulsFormats
                 case ".tae": return "tae/";
                 case ".tdf": return "_unknown/tdf/";
                 case ".tpf": return "image/texture/tpf/";
-                case ".txt": return "text/";
                 case ".blf": return "system/";
                 case ".xml": return "text/xml/";
                 case ".ani": return "bind/motion/ani/";
@@ -65,6 +64,10 @@ namespace SoulsFormats
                 case ".fxr": return "sfx/fxr/";
                 case ".clm": return "_unknown/clm/";
                 case ".acb": return "_unknown/acb/";
+                case ".properties": return "system/";
+                case ".ini": return "system/";
+                case ".pem": return "system/";
+                case ".txt": return "system/";
             }
 
             if (ext == ".bnd")
@@ -148,6 +151,13 @@ namespace SoulsFormats
                     return false;
 
                 int offset = br.GetInt32(4);
+                if (offset > br.Length || offset < 0)
+                {
+                    byte[] offsetbytes = BitConverter.GetBytes(offset);
+                    Array.Reverse(offsetbytes);
+                    offset = BitConverter.ToInt32(offsetbytes, 0);
+                }
+
                 if (offset < 0 || offset >= br.Length - 1)
                     return false;
 
@@ -188,6 +198,19 @@ namespace SoulsFormats
                 return false;
             }
 
+            bool tryReadFmg()
+            {
+                try 
+                {
+                    FMG.Read(bytes);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
             string ext = "";
             using (var ms = new MemoryStream(bytes))
             {
@@ -209,7 +232,7 @@ namespace SoulsFormats
                 // ESD or FFX
                 else if (magic != null && magic.ToUpper() == "DLSE")
                     ext = ".dlse";
-                else if (bigEndian && magic == "\0BRD" || !bigEndian && magic == "DRB\0")
+                else if (magic == "\0BRD" || magic == "DRB\0")
                     ext = ".drb";
                 else if (magic == "EDF\0")
                     ext = ".edf";
@@ -282,7 +305,7 @@ namespace SoulsFormats
                 else if (magic == "ACB\0")
                     ext = ".acb";
                 // This is pretty sketchy
-                else if (br.Length >= 0xC && br.GetByte(0) == 0 && br.GetByte(3) == 0 && br.GetInt32(4) == br.Length && br.GetInt16(0xA) == 0)
+                else if (br.Length >= 0xC && br.GetByte(0) == 0 && br.GetByte(3) == 0 && br.GetInt32(4) == br.Length && br.GetInt16(0xA) == 0 || tryReadFmg())
                     ext = ".fmg";
             }
 
