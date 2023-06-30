@@ -53,12 +53,61 @@ namespace SoulsFormats
             }
             private object value;
 
+            /// <summary>
+            /// The display type of the cell.
+            /// </summary>
+            public DefType DisplayType => Def.DisplayType;
+
+            /// <summary>
+            /// The display name of the cell.
+            /// </summary>
+            public string DisplayName => Def.DisplayName;
+
+            /// <summary>
+            /// The internal name of the cell.
+            /// </summary>
+            public string InternalName => Def.InternalName;
+
+            /// <summary>
+            /// An optional description of the cell.
+            /// </summary>
+            public string Description => Def.Description;
+
+            /// <summary>
+            /// A string for formatting the value of the cell.
+            /// </summary>
+            public string DisplayFormat => Def.DisplayFormat;
+
+            /// <summary>
+            /// The default value of the cell.
+            /// </summary>
+            public object Default => Def.Default;
+
+            /// <summary>
+            /// How much the cell's value increments by.
+            /// </summary>
+            public object Increment => Def.Increment;
+
+            /// <summary>
+            /// The minimum value of the cell.
+            /// </summary>
+            public object Minimum => Def.Minimum;
+
+            /// <summary>
+            /// The maximum value of the cell.
+            /// </summary>
+            public object Maximum => Def.Maximum;
+
             internal Cell(PARAMDEF.Field def, object value)
             {
                 Def = def;
                 Value = value;
             }
 
+            /// <summary>
+            /// Make a new cell from a cell.
+            /// </summary>
+            /// <param name="clone">The cell to copy.</param>
             public Cell(Cell clone)
             {
                 Def = clone.Def;

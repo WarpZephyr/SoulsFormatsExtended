@@ -11,7 +11,7 @@ namespace SoulsFormats
         /// <summary>
         /// Unknown.
         /// </summary>
-        private class MapStudioTree : Param<Tree>
+        private class MapstudioTree : Param<Tree>
         {
             internal override int Version => throw new NotImplementedException();
 
@@ -28,7 +28,7 @@ namespace SoulsFormats
             /// <summary>
             /// Create a new MapStudioTree with a list of empty Trees.
             /// </summary>
-            public MapStudioTree()
+            public MapstudioTree()
             {
                 Trees = new List<Tree>();
             }

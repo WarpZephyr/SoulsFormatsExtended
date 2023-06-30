@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace SoulsFormats
 {
@@ -45,7 +46,7 @@ namespace SoulsFormats
         /// <summary>
         /// Unknown; Relates to rendering somehow.
         /// </summary>
-        public List<Tree> Trees { get; set; }
+        public List<List<Tree>> TreeList { get; set; }
 
         internal struct Entries
         {
@@ -62,7 +63,7 @@ namespace SoulsFormats
         {
             br.BigEndian = true;
 
-            Entries entries;
+            Entries entries = default;
             Models = new ModelParam();
             entries.Models = Models.Read(br);
             Events = new EventParam();
@@ -73,8 +74,16 @@ namespace SoulsFormats
             entries.Regions = Regions.Read(br);
             Parts = new PartsParam();
             entries.Parts = Parts.Read(br);
-            var tree = new MapStudioTree();
-            Trees = tree.Read(br);
+            TreeList = new List<List<Tree>>();
+            TreeList.Add(new MapstudioTree().Read(br));
+            TreeList.Add(new MapstudioTree().Read(br));
+
+            if (br.Position != 0)
+                throw new InvalidDataException($"The next param offset of the final param should be 0, but it was 0x{br.Position:X}.");
+
+            MSB.DisambiguateNames(entries.Models);
+            MSB.DisambiguateNames(entries.Regions);
+            MSB.DisambiguateNames(entries.Parts);
         }
 
         /// <summary>
