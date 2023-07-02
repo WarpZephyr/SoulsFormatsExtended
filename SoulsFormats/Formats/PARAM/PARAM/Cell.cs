@@ -98,6 +98,21 @@ namespace SoulsFormats
             /// </summary>
             public object Maximum => Def.Maximum;
 
+            /// <summary>
+            /// Cells are sorted by this ID.
+            /// </summary>
+            public int SortID => Def.SortID;
+
+            /// <summary>
+            /// Number of elements for arrays.
+            /// </summary>
+            public int ArrayLength => Def.ArrayLength;
+
+            /// <summary>
+            /// The number of bits used by a bitfield.
+            /// </summary>
+            public int BitSize => Def.BitSize;
+
             internal Cell(PARAMDEF.Field def, object value)
             {
                 Def = def;
