@@ -59,6 +59,11 @@ namespace SoulsFormats
             public DefType DisplayType => Def.DisplayType;
 
             /// <summary>
+            /// The internal type of the cell.
+            /// </summary>
+            public string InternalType => Def.InternalType;
+
+            /// <summary>
             /// The display name of the cell.
             /// </summary>
             public string DisplayName => Def.DisplayName;
