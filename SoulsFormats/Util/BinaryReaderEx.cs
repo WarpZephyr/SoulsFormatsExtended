@@ -11,10 +11,15 @@ namespace SoulsFormats
     /// <summary>
     /// An extended reader for binary data supporting big and little endianness, value assertions, and arrays.
     /// </summary>
-    public class BinaryReaderEx
+    public class BinaryReaderEx : IDisposable
     {
         private BinaryReader br;
         private Stack<long> steps;
+
+        /// <summary>
+        /// Whether or not the BinaryReaderEx has been disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Interpret values as big-endian if set, or little-endian if not.
@@ -1139,6 +1144,23 @@ namespace SoulsFormats
             byte a = br.ReadByte();
             return Color.FromArgb(a, r, g, b);
         }
+
+        #endregion
+
+        #region IDisposable Support
+
+        /// <summary>
+        /// Releases all resources used by the <see cref="BinaryReaderEx" />
+        /// </summary>
+        public void Dispose()
+        {
+            if (!IsDisposed)
+            {
+                ((IDisposable)br).Dispose();
+                IsDisposed = true;
+            }
+        }
+
         #endregion
     }
 }

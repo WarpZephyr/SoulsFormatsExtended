@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -105,15 +104,6 @@ namespace SoulsFormats
         /// <summary>
         /// Read a dvdbnd header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
         /// </summary>
-        public static BHD5 Read(string path, Game game)
-        {
-            Stream stream = File.OpenRead(path);
-            return Read(stream, game);
-        }
-
-        /// <summary>
-        /// Read a dvdbnd header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
-        /// </summary>
         public static BHD5 Read(Stream bhdStream, Game game)
         {
             var br = new BinaryReaderEx(false, bhdStream);
@@ -128,106 +118,6 @@ namespace SoulsFormats
             var bw = new BinaryWriterEx(false, bhdStream);
             Write(bw);
             bw.Finish();
-        }
-
-        /// <summary>
-        /// Write a dvdbnd header to the given path.
-        /// </summary>
-        public void Write(string bhdPath)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(bhdPath));
-            using (FileStream stream = File.Create(bhdPath))
-            {
-                BinaryWriterEx bw = new BinaryWriterEx(false, stream);
-                Write(bw);
-                bw.Finish();
-            }
-        }
-
-        /*
-        /// <summary>
-        /// Write a dvdbnd header and data to the given paths.
-        /// </summary>
-        public void Write(string bhdPath, string bdtPath, string bdtDataDirPath)
-        {
-            // Write the BHD header.
-            Write(bhdPath);
-
-            // If the data path for BDT does not exist throw.
-            if (!Directory.Exists(bdtDataDirPath))
-                throw new DirectoryNotFoundException("BDT data must be in specified directory to have BDT written, but no directory was found on provided path.");
-
-            // Get the files to repack into BDT.
-            string[] dirPaths = Directory.GetFiles(bdtDataDirPath, "*", SearchOption.AllDirectories);
-
-            // Remove bdt extract directory name from path.
-            for (int i = 0; i < dirPaths.Length; i++)
-                dirPaths[i] = dirPaths[i].Substring(dirPaths[i].IndexOf("\\"));
-
-            // Get the number of hashes we need to repack.
-            int hashCount = HashCount();
-            Console.WriteLine($"Hash count is {hashCount}");
-
-            // Verify there are enough files to repack to begin with.
-            if (dirPaths.Length < hashCount)
-                throw new Exception("There is not enough files to fill all the hashes in the BHD.");
-
-            using (var bdtStream = File.Create(bdtPath))
-            {
-                // Search each bucket
-                foreach (var bucket in Buckets)
-                {
-                    Console.WriteLine($"Checking next Bucket");
-                    // Search each hash in bucket
-                    foreach (var hash in bucket)
-                    {
-                        Console.WriteLine($"Checking hash {hash.FileNameHash}");
-                        bool matched = false;
-                        // Search for a hash to match in each path
-                        foreach (string path in dirPaths)
-                        {
-                            // If the file name is the hash already, use it instead of hashing it
-                            if (Path.GetFileNameWithoutExtension(path) == hash.FileNameHash.ToString())
-                            {
-                                Console.WriteLine($"Hash {hash.FileNameHash} matched with path {path}");
-                                matched = true;
-                                byte[] bytes = File.ReadAllBytes(path);
-                                if (bytes.Length > hash.PaddedFileSize)
-                                    throw new ArgumentOutOfRangeException($"The path {path} byte length is longer than the hash PaddedFileSize, this may lead to overflowing into other files.");
-                                bdtStream.Write(bytes, (int)hash.FileOffset, bytes.Length);
-                            }
-                            // If the path being hashed is the file name hash we have a match.
-                            else if (SFUtil.FromPathHash(path) == hash.FileNameHash)
-                            {
-                                Console.WriteLine($"Hash {hash.FileNameHash} matched with path {path}");
-                                matched = true;
-                                byte[] bytes = File.ReadAllBytes(path);
-                                if (bytes.Length > hash.PaddedFileSize)
-                                    throw new ArgumentOutOfRangeException($"The path {path} byte length is longer than the hash PaddedFileSize, this may lead to overflowing into other files.");
-                                bdtStream.Write(bytes, (int)hash.FileOffset, bytes.Length);
-                            }
-                        }
-                        // We did not find a match for this hash.
-                        if (matched == false)
-                            throw new Exception($"No paths matched hash {hash.FileNameHash} in the given BDT data directory.");
-                    }
-                }
-                bdtStream.Close();
-            }
-        }
-        */
-
-        /// <summary>
-        /// Get the total count of all the hashes in the BHD5.
-        /// </summary>
-        /// <returns>The total number of hashes in the BHD5.</returns>
-        public int HashCount()
-        {
-            int count = 0;
-            foreach (var bucket in Buckets)
-                foreach (var hash in bucket)
-                    count++;
-            return count;
         }
 
         /// <summary>
@@ -317,14 +207,14 @@ namespace SoulsFormats
             DarkSouls2,
 
             /// <summary>
-            /// Dark Souls 3 on PC.
+            /// Dark Souls 3 and Sekiro on PC.
             /// </summary>
             DarkSouls3,
 
             /// <summary>
-            /// Sekiro on PC.
+            /// Elden Ring on PC.
             /// </summary>
-            Sekiro,
+            EldenRing,
         }
 
         /// <summary>
@@ -373,7 +263,7 @@ namespace SoulsFormats
             /// <summary>
             /// Hash of the full file path using From's algorithm found in SFUtil.FromPathHash.
             /// </summary>
-            public uint FileNameHash { get; set; }
+            public ulong FileNameHash { get; set; }
 
             /// <summary>
             /// Full size of the file data in the BDT.
@@ -407,56 +297,83 @@ namespace SoulsFormats
 
             internal FileHeader(BinaryReaderEx br, Game game)
             {
-                FileNameHash = br.ReadUInt32();
-                PaddedFileSize = br.ReadInt32();
-                FileOffset = br.ReadInt64();
+                long shaHashOffset = 0;
+                long aesKeyOffset = 0;
+                UnpaddedFileSize = -1;
 
-                if (game >= Game.DarkSouls2)
+                if (game >= Game.EldenRing)
                 {
-                    long shaHashOffset = br.ReadInt64();
-                    long aesKeyOffset = br.ReadInt64();
+                    FileNameHash = br.ReadUInt64();
+                    PaddedFileSize = br.ReadInt32();
+                    UnpaddedFileSize = br.ReadInt32();
+                    FileOffset = br.ReadInt64();
+                    shaHashOffset = br.ReadInt64();
+                    aesKeyOffset = br.ReadInt64();
+                }
+                else
+                {
+                    FileNameHash = br.ReadUInt32();
+                    PaddedFileSize = br.ReadInt32();
+                    FileOffset = br.ReadInt64();
 
-                    if (shaHashOffset != 0)
+                    if (game >= Game.DarkSouls2)
                     {
-                        br.StepIn(shaHashOffset);
-                        {
-                            SHAHash = new SHAHash(br);
-                        }
-                        br.StepOut();
+                        shaHashOffset = br.ReadInt64();
+                        aesKeyOffset = br.ReadInt64();
                     }
 
-                    if (aesKeyOffset != 0)
+                    if (game >= Game.DarkSouls3)
                     {
-                        br.StepIn(aesKeyOffset);
-                        {
-                            AESKey = new AESKey(br);
-                        }
-                        br.StepOut();
+                        UnpaddedFileSize = br.ReadInt64();
                     }
                 }
 
-                UnpaddedFileSize = -1;
-                if (game >= Game.DarkSouls3)
+                if (shaHashOffset != 0)
                 {
-                    UnpaddedFileSize = br.ReadInt64();
+                    br.StepIn(shaHashOffset);
+                    {
+                        SHAHash = new SHAHash(br);
+                    }
+                    br.StepOut();
+                }
+
+                if (aesKeyOffset != 0)
+                {
+                    br.StepIn(aesKeyOffset);
+                    {
+                        AESKey = new AESKey(br);
+                    }
+                    br.StepOut();
                 }
             }
 
             internal void Write(BinaryWriterEx bw, Game game, int bucketIndex, int fileIndex)
             {
-                bw.WriteUInt32(FileNameHash);
-                bw.WriteInt32(PaddedFileSize);
-                bw.WriteInt64(FileOffset);
-
-                if (game >= Game.DarkSouls2)
+                if (game >= Game.EldenRing)
                 {
-                    bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
+                    bw.WriteUInt64(FileNameHash);
+                    bw.WriteInt32(PaddedFileSize);
+                    bw.WriteInt32((int)UnpaddedFileSize);
+                    bw.WriteInt64(FileOffset);
                     bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
+                    bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
                 }
-
-                if (game >= Game.DarkSouls3)
+                else
                 {
-                    bw.WriteInt64(UnpaddedFileSize);
+                    bw.WriteUInt32((uint)FileNameHash);
+                    bw.WriteInt32(PaddedFileSize);
+                    bw.WriteInt64(FileOffset);
+
+                    if (game >= Game.DarkSouls2)
+                    {
+                        bw.ReserveInt64($"SHAHashOffset{bucketIndex}:{fileIndex}");
+                        bw.ReserveInt64($"AESKeyOffset{bucketIndex}:{fileIndex}");
+                    }
+
+                    if (game >= Game.DarkSouls3)
+                    {
+                        bw.WriteInt64(UnpaddedFileSize);
+                    }
                 }
             }
 
