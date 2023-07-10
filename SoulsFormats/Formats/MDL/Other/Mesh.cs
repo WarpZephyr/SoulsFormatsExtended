@@ -6,7 +6,7 @@ namespace SoulsFormats.Other
     public partial class MDL : SoulsFile<MDL>
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        public class Bone
+        public class Mesh
         {
             public Vector3 Translation;
             public Vector3 Rotation;
@@ -24,7 +24,7 @@ namespace SoulsFormats.Other
             public Vector3 BoundingBoxMax;
             public short[] Unk70;
 
-            internal Bone(BinaryReaderEx br)
+            internal Mesh(BinaryReaderEx br)
             {
                 Translation = br.ReadVector3();
                 Rotation = br.ReadVector3();

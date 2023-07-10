@@ -157,7 +157,6 @@ namespace SoulsFormats.AC3
             {
                 br.StepIn(namesOffset);
                 Path = br.ReadShiftJIS();
-                Console.WriteLine(Path);
                 br.StepOut();
             }
 

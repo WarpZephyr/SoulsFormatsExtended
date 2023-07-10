@@ -10,6 +10,11 @@ namespace SoulsFormats
     public class DBPPARAM : SoulsFile<DBPPARAM>
     {
         /// <summary>
+        /// Whether or not the DBPPARAM is in big endian.
+        /// </summary>
+        public bool BigEndian { get; set; } = true;
+
+        /// <summary>
         /// Whether or not a dbp is currently applied.
         /// </summary>
         public bool DbpApplied { get => AppliedParamDbp != null; }
@@ -51,11 +56,48 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Deserialize a DBPPARAM from a stream.
+        /// </summary>
+        /// <param name="path">The path to read the DBPPARAM from.</param>
+        /// <param name="bigendian">Whether or not to read the DBPPARAM in big endian.</param>
+        /// <returns>A new DBPPARAM.</returns>
+        public static DBPPARAM Read(string path, bool bigendian)
+        {
+            using (FileStream stream = File.OpenRead(path))
+            {
+                BinaryReaderEx br = new BinaryReaderEx(false, stream);
+                DBPPARAM file = new DBPPARAM();
+                br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
+                file.Compression = compression;
+                file.BigEndian = bigendian;
+                file.Read(br);
+                return file;
+            }
+        }
+
+        /// <summary>
+        /// Deserialize a DBPPARAM from a stream.
+        /// </summary>
+        /// <param name="bytes">The bytes to read the DBPPARAM from.</param>
+        /// <param name="bigendian">Whether or not to read the DBPPARAM in big endian.</param>
+        /// <returns>A new DBPPARAM.</returns>
+        public static DBPPARAM Read(byte[] bytes, bool bigendian)
+        {
+            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            DBPPARAM file = new DBPPARAM();
+            br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
+            file.Compression = compression;
+            file.BigEndian = bigendian;
+            file.Read(br);
+            return file;
+        }
+
+        /// <summary>
         /// Set the reader of the DBPPARAM for use when applying the PARAMDBP.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
-            br.BigEndian = true;
+            br.BigEndian = BigEndian;
             byte[] copy = br.GetBytes(0, (int)br.Stream.Length);
             CellReader = new BinaryReaderEx(br.BigEndian, copy);
         }
@@ -65,7 +107,7 @@ namespace SoulsFormats
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
-            bw.BigEndian = true;
+            bw.BigEndian = BigEndian;
             foreach (var cell in Cells)
             {
                 switch (cell.Dbp.DisplayType)

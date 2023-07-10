@@ -187,7 +187,7 @@
                 bw.WriteSingle(Unk60);
                 bw.WriteSingle(Unk64);
                 bw.WriteSingle(Unk68);
-                bw.WriteSingle(Unk6C);
+                bw.WriteInt32(Unk6C);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);

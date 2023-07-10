@@ -21,12 +21,24 @@ namespace SoulsFormats.Other
             /// </summary>
             public byte Unk01 { get; set; }
 
+            /// <summary>
+            /// The number of vertices in this faceset.
+            /// </summary>
             public short VertexCount { get; set; }
 
+            /// <summary>
+            /// The number of indices in this faceset.
+            /// </summary>
             public int IndexCount { get; set; }
 
+            /// <summary>
+            /// The start vertex.
+            /// </summary>
             public int StartVertex { get; set; }
 
+            /// <summary>
+            /// The start index.
+            /// </summary>
             public int StartIndex { get; set; }
 
             internal Faceset(BinaryReaderEx br)

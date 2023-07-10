@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A cutscene definition format used since DS2, short for MovieSequencer Binary. Extension: .mqb
+    /// A cutscene definition format which dates back to at least Armored Core V, short for MovieSequencer Binary. Extension: .mqb
     /// </summary>
     public partial class MQB : SoulsFile<MQB>
     {

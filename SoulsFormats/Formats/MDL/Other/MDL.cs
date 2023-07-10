@@ -7,7 +7,6 @@ namespace SoulsFormats.Other
     /// </summary>
     public partial class MDL : SoulsFile<MDL>
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         /// <summary>
         /// Unknown.
         /// </summary>
@@ -23,16 +22,54 @@ namespace SoulsFormats.Other
         /// </summary>
         public int Unk14;
 
-        public List<Bone> Meshes;
+        /// <summary>
+        /// The meshes with the model.
+        /// </summary>
+        public List<Mesh> Meshes;
+
+        /// <summary>
+        /// The vertex indices within the model.
+        /// </summary>
         public ushort[] Indices;
+
+        /// <summary>
+        /// The first set of vertices.
+        /// </summary>
         public List<Vertex> VerticesA;
+
+        /// <summary>
+        /// The second set of vertices.
+        /// </summary>
         public List<Vertex> VerticesB;
+
+        /// <summary>
+        /// The third set of vertices.
+        /// </summary>
         public List<Vertex> VerticesC;
+
+        /// <summary>
+        /// The fourth set of vertices.
+        /// </summary>
         public List<VertexD> VerticesD;
+
+        /// <summary>
+        /// Unknown.
+        /// </summary>
         public List<Struct7> Struct7s;
+
+        /// <summary>
+        /// The materials in this model.
+        /// </summary>
         public List<Material> Materials;
+
+        /// <summary>
+        /// The names of textures this model uses.
+        /// </summary>
         public List<string> Textures;
 
+        /// <summary>
+        /// Returns true if a file appears to be data of this type.
+        /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
             if (br.Length < 4)
@@ -42,6 +79,9 @@ namespace SoulsFormats.Other
             return magic == "MDL ";
         }
 
+        /// <summary>
+        /// Deserialize file data from a stream.
+        /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
             br.BigEndian = false;
@@ -75,9 +115,9 @@ namespace SoulsFormats.Other
             int texturesOffset = br.ReadInt32();
 
             br.Position = meshesOffset;
-            Meshes = new List<Bone>();
+            Meshes = new List<Mesh>();
             for (int i = 0; i < meshCount; i++)
-                Meshes.Add(new Bone(br));
+                Meshes.Add(new Mesh(br));
 
             Indices = br.GetUInt16s(indicesOffset, indexCount);
 
@@ -116,6 +156,5 @@ namespace SoulsFormats.Other
             for (int i = 0; i < textureCount; i++)
                 Textures.Add(br.ReadShiftJIS());
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

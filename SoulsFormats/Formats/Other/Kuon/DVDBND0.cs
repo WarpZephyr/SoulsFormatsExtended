@@ -31,6 +31,32 @@ namespace SoulsFormats.Kuon
         }
 
         /// <summary>
+        /// Serializes file data to a stream.
+        /// </summary>
+        protected override void Write(BinaryWriterEx bw)
+        {
+            bw.BigEndian = false;
+
+            bw.WriteASCII("BND\0");
+            bw.WriteInt32(0xCA);
+            bw.ReserveInt32("FileSize");
+            bw.WriteInt32(Files.Count);
+
+            for (int i = 0; i < Files.Count; i++)
+                Files[i].Write(bw, i);
+            for (int i = 0; i < Files.Count; i++)
+            {
+                bw.FillInt32($"NameOffset_{i}", (int)bw.Position);
+                bw.WriteShiftJIS(Files[i].Name, true);
+            }
+            for (int i = 0; i < Files.Count; i++)
+            {
+                bw.FillInt32($"DataOffset_{i}", (int)bw.Position);
+                bw.WriteBytes(Files[i].Bytes);
+            }
+        }
+
+        /// <summary>
         /// A file in a DVDBND0.
         /// </summary>
         public class File
@@ -59,6 +85,14 @@ namespace SoulsFormats.Kuon
 
                 Name = br.GetShiftJIS(nameOffset);
                 Bytes = br.GetBytes(dataOffset, dataSize);
+            }
+
+            internal void Write(BinaryWriterEx bw, int index)
+            {
+                bw.WriteInt32(ID);
+                bw.ReserveInt32($"DataOffset_{index}");
+                bw.WriteInt32(Bytes.Length);
+                bw.ReserveInt32($"NameOffset_{index}");
             }
         }
     }

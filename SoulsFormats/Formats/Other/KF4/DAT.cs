@@ -27,12 +27,36 @@ namespace SoulsFormats.KF4
 
             int fileCount = br.ReadInt32();
 
-            for (int i = 0; i < 0x38; i++)
-                br.AssertByte(0);
+            br.AssertPattern(0x38, 0);
 
             Files = new List<File>(fileCount);
             for (int i = 0; i < fileCount; i++)
                 Files.Add(new File(br));
+        }
+
+        /// <summary>
+        /// Serializes file data to a stream.
+        /// </summary>
+        protected override void Write(BinaryWriterEx bw)
+        {
+            bw.BigEndian = false;
+
+            bw.WriteByte(0x00);
+            bw.WriteByte(0x80);
+            bw.WriteByte(0x04);
+            bw.WriteByte(0x1E);
+
+            bw.WriteInt32(Files.Count);
+
+            bw.WritePattern(0x38, 0);
+
+            for (int i = 0; i < Files.Count; i++)
+                Files[i].Write(bw, i);
+            for (int i = 0; i < Files.Count; i++)
+            {
+                bw.FillInt32($"Offset_{i}", (int)bw.Position);
+                bw.WriteBytes(Files[i].Bytes);
+            }
         }
 
         /// <summary>
@@ -58,6 +82,14 @@ namespace SoulsFormats.KF4
                 int offset = br.ReadInt32();
 
                 Bytes = br.GetBytes(offset, size);
+            }
+
+            internal void Write(BinaryWriterEx bw, int index)
+            {
+                bw.WriteFixStr(Name, 0x34);
+                bw.WriteInt32(Bytes.Length);
+                bw.WriteInt32(0);
+                bw.ReserveInt32($"Offset_{index}");
             }
         }
     }

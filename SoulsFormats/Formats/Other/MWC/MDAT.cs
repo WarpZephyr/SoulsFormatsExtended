@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SoulsFormats.MWC
 {
@@ -8,14 +7,39 @@ namespace SoulsFormats.MWC
     /// </summary>
     public class MDAT : SoulsFile<MDAT>
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// Unknown.
+        /// </summary>
         public int Unk1C;
+
+        /// <summary>
+        /// Seen as MDL data, unknown if anything else.
+        /// </summary>
         public byte[] Data1;
+
+        /// <summary>
+        /// Unknown.
+        /// </summary>
         public byte[] Data2;
+
+        /// <summary>
+        /// Unknown.
+        /// </summary>
         public byte[] Data3;
+
+        /// <summary>
+        /// Unknown.
+        /// </summary>
         public byte[] Data5;
+
+        /// <summary>
+        /// Unknown.
+        /// </summary>
         public byte[] Data6;
 
+        /// <summary>
+        /// Deserialize file data from a stream.
+        /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
             br.BigEndian = false;
@@ -42,6 +66,48 @@ namespace SoulsFormats.MWC
             if (offset6 != 0)
                 Data6 = br.GetBytes(offset6, offsets[offsets.IndexOf(offset6) + 1] - offset6);
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+        /// <summary>
+        /// Serialize file data to a stream.
+        /// </summary>
+        protected override void Write(BinaryWriterEx bw)
+        {
+            bw.BigEndian = false;
+            bw.ReserveInt32("FileSize");
+            bw.ReserveInt32("Offset1");
+            bw.ReserveInt32("Offset2");
+            bw.ReserveInt32("Offset3");
+            bw.WriteInt32(0);
+            bw.ReserveInt32("Offset5");
+            bw.ReserveInt32("Offset6");
+            bw.WriteInt32(Unk1C);
+
+            FillData(bw, "Offset1", Data1);
+            FillData(bw, "Offset2", Data2);
+            FillData(bw, "Offset3", Data3);
+            FillData(bw, "Offset5", Data5);
+            FillData(bw, "Offset6", Data6);
+
+            bw.FillInt32("FileSize", (int)bw.Position);
+        }
+
+        /// <summary>
+        /// Helper method for filling offsets and data.
+        /// </summary>
+        /// <param name="bw">A BinaryWriterEx.</param>
+        /// <param name="offsetName">The name of the offset reservation to fill.</param>
+        /// <param name="data">The data to fill at the offset.</param>
+        private void FillData(BinaryWriterEx bw, string offsetName, byte[] data)
+        {
+            if (data.Length == 0)
+            {
+                bw.FillInt32(offsetName, 0);
+            }
+            else
+            {
+                bw.FillInt32(offsetName, (int)bw.Position);
+                bw.WriteBytes(data);
+            }
+        }
     }
 }

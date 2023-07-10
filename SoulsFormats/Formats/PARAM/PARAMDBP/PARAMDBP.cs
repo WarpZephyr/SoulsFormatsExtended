@@ -185,7 +185,7 @@ namespace SoulsFormats
             int fieldCount = br.ReadInt32();
 
             // Verify endianness
-            if ((fieldCount / 4) > br.Length) {
+            if (fieldCount > br.Length) {
                 br.Position = 0;
                 br.BigEndian = false;
                 fieldCount = br.ReadInt32();
