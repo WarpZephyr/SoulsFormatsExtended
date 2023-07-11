@@ -11,6 +11,11 @@ namespace SoulsFormats.Dreamcast
     public class MGF : SoulsFile<MGF>
     {
         /// <summary>
+        /// Unknown; Seen as 1 or 2.
+        /// </summary>
+        public int Unk04;
+
+        /// <summary>
         /// The files within the MGF archive.
         /// </summary>
         public List<File> Files;
@@ -33,7 +38,7 @@ namespace SoulsFormats.Dreamcast
         {
             br.BigEndian = false;
             br.AssertASCII("MGFL");
-            br.AssertInt32(1);
+            Unk04 = br.ReadInt32();
             int fileCount = br.ReadInt32();
 
             Files = new List<File>();
@@ -48,7 +53,7 @@ namespace SoulsFormats.Dreamcast
         {
             bw.BigEndian = false;
             bw.WriteASCII("MGFL", false);
-            bw.WriteInt32(1);
+            bw.WriteInt32(Unk04);
             bw.WriteInt32(Files.Count);
 
             int next_start_block = 1;
