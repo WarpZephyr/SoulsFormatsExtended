@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 
 namespace SoulsFormats
 {
@@ -41,12 +42,12 @@ namespace SoulsFormats
         /// <summary>
         /// Decompress an fsliblzs.
         /// </summary>
-        public static byte[] Decompress(byte[] data, BinaryReaderEx br)
+        public static byte[] Decompress(BinaryReaderEx br)
         {
             br.AssertASCII("fsliblzs");
             br.AssertInt32(0);
             br.AssertInt32(0);
-            int compressedSize = br.AssertInt32(data.Length);
+            int compressedSize = br.ReadInt32();
             br.AssertInt32(1);
             br.AssertInt32(0);
             br.AssertInt32(0);
@@ -57,6 +58,8 @@ namespace SoulsFormats
             int decompressedSize = br.ReadInt32();
             br.AssertInt32(0);
             br.BigEndian = false;
+
+            
 
             throw new NotImplementedException();
         }

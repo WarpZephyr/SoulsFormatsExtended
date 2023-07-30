@@ -26,7 +26,7 @@ namespace SoulsFormats
                 case ".bdt": return "bind/";
                 case ".bhd": return "bind/";
                 case ".dds": return "image/texture/dds/";
-                case ".dlse": return "sfx/";
+                case ".ffx": return "sfx/";
                 case ".drb": return "lang/menu/";
                 case ".edf": return "_unknown/edf/";
                 case ".eld": return "_unknown/eld/";
@@ -88,7 +88,7 @@ namespace SoulsFormats
                 return $"{folder}/dcx/";
             }
 
-            return "_unknown/_unknown/";
+            return "_unknown/";
         }
 
         private static string GuessFolderBinder(IBinder bnd)
@@ -231,7 +231,7 @@ namespace SoulsFormats
                     ext = ".dds";
                 // ESD or FFX
                 else if (magic != null && magic.ToUpper() == "DLSE")
-                    ext = ".dlse";
+                    ext = ".ffx";
                 else if (magic == "\0BRD" || magic == "DRB\0")
                     ext = ".drb";
                 else if (magic == "EDF\0")
