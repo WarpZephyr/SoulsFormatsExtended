@@ -98,7 +98,7 @@ namespace SoulsFormats
                 return false;
 
             string magic = br.GetASCII(0, 4);
-            return magic == "BDF3";
+            return magic == "BDF3" || magic == "BDF4";
         }
 
         /// <summary>

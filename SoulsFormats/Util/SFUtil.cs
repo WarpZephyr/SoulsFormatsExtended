@@ -101,12 +101,14 @@ namespace SoulsFormats
             string nowload = bnd.Files[0].Name.Substring(bnd.Files[0].Name.LastIndexOf("\\") + 1);
 
             string folder;
-            if (bnd.Files.NamesContains("event\\mission\\", "mission\\battlefeild", "model\\map\\ch_nav\\battlefeild_", "mission\\mission_"))
+            if (bnd.Files.NamesContains("event\\mission\\", "model\\cam\\cam_a.bnd", "mission\\battlefeild", "model\\map\\ch_nav\\battlefeild_", "mission\\mission_"))
                 folder = "mission/";
-            else if (bnd.Files.NamesContains("a0") && bnd.Files.NamesContains(".ani"))
+            else if (bnd.Files.NamesStartsWiths("a0") && bnd.Files.NamesEndsWiths(".ani"))
                 folder = "model/motion/";
-            else if (bnd.Files.NamesContains("b") && bnd.Files.NamesContains(".flv", ".tpf"))
+            else if (bnd.Files.NamesStartsWiths("b") && bnd.Files.NamesEndsWiths(".flv", ".flver", ".tpf"))
                 folder = "model/break/";
+            else if (bnd.Files.NamesStartsWiths("e") && bnd.Files.NamesEndsWiths(".flv", ".flver", ".tpf"))
+                folder = "model/ene/";
             else if (nowload.Length == 6 && nowload.EndsWith(".tpf"))
                 folder = "lang/nowload/";
             else
@@ -122,6 +124,24 @@ namespace SoulsFormats
             foreach (BinderFile file in files)
                 foreach (string str in strs)
                     if (file.Name.Contains(str))
+                        return true;
+            return false;
+        }
+
+        private static bool NamesStartsWiths(this List<BinderFile> files, params string[] strs)
+        {
+            foreach (BinderFile file in files)
+                foreach (string str in strs)
+                    if (file.Name.StartsWith(str))
+                        return true;
+            return false;
+        }
+
+        private static bool NamesEndsWiths(this List<BinderFile> files, params string[] strs)
+        {
+            foreach (BinderFile file in files)
+                foreach (string str in strs)
+                    if (file.Name.EndsWith(str))
                         return true;
             return false;
         }
