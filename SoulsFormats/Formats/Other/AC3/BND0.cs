@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace SoulsFormats.AC3
@@ -31,7 +30,7 @@ namespace SoulsFormats.AC3
     }
 
     /// <summary>
-    /// BND file from Armored Core Nine Breaker and Armored Core Last Raven
+    /// A BND file from Armored Core Nine Breaker, Armored Core Last Raven, and Metal Wolf Chaos.
     /// </summary>
     public class BND0 : SoulsFile<BND0>
     {
