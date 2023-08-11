@@ -210,6 +210,13 @@ namespace SoulsFormats
             return dds.Write(bytes);
         }
 
+        public static byte[] Deheaderize(TPF.Texture texture)
+        {
+            var byteList = texture.Bytes.ToList();
+            byteList.RemoveRange(0, 0x80);
+            return byteList.ToArray();
+        }
+
         private static int DetermineMipCount(int width, int height)
         {
             return (int)Math.Ceiling(Math.Log(Math.Max(width, height), 2)) + 1;

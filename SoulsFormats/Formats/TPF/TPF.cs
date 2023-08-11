@@ -328,6 +328,23 @@ namespace SoulsFormats
             }
 
             /// <summary>
+            /// Remove the added DDS header for console TPFs if it exists.
+            /// </summary>
+            /// <returns>DDS texture bytes without the DDS Header.</returns>
+            public byte[] Deheaderize()
+            {
+                if (Bytes.Length >= 3)
+                {
+                    var magic = new byte[3] { Bytes[0], Bytes[1], Bytes[2] };
+                    if (SFEncoding.ASCII.GetString(magic) == "DDS")
+                    {
+                        return Headerizer.Deheaderize(this);
+                    }
+                }
+                return Bytes;
+            }
+
+            /// <summary>
             /// Returns the name of this texture.
             /// </summary>
             public override string ToString()
