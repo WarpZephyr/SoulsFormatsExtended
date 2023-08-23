@@ -1,7 +1,14 @@
-# SoulsFormats
+# SoulsFormatsExtended
 A .NET library for reading and writing various FromSoftware file formats, targeting .NET Framework 4.6 and .NET Standard 2.1.  
-Dark Souls, Demon's Souls, Bloodborne, and Sekiro are the main focus, but other From games may be supported to varying degrees.  
+Dark Souls, Demon's Souls, Bloodborne, and Sekiro are the main focus, but other FromSoftware games may be supported to varying degrees.  
 A brief description of each supported format can be found in FORMATS.md, with further documentation for some formats.  
+
+The original SoulsFormats is by TKGP
+This is based on a fork of theirs:
+https://www.github.com/JKAnderson/SoulsFormats
+
+The fork looks very different because it was received by me from Dropoff,
+Who added FLVER0 write support.
 
 ## Usage
 Objects for most formats can be created with the static method Read, which accepts either a byte array or a file path. Using a path is preferable as it will be read with a stream, reducing memory consumption.
@@ -67,7 +74,6 @@ File.WriteAllBytes(@"C:\your\path\here.chrbnd.dcx", dcxBytes);
 ```
 
 ## Special Thanks
-To everyone below, for either creating tools that I learned from, or helping decipher these formats one way or another. Please yell at me on Discord if I missed you.
 * albeartron
 * Atvaark
 * B3LYP
@@ -82,3 +88,5 @@ To everyone below, for either creating tools that I learned from, or helping dec
 * thefifthmatt
 * Wulf2k
 * Yoshimitsu
+* TKGP
+* Dropoff

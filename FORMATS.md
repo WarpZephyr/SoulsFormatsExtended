@@ -41,6 +41,7 @@ NVM | .nvm | The navmesh format used in DeS and DS1
 [PARAM](#param) | .param | A generic configuration format
 PARAMDEF | .def, .paramdef | A companion format that specifies the format of data in a param
 PARAMTDF | .tdf | A companion format that provides friendly names for enumerated types in params
+PARAMDBP | .dbp | A descriptor for special params that only have fields for configuration. These only appear in Armored Core games so far.
 PMDCL | .pmdcl | Places and configures static map decals in DS3
 RMB | .rmb | Controller rumble effects for all games
 TAE3 | .tae | The animation event format used in DS3
@@ -115,3 +116,14 @@ foreach (BinderFile file in parambnd.Files)
 }
 parambnd.Write(path);
 ```
+
+<a name="paramdbp"></a>
+#PARAMDBP
+Param dbps are not the same as params above, they are a very stripped down and simple format, usually storing only global setting values.  
+There are ".dbp" files in folders labeled "DBMenu", usually in the boot archive for the game.  
+These have only been spotted in Armored Core 4, Armored Core For Answer, Armored Core V, and Armored Core Verdict Day so far.  
+Dbps are similar to defs in that they give information about the param files they read.  
+The param files are just fields without any extra identifying information, dbps should usually be matched by file name.  
+Oddly enough not all fields have descriptions, despite them having set values.
+
+The DBPPARAM class is used for the param file with the fields, the PARAMDBP class is used for the dbp files with the descriptors.

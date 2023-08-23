@@ -8,6 +8,9 @@ namespace SoulsFormats
     /// <summary>
     /// Armored Core For Answer animations.
     /// </summary>
+	/// <remarks>
+	/// Extremely poor and incomplete support at this time.
+	/// </remarks>
     public class ANI : SoulsFile<ANI>
     {
         /// <summary>
