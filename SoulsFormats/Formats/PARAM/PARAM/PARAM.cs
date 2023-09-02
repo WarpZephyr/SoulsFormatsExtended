@@ -47,7 +47,7 @@ namespace SoulsFormats
         /// <summary>
         /// Automatically determined based on spacing of row offsets; -1 if param had no rows.
         /// </summary>
-        public long RowSize { get; private set; }
+        public long DetectedRowSize { get; private set; }
 
         /// <summary>
         /// The rows of this param; must be loaded with PARAM.ApplyParamdef() before cells can be used.
@@ -124,11 +124,11 @@ namespace SoulsFormats
                 Rows.Add(new Row(br, this, ref actualStringsOffset));
 
             if (Rows.Count > 1)
-                RowSize = Rows[1].DataOffset - Rows[0].DataOffset;
+                DetectedRowSize = Rows[1].DataOffset - Rows[0].DataOffset;
             else if (Rows.Count == 1)
-                RowSize = (actualStringsOffset == 0 ? stringsOffset : actualStringsOffset) - Rows[0].DataOffset;
+                DetectedRowSize = (actualStringsOffset == 0 ? stringsOffset : actualStringsOffset) - Rows[0].DataOffset;
             else
-                RowSize = -1;
+                DetectedRowSize = -1;
 
             long dataStart = 0;
             if (Rows.Count > 0)
@@ -139,7 +139,7 @@ namespace SoulsFormats
             if (Format2D.HasFlag(FormatFlags1.OffsetParamType))
             {
                 // Check if ParamTypeOffset is valid.
-                if (paramTypeOffset == dataStart + (rowCount * RowSize))
+                if (paramTypeOffset == dataStart + (rowCount * DetectedRowSize))
                 {
                     ParamType = br.GetASCII(paramTypeOffset);
                 }
@@ -251,7 +251,7 @@ namespace SoulsFormats
         public bool ApplyParamdefCarefully(PARAMDEF paramdef)
         {
             if (ParamType == paramdef.ParamType && ParamdefDataVersion == paramdef.DataVersion
-                && (RowSize == -1 || RowSize == paramdef.GetRowSize()))
+                && (DetectedRowSize == -1 || DetectedRowSize == paramdef.GetRowSize()))
             {
                 ApplyParamdef(paramdef);
                 return true;
