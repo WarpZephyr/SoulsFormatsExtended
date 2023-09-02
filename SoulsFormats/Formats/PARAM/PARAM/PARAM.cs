@@ -143,6 +143,10 @@ namespace SoulsFormats
                 {
                     ParamType = br.GetASCII(paramTypeOffset);
                 }
+                else
+                {
+                    ParamType = string.Empty;
+                }
             }
         }
 
@@ -277,7 +281,7 @@ namespace SoulsFormats
         /// </summary>
         public bool ApplyParamdefSomewhatCarefully(PARAMDEF paramdef)
         {
-            if (ParamType == paramdef.ParamType && ParamdefDataVersion == paramdef.DataVersion)
+            if ((ParamType == paramdef.ParamType || string.IsNullOrEmpty(ParamType)) && ParamdefDataVersion == paramdef.DataVersion)
             {
                 ApplyParamdef(paramdef);
                 return true;
