@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SoulsFormats
 {
@@ -46,7 +47,7 @@ namespace SoulsFormats
         /// <summary>
         /// Automatically determined based on spacing of row offsets; -1 if param had no rows.
         /// </summary>
-        public long DetectedSize { get; private set; }
+        public long RowSize { get; private set; }
 
         /// <summary>
         /// The rows of this param; must be loaded with PARAM.ApplyParamdef() before cells can be used.
@@ -90,12 +91,14 @@ namespace SoulsFormats
             Unk06 = br.ReadInt16();
             ParamdefDataVersion = br.ReadInt16();
             ushort rowCount = br.ReadUInt16();
+            long paramTypeOffset = 0;
             if (Format2D.HasFlag(FormatFlags1.OffsetParamType))
             {
                 br.AssertInt32(0);
-                long paramTypeOffset = br.ReadInt64();
+                paramTypeOffset = br.ReadInt64();
                 br.AssertPattern(0x14, 0x00);
-                ParamType = br.GetASCII(paramTypeOffset);
+
+                // ParamType itself will be checked after rows.
                 actualStringsOffset = paramTypeOffset;
             }
             else
@@ -121,11 +124,26 @@ namespace SoulsFormats
                 Rows.Add(new Row(br, this, ref actualStringsOffset));
 
             if (Rows.Count > 1)
-                DetectedSize = Rows[1].DataOffset - Rows[0].DataOffset;
+                RowSize = Rows[1].DataOffset - Rows[0].DataOffset;
             else if (Rows.Count == 1)
-                DetectedSize = (actualStringsOffset == 0 ? stringsOffset : actualStringsOffset) - Rows[0].DataOffset;
+                RowSize = (actualStringsOffset == 0 ? stringsOffset : actualStringsOffset) - Rows[0].DataOffset;
             else
-                DetectedSize = -1;
+                RowSize = -1;
+
+            long dataStart = 0;
+            if (Rows.Count > 0)
+            {
+                dataStart = Rows.Min(row => row.DataOffset);
+            }
+
+            if (Format2D.HasFlag(FormatFlags1.OffsetParamType))
+            {
+                // Check if ParamTypeOffset is valid.
+                if (paramTypeOffset == dataStart + (rowCount * RowSize))
+                {
+                    ParamType = br.GetASCII(paramTypeOffset);
+                }
+            }
         }
 
         /// <summary>
@@ -233,7 +251,7 @@ namespace SoulsFormats
         public bool ApplyParamdefCarefully(PARAMDEF paramdef)
         {
             if (ParamType == paramdef.ParamType && ParamdefDataVersion == paramdef.DataVersion
-                && (DetectedSize == -1 || DetectedSize == paramdef.GetRowSize()))
+                && (RowSize == -1 || RowSize == paramdef.GetRowSize()))
             {
                 ApplyParamdef(paramdef);
                 return true;
