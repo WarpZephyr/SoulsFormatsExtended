@@ -55,6 +55,8 @@ namespace SoulsFormats
         {
             br.BigEndian = true;
             br.AssertASCII("MDL4");
+
+            Header = new MDLHeader();
             Header.Version = br.AssertInt32(0x40001, 0x40002);
             int dataOffset = br.ReadInt32();
             int dataLength = br.ReadInt32();

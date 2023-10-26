@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace SoulsFormats
 {
@@ -113,7 +114,7 @@ namespace SoulsFormats
                     if (format == 0)
                     {
                         Position = br.ReadVector3();
-                        Normal = ReadSByteVector4(br);
+                        Normal = ReadSByteVector4Normal(br);
                         Tangent = ReadSByteVector4(br);
                         Color = VertexColor.ReadByteARGB(br);
                         UVs.Add(ReadShortUV(br));
@@ -203,6 +204,15 @@ namespace SoulsFormats
                 sbyte y = br.ReadSByte();
                 sbyte x = br.ReadSByte();
                 return new Vector4(x / 127f, y / 127f, z / 127f, w / 127f);
+            }
+
+            private static Vector4 ReadSByteVector4Normal(BinaryReaderEx br)
+            {
+                sbyte w = br.ReadSByte();
+                sbyte z = br.ReadSByte();
+                sbyte y = br.ReadSByte();
+                sbyte x = br.ReadSByte();
+                return new Vector4(x / 127f, y / 127f, z / 127f, w);
             }
 
             private static Vector2 ReadShortUV(BinaryReaderEx br)
