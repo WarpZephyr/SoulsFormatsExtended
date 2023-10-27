@@ -102,7 +102,7 @@ namespace SoulsFormats
                 int indicesOffset = br.ReadInt32();
 
                 int indexSize = 0;
-                if (header.Version > 0x20005)
+                if (header.Version > 0x20005 && header.Version != 0x20007)
                 {
                     br.ReadInt32(); // Indices length
                     br.AssertInt32(0);

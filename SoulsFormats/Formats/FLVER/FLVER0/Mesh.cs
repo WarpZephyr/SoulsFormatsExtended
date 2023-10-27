@@ -45,7 +45,6 @@ namespace SoulsFormats
             public List<int> VertexIndices { get; set; }
 
             public List<FLVER.Vertex> Vertices { get; set; }
-
             IReadOnlyList<FLVER.Vertex> IFlverMesh.Vertices => Vertices;
 
             public List<VertexBuffer> VertexBuffers1 { get; set; }
