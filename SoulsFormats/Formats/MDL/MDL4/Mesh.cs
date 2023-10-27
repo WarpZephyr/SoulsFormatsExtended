@@ -27,19 +27,19 @@ namespace SoulsFormats
             public byte MaterialIndex;
 
             /// <summary>
-            /// Unknown.
+            /// Whether triangles can be seen through from behind.
             /// </summary>
-            public bool Unk02;
+            public bool CullBackfaces;
 
             /// <summary>
-            /// Unknown.
+            /// Whether vertices are defined as a triangle strip or individual triangles.
             /// </summary>
-            public bool Unk03;
+            public byte TriangleStrip;
 
             /// <summary>
-            /// Unknown.
+            /// Apparently does nothing. Usually points to a dummy bone named after the model, possibly just for labelling.
             /// </summary>
-            public short Unk08;
+            public short DefaultBoneIndex;
 
             /// <summary>
             /// Indexes of bones in the bone collection which may be used by vertices in this mesh.
@@ -68,10 +68,10 @@ namespace SoulsFormats
             {
                 VertexFormat = br.AssertByte(0, 1, 2);
                 MaterialIndex = br.ReadByte();
-                Unk02 = br.ReadBoolean();
-                Unk03 = br.ReadBoolean();
+                CullBackfaces = br.ReadBoolean();
+                TriangleStrip = br.ReadByte();
                 ushort vertexIndexCount = br.ReadUInt16();
-                Unk08 = br.ReadInt16();
+                DefaultBoneIndex = br.ReadInt16();
                 BoneIndices = br.ReadInt16s(28);
                 int vertexIndicesLength = br.ReadInt32();
                 int vertexIndicesOffset = br.ReadInt32();
@@ -123,10 +123,10 @@ namespace SoulsFormats
             {
                 bw.WriteByte(VertexFormat);
                 bw.WriteByte(MaterialIndex);
-                bw.WriteBoolean(Unk02);
-                bw.WriteBoolean(Unk03);
+                bw.WriteBoolean(CullBackfaces);
+                bw.WriteByte(TriangleStrip);
                 bw.WriteUInt16((ushort)VertexIndices.Length); // Vertex Index Count
-                bw.WriteInt16(Unk08);
+                bw.WriteInt16(DefaultBoneIndex);
                 bw.WriteInt16s(BoneIndices);
                 bw.ReserveInt32($"VertexIndicesLength_{index}");
                 bw.ReserveInt32($"VertexIndicesOffset_{index}");

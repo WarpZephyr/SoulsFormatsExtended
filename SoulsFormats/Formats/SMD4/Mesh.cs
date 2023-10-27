@@ -93,7 +93,7 @@ namespace SoulsFormats
                 MaterialIndex = br.ReadByte();
                 CullBackfaces = br.ReadBoolean();
                 TriangleStrip = br.ReadByte();
-                short vertexIndexCount = br.ReadInt16();
+                ushort vertexIndexCount = br.ReadUInt16();
                 DefaultBoneIndex = br.ReadInt16();
                 BoneIndices = br.ReadInt16s(28);
                 int vertexIndicesLength = br.AssertInt32(vertexIndexCount * 2);

@@ -145,13 +145,13 @@ namespace SoulsFormats
             for (int i = 0; i < Meshes.Count; i++)
             {
                 Mesh mesh = Meshes[i];
-                bw.FillInt32($"vertexIndicesOffset_{i}", (int)bw.Position);
+                bw.FillInt32($"vertexIndicesOffset_{i}", (int)bw.Position - dataStart);
                 bw.WriteUInt16s(mesh.VertexIndices);
                 bw.Pad(0x10);
 
-                bw.FillInt32($"vertexBufferOffset_{i}", (int)bw.Position);
-                for (int k = 0; k < mesh.Vertices.Count; i++)
-                    mesh.Vertices[i].Write(bw);
+                bw.FillInt32($"vertexBufferOffset_{i}", (int)bw.Position - dataStart);
+                foreach (Vertex vertex in mesh.Vertices)
+                    vertex.Write(bw);
             }
             bw.Pad(0x800);
 
