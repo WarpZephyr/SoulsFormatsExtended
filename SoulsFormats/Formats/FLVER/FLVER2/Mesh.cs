@@ -53,7 +53,8 @@ namespace SoulsFormats
             /// </summary>
             public BoundingBoxes BoundingBox { get; set; }
 
-            private int[] faceSetIndices, vertexBufferIndices;
+            private int[] faceSetIndices;
+            private int[] vertexBufferIndices;
 
             /// <summary>
             /// Creates a new Mesh with default values.

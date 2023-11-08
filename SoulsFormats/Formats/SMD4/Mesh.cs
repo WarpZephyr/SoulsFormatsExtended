@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SoulsFormats
 {
@@ -10,9 +11,9 @@ namespace SoulsFormats
         public class Mesh
         {
             /// <summary>
-            /// When 1, mesh is in bind pose; when 0, it isn't. Most likely has further implications.
+            /// The format of vertices in the vertex buffer.
             /// </summary>
-            public byte Dynamic { get; set; }
+            public byte VertexFormat { get; set; }
 
             /// <summary>
             /// Index of the material used by all triangles in this mesh.
@@ -27,7 +28,7 @@ namespace SoulsFormats
             /// <summary>
             /// Whether vertices are defined as a triangle strip or individual triangles.
             /// </summary>
-            public byte TriangleStrip { get; set; }
+            public bool UseTriangleStrips { get; set; }
 
             /// <summary>
             /// Apparently does nothing. Usually points to a dummy bone named after the model, possibly just for labelling.
@@ -50,14 +51,14 @@ namespace SoulsFormats
             public List<Vertex> Vertices { get; set; }
 
             /// <summary>
-            /// Create a new Mesh with default values.
+            /// Create a new and empty Mesh with default values.
             /// </summary>
             public Mesh()
             {
-                Dynamic = 0;
+                VertexFormat = 0;
                 MaterialIndex = 0;
                 CullBackfaces = true;
-                TriangleStrip = 0;
+                UseTriangleStrips = false;
                 DefaultBoneIndex = 0;
                 BoneIndices = new short[28];
                 VertexIndices = new List<ushort>();
@@ -71,10 +72,10 @@ namespace SoulsFormats
             /// </summary>
             public Mesh(Mesh mesh)
             {
-                Dynamic = mesh.Dynamic;
+                VertexFormat = mesh.VertexFormat;
                 MaterialIndex = mesh.MaterialIndex;
                 CullBackfaces = mesh.CullBackfaces;
-                TriangleStrip = mesh.TriangleStrip;
+                UseTriangleStrips = mesh.UseTriangleStrips;
                 DefaultBoneIndex = mesh.DefaultBoneIndex;
                 BoneIndices = new short[28];
                 VertexIndices = new List<ushort>();
@@ -87,12 +88,15 @@ namespace SoulsFormats
                     Vertices[i] = new Vertex(mesh.Vertices[i]);
             }
 
-            internal Mesh(BinaryReaderEx br, int dataOffset)
+            /// <summary>
+            /// Read a new Mesh from a stream.
+            /// </summary>
+            internal Mesh(BinaryReaderEx br, int dataOffset, int version)
             {
-                Dynamic = br.ReadByte();
+                VertexFormat = br.ReadByte();
                 MaterialIndex = br.ReadByte();
                 CullBackfaces = br.ReadBoolean();
-                TriangleStrip = br.ReadByte();
+                UseTriangleStrips = br.ReadBoolean();
                 ushort vertexIndexCount = br.ReadUInt16();
                 DefaultBoneIndex = br.ReadInt16();
                 BoneIndices = br.ReadInt16s(28);
@@ -107,35 +111,56 @@ namespace SoulsFormats
                 VertexIndices.AddRange(br.GetUInt16s(dataOffset + vertexIndicesOffset, vertexIndexCount));
 
                 br.StepIn(dataOffset + vertexBufferOffset);
-                int vertexCount = vertexBufferLength / 16;
+                int vertexCount = vertexBufferLength / GetVertexSize(version);
                 for (int i = 0; i < vertexCount; i++)
                 {
-                    Vertices.Add(new Vertex(br));
+                    Vertices.Add(new Vertex(br, version, VertexFormat));
                 }
                 br.StepOut();
             }
 
-            internal void Write(BinaryWriterEx bw, int index)
+            /// <summary>
+            /// Write this Mesh to a stream.
+            /// </summary>
+            internal void Write(BinaryWriterEx bw, int index, int version)
             {
-                bw.WriteByte(Dynamic);
+                bw.WriteByte(VertexFormat);
                 bw.WriteByte(MaterialIndex);
                 bw.WriteBoolean(CullBackfaces);
-                bw.WriteByte(TriangleStrip);
+                bw.WriteBoolean(UseTriangleStrips);
                 bw.WriteInt16((short)VertexIndices.Count);
                 bw.WriteInt16(DefaultBoneIndex);
                 bw.WriteInt16s(BoneIndices);
                 bw.WriteInt32(VertexIndices.Count * 2);
                 bw.ReserveInt32($"vertexIndicesOffset_{index}");
-                bw.WriteInt32(Vertices.Count * 16);
+                bw.WriteInt32(Vertices.Count * GetVertexSize(version));
                 bw.ReserveInt32($"vertexBufferOffset_{index}");
             }
 
             /// <summary>
-            /// Get the calculated strip count from the VertexIndices of this Mesh.
+            /// Get the size of each Vertex.
             /// </summary>
-            public int GetStripCount()
+            internal int GetVertexSize(int version)
             {
-                return new TriangleStripCollection(VertexIndices, 65535).StripCount;
+                if (version == 0x40001)
+                {
+                    if (VertexFormat == 0)
+                    {
+                        return 16;
+                    }
+                    else if (VertexFormat == 2)
+                    {
+                        return 36;
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"VertexFormat {VertexFormat} is not currently supported for Version {version}.");
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException($"Version {version} is not currently supported.");
+                }
             }
 
             /// <summary>
@@ -147,11 +172,62 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Get a list of faces containing vertex indices.
+            /// Get the calculated strip count from the VertexIndices of this Mesh.
             /// </summary>
-            public List<int[]> GetFaces()
+            public int GetStripCount()
             {
-                return new TriangleStripCollection(VertexIndices, 65535).GetFaces();
+                return new TriangleStripCollection(VertexIndices, 65535).StripCount;
+            }
+
+            /// <summary>
+            /// Get a list of faces as index arrays.
+            /// </summary>
+            public List<int[]> GetFaceIndices()
+            {
+                return new TriangleStripCollection(VertexIndices, 65535).GetFaceIndices();
+            }
+
+            /// <summary>
+            /// Get a list of faces as index arrays.
+            /// </summary>
+            public List<ushort[]> GetFaceIndicesUShort()
+            {
+                return new TriangleStripCollection(VertexIndices, 65535).GetFaceIndicesUShort();
+            }
+
+            /// <summary>
+            /// Get a list of all indices.
+            /// </summary>
+            public List<int> GetIndices()
+            {
+                return new TriangleStripCollection(VertexIndices, 65535).GetIndices();
+            }
+
+            /// <summary>
+            /// Get a list of indices.
+            /// </summary>
+            public List<ushort> GetIndicesUShort()
+            {
+                return new TriangleStripCollection(VertexIndices, 65535).GetIndicesUShort();
+            }
+
+            /// <summary>
+            /// Gets a list of the faces used by this mesh as a list of vertex arrays.
+            /// </summary>
+            public List<Vertex[]> GetFaces()
+            {
+                List<ushort> indices = GetIndicesUShort();
+                var faces = new List<Vertex[]>();
+                for (int i = 0; i < indices.Count; i += 3)
+                {
+                    faces.Add(new Vertex[]
+                    {
+                        Vertices[indices[i + 0]],
+                        Vertices[indices[i + 1]],
+                        Vertices[indices[i + 2]],
+                    });
+                }
+                return faces;
             }
         }
     }

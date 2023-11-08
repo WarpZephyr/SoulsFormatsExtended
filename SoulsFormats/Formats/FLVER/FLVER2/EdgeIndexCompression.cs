@@ -18,8 +18,10 @@ namespace SoulsFormats
                 {
                     long start = br.Position;
                     short memberCount = br.ReadInt16();
+                    short vetrexIndexSize = br.ReadInt16();
                     br.ReadInt16();
-                    br.ReadInt32();
+                    br.ReadByte();
+                    br.ReadByte();
                     br.AssertInt32(0);
                     br.ReadInt32();
 

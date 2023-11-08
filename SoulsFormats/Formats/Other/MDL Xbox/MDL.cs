@@ -23,7 +23,7 @@ namespace SoulsFormats.Other
         public int Unk14;
 
         /// <summary>
-        /// The meshes with the model.
+        /// Individual chunks of the model.
         /// </summary>
         public List<Mesh> Meshes;
 

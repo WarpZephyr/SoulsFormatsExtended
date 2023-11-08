@@ -19,52 +19,77 @@ namespace SoulsFormats
         public class Dummy
         {
             /// <summary>
+            /// Location of the dummy point.
+            /// </summary>
+            public Vector3 Position { get; set; }
+
+            /// <summary>
             /// Vector indicating the dummy point's forward direction.
             /// </summary>
-            public Vector3 Forward;
+            public Vector3 Forward { get; set; }
 
             /// <summary>
-            /// Vector indicating the dummy point's upward direction.
+            /// Unknown; ARGB order.
             /// </summary>
-            public Vector3 Upward;
+            public Color Color { get; set; }
 
             /// <summary>
-            /// Unknown; Order of colors also unknown.
+            /// Indicates the type of dummy point this is (hitbox, sfx, etc).
             /// </summary>
-            public Color Color;
+            public short ReferenceID { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Index of a bone that the dummy point is initially transformed to before binding to the attach bone.
             /// </summary>
-            public short ID;
+            public short ParentBoneIndex { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Index of the bone that the dummy point follows physically.
             /// </summary>
-            public short Unk1E;
+            public short AttachBoneIndex { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; Could be two bytes, one representing UseUpwardVector.
             /// </summary>
-            public short Unk20;
+            public short Unk22 { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Create a new Dummy with default values.
             /// </summary>
-            public short Unk22;
+            public Dummy()
+            {
+                ParentBoneIndex = 0;
+                AttachBoneIndex = -1;
+            }
 
             /// <summary>
-            /// Reads a dummy from an MDL4 file.
+            /// Clone an existing Dummy.
+            /// </summary>
+            public Dummy(Dummy dummy)
+            {
+                Position = dummy.Position;
+                Forward = dummy.Forward;
+                ReferenceID = dummy.ReferenceID;
+                ParentBoneIndex = dummy.ParentBoneIndex;
+                AttachBoneIndex = dummy.AttachBoneIndex;
+                Color = dummy.Color;
+                Unk22 = dummy.Unk22;
+            }
+
+            /// <summary>
+            /// Read a Dummy from a stream.
             /// </summary>
             internal Dummy(BinaryReaderEx br)
             {
+                Position = br.ReadVector3();
                 Forward = br.ReadVector3();
-                Upward = br.ReadVector3();
-                Color = br.ReadARGB(); // Unknown order
-                ID = br.ReadInt16();
-                Unk1E = br.ReadInt16();
-                Unk20 = br.ReadInt16();
-                Unk22 = br.ReadInt16();
+                Color = br.ReadARGB();
+                ReferenceID = br.ReadInt16();
+                ParentBoneIndex = br.ReadInt16();
+                AttachBoneIndex = br.ReadInt16();
+                Unk22 = br.ReadInt16(); // Some flag then UseUpwardVector?
+
+                // Upward Vector?
                 br.AssertInt32(0);
                 br.AssertInt32(0);
                 br.AssertInt32(0);
@@ -75,13 +100,15 @@ namespace SoulsFormats
             /// </summary>
             internal void Write(BinaryWriterEx bw)
             {
+                bw.WriteVector3(Position);
                 bw.WriteVector3(Forward);
-                bw.WriteVector3(Upward);
-                bw.WriteARGB(Color); // Unknown order
-                bw.WriteInt16(ID);
-                bw.WriteInt16(Unk1E);
-                bw.WriteInt16(Unk20);
-                bw.WriteInt16(Unk22);
+                bw.WriteARGB(Color);
+                bw.WriteInt16(ReferenceID);
+                bw.WriteInt16(ParentBoneIndex);
+                bw.WriteInt16(AttachBoneIndex);
+                bw.WriteInt16(Unk22); // Some flag then UseUpwardVector?
+
+                // Upward Vector?
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);

@@ -2,7 +2,7 @@
 
 namespace SoulsFormats
 {
-    public partial class MDL4
+    public partial class SMD4
     {
         /// <summary>
         /// Four weights for binding a vertex to bones, accessed like an array. Unused bones should be set to 0.
@@ -49,7 +49,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Creates a VertexBoneWeights with the given ABCD values in float form.
+            /// Create a new VertexBoneWeights array using the specified weights.
             /// </summary>
             public VertexBoneWeights(float a, float b, float c, float d)
             {
@@ -57,29 +57,6 @@ namespace SoulsFormats
                 B = b;
                 C = c;
                 D = d;
-            }
-
-            /// <summary>
-            /// Read a VertexBoneWeight from a stream.
-            /// </summary>
-            internal static VertexBoneWeights ReadBoneWeights(BinaryReaderEx br)
-            {
-                float a = br.ReadSingle();
-                float b = br.ReadSingle();
-                float c = br.ReadSingle();
-                float d = br.ReadSingle();
-                return new VertexBoneWeights(a, b, c, d);
-            }
-
-            /// <summary>
-            /// Write this VertexBoneWeight to a stream.
-            /// </summary>
-            internal void WriteBoneWeights(BinaryWriterEx bw)
-            {
-                bw.WriteSingle(A);
-                bw.WriteSingle(B);
-                bw.WriteSingle(C);
-                bw.WriteSingle(D);
             }
         }
     }

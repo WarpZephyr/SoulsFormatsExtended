@@ -76,10 +76,10 @@ namespace SoulsFormats
             if (br.Length < 0xC)
                 return false;
 
-            string magic = br.GetASCII(0, 6);
-            string endian = br.GetASCII(6, 2);
+            string magic = br.ReadASCII(6);
+            string endian = br.ReadASCII(2);
             br.BigEndian = endian == "B\0";
-            int version = br.GetInt32(8);
+            int version = br.ReadInt32();
             return magic == "FLVER\0" && version >= 0x20000;
         }
 
@@ -429,7 +429,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// General metadata about a FLVER.
+        /// General metadata about a FLVER2.
         /// </summary>
         public class FLVERHeader
         {

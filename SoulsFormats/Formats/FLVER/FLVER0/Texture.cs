@@ -2,59 +2,94 @@
 {
     public partial class FLVER0
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// A single texture map used by a material.
+        /// </summary>
         public class Texture : IFlverTexture
         {
+            /// <summary>
+            /// Indicates the type of texture map this is.
+            /// </summary>
             public string Type { get; set; }
 
+            /// <summary>
+            /// Network path to the texture file; only the filename without extension is actually used.
+            /// </summary>
             public string Path { get; set; }
 
             /// <summary>
-            /// Creates a new Texture with null or default values.
+            /// Create a new empty Texture.
             /// </summary>
             public Texture()
             {
-                Path = "";
-                Type = "";
+                Type = string.Empty;
+                Path = string.Empty;
             }
 
-            internal Texture(BinaryReaderEx br, FLVER0 flv)
+            /// <summary>
+            /// Create a new texture with the specified type and path.
+            /// </summary>
+            /// <param name="type">Indicates the type of texture map.</param>
+            /// <param name="path">The name of the texture file.</param>
+            public Texture(string type, string path)
+            {
+                Type = type;
+                Path = path;
+            }
+
+            /// <summary>
+            /// Clone an existing Texture.
+            /// </summary>
+            public Texture(Texture texture)
+            {
+                texture.Path = Path;
+                texture.Type = Type;
+            }
+
+            /// <summary>
+            /// Read a texture map from a stream.
+            /// </summary>
+            internal Texture(BinaryReaderEx br, bool useUnicode)
             {
                 int pathOffset = br.ReadInt32();
                 int typeOffset = br.ReadInt32();
                 br.AssertInt32(0);
                 br.AssertInt32(0);
 
-                Path = flv.Header.Unicode ? br.GetUTF16(pathOffset) : br.GetShiftJIS(pathOffset);
+                Path = useUnicode ? br.GetUTF16(pathOffset) : br.GetShiftJIS(pathOffset);
                 if (typeOffset > 0)
-                    Type = flv.Header.Unicode ? br.GetUTF16(typeOffset) : br.GetShiftJIS(typeOffset);
+                    Type = useUnicode ? br.GetUTF16(typeOffset) : br.GetShiftJIS(typeOffset);
                 else
                     Type = null;
             }
 
-            internal void Write(BinaryWriterEx bw, int index)
+            /// <summary>
+            /// Write this texture map to a stream.
+            /// </summary>
+            internal void Write(BinaryWriterEx bw, int materialIndex, int textureIndex)
             {
-                bw.ReserveInt32($"TexturePathOffset{index}");
-                bw.ReserveInt32($"TextureTypeOffset{index}");
+                bw.ReserveInt32($"Path_Offset{materialIndex}_{textureIndex}");
+                bw.ReserveInt32($"Type_Offset{materialIndex}_{textureIndex}");
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
             }
 
-            internal void WriteStrings(BinaryWriterEx bw, bool Unicode, int index)
+            /// <summary>
+            /// Write the strings of this texture map to a stream.
+            /// </summary>
+            internal void WriteStrings(BinaryWriterEx bw, int materialIndex, int textureIndex, bool useUnicode)
             {
-                bw.FillInt32($"TexturePathOffset{index}", (int)bw.Position);
-                if (Unicode)
+                bw.FillInt32($"Path_Offset{materialIndex}_{textureIndex}", (int)bw.Position);
+                if (useUnicode)
                     bw.WriteUTF16(Path, true);
                 else
                     bw.WriteShiftJIS(Path, true);
-
-                bw.FillInt32($"TextureTypeOffset{index}", (int)bw.Position);
-                if (Unicode)
+                bw.FillInt32($"Type_Offset{materialIndex}_{textureIndex}", (int)bw.Position);
+                if (useUnicode)
                     bw.WriteUTF16(Type, true);
                 else
                     bw.WriteShiftJIS(Type, true);
             }
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

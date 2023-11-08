@@ -111,7 +111,7 @@ namespace SoulsFormats
                 public object Value;
 
                 /// <summary>
-                /// Reads a material param from an MDL4.
+                /// Read a MATParam from a stream.
                 /// </summary>
                 internal MATParam(BinaryReaderEx br)
                 {
@@ -134,11 +134,10 @@ namespace SoulsFormats
                 }
 
                 /// <summary>
-                /// Writes a material param to an MDL4.
+                /// Write a MATParam to a stream.
                 /// </summary>
                 internal void Write(BinaryWriterEx bw)
                 {
-                    long start = bw.Position;
                     bw.WriteByte((byte)Type);
                     bw.WriteFixStr(Name, 0x1F);
 
@@ -153,7 +152,7 @@ namespace SoulsFormats
                             throw new NotImplementedException("Unknown param type: " + Type);
                     }
 
-                    bw.Position = start + 0x40;
+                    bw.Pad(0x20);
                 }
             }
 

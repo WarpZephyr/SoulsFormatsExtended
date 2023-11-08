@@ -80,6 +80,17 @@ namespace SoulsFormats
                 Index = index;
             }
 
+            /// <summary>
+            /// Clone an existing LayoutMember.
+            /// </summary>
+            public LayoutMember(LayoutMember layoutMember)
+            {
+                Unk00 = layoutMember.Unk00;
+                Type = layoutMember.Type;
+                Semantic = layoutMember.Semantic;
+                Index = layoutMember.Index;
+            }
+
             internal LayoutMember(BinaryReaderEx br, int structOffset)
             {
                 Unk00 = br.ReadInt32();

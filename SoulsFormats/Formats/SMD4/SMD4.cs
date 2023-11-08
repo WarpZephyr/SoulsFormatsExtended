@@ -50,10 +50,8 @@ namespace SoulsFormats
             Meshes = new List<Mesh>();
 
             Header.Version = smd.Header.Version;
-            Vector3 min = smd.Header.BoundingBoxMin;
-            Vector3 max = smd.Header.BoundingBoxMax;
-            Header.BoundingBoxMin = new Vector3(min.X, min.Y, min.Z);
-            Header.BoundingBoxMax = new Vector3(max.X, max.Y, max.Z);
+            Header.BoundingBoxMin = smd.Header.BoundingBoxMin;
+            Header.BoundingBoxMax = smd.Header.BoundingBoxMax;
 
             for (int i = 0; i < smd.UnkIndices.Count; i++)
                 UnkIndices.Add(smd.UnkIndices[i]);
@@ -88,25 +86,30 @@ namespace SoulsFormats
             int unkIndicesCount = br.ReadInt32();
             int boneCount = br.ReadInt32();
             int meshCount = br.ReadInt32();
-            int vertexBufferCount = br.AssertInt32(meshCount);
+            int vertexBufferCount = br.AssertInt32(meshCount); // Vertex Buffer Count Probably
 
             Header.BoundingBoxMin = br.ReadVector3();
             Header.BoundingBoxMax = br.ReadVector3();
-            int faceCount = br.ReadInt32();
+            int trueFaceCount = br.ReadInt32();
             int totalFaceCount = br.ReadInt32();
-
-            for (int i = 0; i < 16; i++)
-                br.AssertInt32(0);
+            br.AssertPattern(32, 0);
 
             UnkIndices = new List<int>();
             Bones = new List<Bone>();
             Meshes = new List<Mesh>();
 
-            UnkIndices.AddRange(br.ReadInt32s(unkIndicesCount));
+            for (int i = 0; i < unkIndicesCount; i++)
+            {
+                br.BigEndian = false;
+                UnkIndices.Add(br.ReadInt32());
+                br.AssertPattern(32, 0);
+                br.BigEndian = true;
+            }
+
             for (int i = 0; i < boneCount; i++)
                 Bones.Add(new Bone(br));
             for (int i = 0; i < meshCount; i++)
-                Meshes.Add(new Mesh(br, dataOffset));
+                Meshes.Add(new Mesh(br, dataOffset, Header.Version));
         }
 
         /// <summary>
@@ -122,21 +125,27 @@ namespace SoulsFormats
             bw.WriteInt32(UnkIndices.Count);
             bw.WriteInt32(Bones.Count);
             bw.WriteInt32(Meshes.Count);
-            bw.WriteInt32(Meshes.Count); // Vertex Buffer Count
+            bw.WriteInt32(Meshes.Count); // Vertex Buffer Count Probably
 
             bw.WriteVector3(Header.BoundingBoxMin);
             bw.WriteVector3(Header.BoundingBoxMax);
 
-            int faceCount = GetFaceCount();
-            bw.WriteInt32(faceCount);
-            bw.WriteInt32(faceCount); // Not entirely accurate but oh well
-            bw.WriteInt32s(new int[16]);
+            bw.WriteInt32(GetFaceCount()); // Not entirely accurate but oh well
+            bw.WriteInt32(GetIndiceCount()); // Not entirely accurate but oh well
+            bw.WritePattern(32, 0);
 
-            bw.WriteInt32s(UnkIndices);
+            for (int i = 0; i < UnkIndices.Count; i++)
+            {
+                bw.BigEndian = false;
+                bw.WriteInt32(UnkIndices[i]);
+                bw.WritePattern(32, 0);
+                bw.BigEndian = true;
+            }
+
             foreach (Bone bone in Bones)
                 bone.Write(bw);
             for (int i = 0; i < Meshes.Count; i++)
-                Meshes[i].Write(bw, i);
+                Meshes[i].Write(bw, i, Header.Version);
 
             // Fill Data
             bw.Pad(0x800);
@@ -151,12 +160,25 @@ namespace SoulsFormats
 
                 bw.FillInt32($"vertexBufferOffset_{i}", (int)bw.Position - dataStart);
                 foreach (Vertex vertex in mesh.Vertices)
-                    vertex.Write(bw);
+                    vertex.Write(bw, Header.Version, mesh.VertexFormat);
             }
             bw.Pad(0x800);
 
             int dataEnd = (int)bw.Position;
             bw.FillInt32("dataSize", dataEnd - dataStart);
+        }
+
+        /// <summary>
+        /// Get the total indice count from the VertexIndices of all Meshes in this model.
+        /// </summary>
+        public int GetIndiceCount()
+        {
+            int count = 0;
+            foreach (Mesh mesh in Meshes)
+            {
+                count += mesh.VertexIndices.Count;
+            }
+            return count;
         }
 
         /// <summary>

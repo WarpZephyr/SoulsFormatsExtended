@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 
 namespace SoulsFormats
@@ -40,7 +39,7 @@ namespace SoulsFormats
         IReadOnlyList<IFlverMesh> IFlver.Meshes => Meshes;
 
         /// <summary>
-        /// Creates a FLVER0 with a default header and empty lists.
+        /// Create a new and empty FLVER0.
         /// </summary>
         public FLVER0()
         {
@@ -49,6 +48,27 @@ namespace SoulsFormats
             Materials = new List<Material>();
             Bones = new List<FLVER.Bone>();
             Meshes = new List<Mesh>();
+        }
+
+        /// <summary>
+        /// Clone an existing FLVER0.
+        /// </summary>
+        public FLVER0(FLVER0 flver0)
+        {
+            Header = new FLVERHeader(flver0.Header);
+            Dummies = new List<FLVER.Dummy>();
+            Materials = new List<Material>();
+            Bones = new List<FLVER.Bone>();
+            Meshes = new List<Mesh>();
+
+            foreach(var dummy in flver0.Dummies)
+                Dummies.Add(new FLVER.Dummy(dummy));
+            foreach (var material in flver0.Materials)
+                Materials.Add(new Material(material));
+            foreach (var bone in flver0.Bones)
+                Bones.Add(new FLVER.Bone(bone));
+            foreach (var mesh in flver0.Meshes)
+                Meshes.Add(new Mesh(mesh));
         }
 
         /// <summary>
@@ -61,25 +81,24 @@ namespace SoulsFormats
 
             string magic = br.ReadASCII(6);
             string endian = br.ReadASCII(2);
-            if (endian == "L\0")
-                br.BigEndian = false;
-            else if (endian == "B\0")
-                br.BigEndian = true;
+            br.BigEndian = endian == "B\0";
             int version = br.ReadInt32();
             return magic == "FLVER\0" && version >= 0x00000 && version < 0x20000;
         }
 
         /// <summary>
-        /// Reads FLVER0 data from a BinaryReaderEx.
+        /// Read a FLVER0 from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
+            Header = new FLVERHeader();
+
             br.AssertASCII("FLVER\0");
             Header.BigEndian = br.AssertASCII("L\0", "B\0") == "B\0";
             br.BigEndian = Header.BigEndian;
 
             // 10002, 10003 - Another Century's Episode R
-            Header.Version = br.AssertInt32(0x0E, 0x0F, 0x10, 0x12, 0x13, 0x14, 0x15, // 0x11 needs to be added
+            Header.Version = br.AssertInt32(0x0E, 0x0F, 0x10, 0x12, 0x13, 0x14, 0x15,
                 0x10002, 0x10003);
             int dataOffset = br.ReadInt32();
             br.ReadInt32(); // Data length
@@ -112,7 +131,7 @@ namespace SoulsFormats
 
             Materials = new List<Material>(materialCount);
             for (int i = 0; i < materialCount; i++)
-                Materials.Add(new Material(br, this));
+                Materials.Add(new Material(br, Header.Unicode));
 
             Bones = new List<FLVER.Bone>(boneCount);
             for (int i = 0; i < boneCount; i++)
@@ -124,7 +143,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Writes FLVER0 data to a BinaryWriterEx.
+        /// Write this FLVER0 to a stream.
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
@@ -135,36 +154,46 @@ namespace SoulsFormats
 
             bw.ReserveInt32("DataOffset");
             bw.ReserveInt32("DataSize");
-
             bw.WriteInt32(Dummies.Count);
             bw.WriteInt32(Materials.Count);
             bw.WriteInt32(Bones.Count);
             bw.WriteInt32(Meshes.Count);
-            bw.WriteInt32(Meshes.Count);
+            bw.WriteInt32(Meshes.Count); // Vertex buffer count. Currently based on reads, there should only be one per mesh
             bw.WriteVector3(Header.BoundingBoxMin);
             bw.WriteVector3(Header.BoundingBoxMax);
 
-            int trueFaceCount = 0;
-            int totalFaceCount = 0;
+            int triCount = 0;
+            int indicesCount = 0;
+            for (int i = 0; i < Meshes.Count; i++)
+            {
+                triCount += Meshes[i].GetFaces(Header.Version).Count;
+                indicesCount += Meshes[i].VertexIndices.Count;
+            }
+            bw.WriteInt32(triCount);
+            bw.WriteInt32(indicesCount); // Not technically correct, but should be valid for the buffer size
+
+            byte vertexIndicesSize = 16;
             foreach (Mesh mesh in Meshes)
             {
-                mesh.AddFaceCounts(Header.Version, ref trueFaceCount, ref totalFaceCount);
+                vertexIndicesSize = (byte)Math.Max(vertexIndicesSize, mesh.GetVertexIndexSize());
             }
-            bw.WriteInt32(trueFaceCount);
-            bw.WriteInt32(totalFaceCount);
-            bw.WriteByte(Header.VertexIndexSize);//tempshit
+
+            bw.WriteByte(vertexIndicesSize);
             bw.WriteBoolean(Header.Unicode);
-            bw.WriteByte(Header.Unk4A);
-            bw.WriteByte(Header.Unk4B);
+            bw.WriteBoolean(Header.Unk4A > 0);
+            bw.WriteByte(0);
+
             bw.WriteInt32(Header.Unk4C);
+
             bw.WriteInt32(0);
             bw.WriteInt32(0);
             bw.WriteInt32(0);
-            bw.WriteByte(Header.Unk5C);
+            bw.WriteByte((byte)Header.Unk5C);
             bw.WriteByte(0);
             bw.WriteByte(0);
             bw.WriteByte(0);
-            bw.WritePattern(0x20, 0x00);
+
+            bw.WriteBytes(new byte[0x20]);
 
             foreach (FLVER.Dummy dummy in Dummies)
                 dummy.Write(bw, Header.Version);
@@ -176,51 +205,52 @@ namespace SoulsFormats
                 Bones[i].Write(bw, i);
 
             for (int i = 0; i < Meshes.Count; i++)
-                Meshes[i].Write(bw, i);
+                Meshes[i].Write(bw, this, i);
 
-
-            //Filling stuff
             for (int i = 0; i < Materials.Count; i++)
-            {
-                int dataStart = (int)bw.Position;
-                Materials[i].WriteStrings(bw, Header.Unicode, i);
-                Materials[i].WriteTextures(bw, Header.Unicode, i);
-                Materials[i].WriteLayouts(bw, i);
-                bw.FillInt32($"dataLength{i}", (int)bw.Position - dataStart);
-            }
+                Materials[i].WriteSubStructs(bw, Header.Unicode, i);
 
             for (int i = 0; i < Bones.Count; i++)
-            {
                 Bones[i].WriteStrings(bw, Header.Unicode, i);
-            }
 
             for (int i = 0; i < Meshes.Count; i++)
-            {
-                bw.FillInt32($"vertexBuffersHeaderOffset1_{i}", (int)bw.Position);
-                Meshes[i].WriteVertexBuffers1(bw, i);
-            }
+                Meshes[i].WriteVertexBufferHeader(bw, this, i);
+
             bw.Pad(0x20);
             int dataOffset = (int)bw.Position;
-            bw.FillInt32($"DataOffset", dataOffset);
+            bw.FillInt32("DataOffset", dataOffset);
+
             for (int i = 0; i < Meshes.Count; i++)
             {
-                bw.FillInt32($"vertexIndicesOffset{i}", (int)bw.Position - dataOffset);
-                bw.FillInt32($"vertexIndicesLength{i}", Meshes[i].VertexIndices.Count * 2);
-                Meshes[i].WriteIndexes(bw, Header.VertexIndexSize);
+                Meshes[i].WriteVertexIndices(bw, Header.VertexIndexSize, dataOffset, i);
                 bw.Pad(0x20);
-                bw.FillInt32($"BufferOffset1_{i}", (int)bw.Position - dataOffset);
-                bw.FillInt32($"bufferDataOffset{i}", (int)bw.Position - dataOffset);
-                int bufferStart = (int)bw.Position;
-                Meshes[i].WriteVertices(bw, Materials, i);
-                bw.FillInt32($"BufferLength1_{i}", (int)bw.Position - bufferStart);
+                Meshes[i].WriteVertexBufferData(bw, this, dataOffset, i);
                 bw.Pad(0x20);
             }
 
-            bw.FillInt32($"DataSize", (int)bw.Position - dataOffset);
+            bw.FillInt32("DataSize", (int)bw.Position - dataOffset);
         }
 
         /// <summary>
-        /// An FLVER0 header containing general values for this model.
+        /// Compute the full transform for a bone.
+        /// </summary>
+        /// <param name="index">The index of the bone to compute the full transform of.</param>
+        /// <returns>A matrix representing the world transform of the bone.</returns>
+        public Matrix4x4 ComputeBoneWorldMatrix(int index)
+        {
+            var bone = Bones[index];
+            Matrix4x4 matrix = bone.ComputeLocalTransform();
+            while (bone.ParentIndex != -1)
+            {
+                bone = Bones[bone.ParentIndex];
+                matrix *= bone.ComputeLocalTransform();
+            }
+
+            return matrix;
+        }
+
+        /// <summary>
+        /// General metadata about a FLVER0.
         /// </summary>
         public class FLVERHeader
         {
@@ -245,7 +275,7 @@ namespace SoulsFormats
             public Vector3 BoundingBoxMax { get; set; }
 
             /// <summary>
-            /// Idk, some shit size
+            /// The length of each vertex index in bits.
             /// </summary>
             public byte VertexIndexSize { get; set; }
 
@@ -265,23 +295,41 @@ namespace SoulsFormats
             public byte Unk4B { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; May be the primitive restart constant value.
             /// </summary>
             public int Unk4C { get; set; }
 
             /// <summary>
             /// Unknown.
             /// </summary>
-            public byte Unk5C { get; set; }
+            public int Unk5C { get; set; }
 
             /// <summary>
             /// Creates a FLVERHeader with default values.
             /// </summary>
             public FLVERHeader()
             {
-                BigEndian = true;
-                Version = 0x00015;
+                BigEndian = false;
+                Version = 0x00000;
                 Unicode = true;
+                Unk4C = 0xFFFF;
+            }
+
+            /// <summary>
+            /// Clone an existing FLVERHeader.
+            /// </summary>
+            public FLVERHeader(FLVERHeader flverHeader)
+            {
+                BigEndian = flverHeader.BigEndian;
+                Version = flverHeader.Version;
+                BoundingBoxMin = flverHeader.BoundingBoxMin;
+                BoundingBoxMax = flverHeader.BoundingBoxMax;
+                VertexIndexSize = flverHeader.VertexIndexSize;
+                Unicode = flverHeader.Unicode;
+                Unk4A = flverHeader.Unk4A;
+                Unk4B = flverHeader.Unk4B;
+                Unk4C = flverHeader.Unk4C;
+                Unk5C = flverHeader.Unk5C;
             }
         }
     }

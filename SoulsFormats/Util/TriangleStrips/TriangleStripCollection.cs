@@ -2,11 +2,24 @@
 
 namespace SoulsFormats
 {
+    /// <summary>
+    /// A collection of TriangleStrips.
+    /// </summary>
     internal class TriangleStripCollection
     {
-        internal int PRIMITIVE_RESTART_CONSTANT;
+        /// <summary>
+        /// The Primitive Restart Constant.
+        /// </summary>
+        internal int PrimitiveRestartConstant;
+
+        /// <summary>
+        /// The TriangleStrips in this TriangleStripCollection.
+        /// </summary>
         internal List<TriangleStrip> TriangleStrips;
 
+        /// <summary>
+        /// The total face count of all TriangleStrips in this TriangleStripCollection.
+        /// </summary>
         internal int FaceCount
         {
             get
@@ -20,48 +33,60 @@ namespace SoulsFormats
             }
         }
 
+        /// <summary>
+        /// The number of TriangleStrips in this TriangleStripCollection.
+        /// </summary>
         internal int StripCount => TriangleStrips.Count;
 
+        /// <summary>
+        /// Create a new TriangleStripCollection with the provided buffer and Primitive Restart Constant.
+        /// </summary>
         internal TriangleStripCollection(IList<int> indexBuffer, int primitiveRestartConstant)
         {
             TriangleStrips = new List<TriangleStrip>();
-            PRIMITIVE_RESTART_CONSTANT = primitiveRestartConstant;
+            PrimitiveRestartConstant = primitiveRestartConstant;
 
             List<int> stripBuffer = new List<int>();
             for (int i = 0; i < indexBuffer.Count; i++)
             {
-                if (indexBuffer[i] != PRIMITIVE_RESTART_CONSTANT)
+                if (indexBuffer[i] != PrimitiveRestartConstant)
                 {
                     stripBuffer.Add(indexBuffer[i]);
                 }
                 else
                 {
-                    TriangleStrips.Add(new TriangleStrip(stripBuffer, PRIMITIVE_RESTART_CONSTANT));
+                    TriangleStrips.Add(new TriangleStrip(stripBuffer, PrimitiveRestartConstant));
                     stripBuffer = new List<int>();
                 }
             }
         }
 
+        /// <summary>
+        /// Create a new TriangleStripCollection with the provided buffer and Primitive Restart Constant.
+        /// </summary>
         internal TriangleStripCollection(IList<ushort> indexBuffer, int primitiveRestartConstant)
         {
             TriangleStrips = new List<TriangleStrip>();
-            PRIMITIVE_RESTART_CONSTANT = primitiveRestartConstant;
+            PrimitiveRestartConstant = primitiveRestartConstant;
 
             List<int> stripBuffer = new List<int>();
             for (int i = 0; i < indexBuffer.Count; i++)
             {
-                if (indexBuffer[i] != PRIMITIVE_RESTART_CONSTANT)
+                if (indexBuffer[i] != PrimitiveRestartConstant)
                 {
                     stripBuffer.Add(indexBuffer[i]);
                 }
                 else
                 {
-                    TriangleStrips.Add(new TriangleStrip(stripBuffer, PRIMITIVE_RESTART_CONSTANT));
+                    TriangleStrips.Add(new TriangleStrip(stripBuffer, PrimitiveRestartConstant));
                     stripBuffer = new List<int>();
                 }
             }
         }
 
+        /// <summary>
+        /// Get a buffer of this TriangleStripCollection.
+        /// </summary>
         internal int[] GetBuffer()
         {
             List<int> buffer = new List<int>();
@@ -79,6 +104,9 @@ namespace SoulsFormats
             return buffer.ToArray();
         }
 
+        /// <summary>
+        /// Get a buffer of this TriangleStripCollection.
+        /// </summary>
         internal ushort[] GetBufferUShort()
         {
             var buffer = GetBuffer();
@@ -90,14 +118,56 @@ namespace SoulsFormats
             return newBuffer;
         }
 
-        internal List<int[]> GetFaces()
+        /// <summary>
+        /// Get a list of faces as index arrays.
+        /// </summary>
+        internal List<int[]> GetFaceIndices()
         {
             List<int[]> faces = new List<int[]>();
             foreach (var strip in TriangleStrips)
             {
-                faces.AddRange(strip.GetFaces());
+                faces.AddRange(strip.GetFaceIndices());
             }
             return faces;
+        }
+
+        /// <summary>
+        /// Get a list of faces as index arrays.
+        /// </summary>
+        internal List<ushort[]> GetFaceIndicesUShort()
+        {
+            List<ushort[]> faces = new List<ushort[]>();
+            foreach (var strip in TriangleStrips)
+            {
+                faces.AddRange(strip.GetFaceIndicesUShort());
+            }
+            return faces;
+        }
+
+        /// <summary>
+        /// Get a list of all indices.
+        /// </summary>
+        internal List<int> GetIndices()
+        {
+            List<int> indices = new List<int>();
+            foreach (var strip in TriangleStrips)
+            {
+                indices.AddRange(strip.GetIndices());
+            }
+            return indices;
+        }
+
+        /// <summary>
+        /// Get a list of all indices.
+        /// </summary>
+        internal List<ushort> GetIndicesUShort()
+        {
+            List<ushort> indices = new List<ushort>();
+            foreach (var strip in TriangleStrips)
+            {
+                indices.AddRange(strip.GetIndicesUShort());
+            }
+            return indices;
         }
     }
 }

@@ -65,6 +65,33 @@ namespace SoulsFormats
             /// </summary>
             public short Unk3E;
 
+            /// <summary>
+            /// Create a new and empty Vertex.
+            /// </summary>
+            public Vertex()
+            {
+                UVs = new List<Vector2>();
+            }
+
+            /// <summary>
+            /// Clone an existing Vertex.
+            /// </summary>
+            public Vertex(Vertex vertex)
+            {
+                Position = vertex.Position;
+                Normal = vertex.Normal;
+                Tangent = vertex.Tangent;
+                Bitangent = vertex.Bitangent;
+                UVs = new List<Vector2>();
+                foreach (Vector2 uv in vertex.UVs)
+                    UVs.Add(uv);
+                BoneIndices = new VertexBoneIndices();
+                BoneWeights = new VertexBoneWeights();
+            }
+
+            /// <summary>
+            /// Read a Vertex from a stream.
+            /// </summary>
             internal Vertex(BinaryReaderEx br, int version, byte format)
             {
                 UVs = new List<Vector2>();
@@ -125,6 +152,9 @@ namespace SoulsFormats
                 }
             }
 
+            /// <summary>
+            /// Write this Vertex to a stream.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int version, byte format)
             {
                 if (version == 0x40001)
@@ -229,7 +259,7 @@ namespace SoulsFormats
                 int y = vector << 12 >> 22;
                 int z = vector << 2 >> 22;
                 int w = vector << 0 >> 30;
-                return new Vector4(x / 511f, y / 511f, z / 511f, w);
+                return new Vector4((float)Math.Round(x / 511f), (float)Math.Round(y / 511f), (float)Math.Round(z / 511f), w);
             }
 
             private static void WriteByteVector4(BinaryWriterEx bw, Vector4 vector)
@@ -254,10 +284,14 @@ namespace SoulsFormats
                 bw.WriteInt16((short)(vector.Y * 2048f));
             }
 
-            // How do I do this????
             private static void Write10BitVector4(BinaryWriterEx bw, Vector4 vector)
             {
-                throw new NotImplementedException("10 Bit Vector4 write not yet implemented.");
+                int x = (int)(vector.X * 511f) & 0x3FF;
+                int y = (int)(vector.Y * 511f) & 0x3FF;
+                int z = (int)(vector.Z * 511f) & 0x3FF;
+                int w = ((int)vector.W) & 0x3;
+
+                bw.WriteInt32(w << 30 | z << 20 | y << 10 | x);
             }
         }
     }

@@ -22,7 +22,7 @@ namespace SoulsFormats
             public BufferLayout() : base() { }
 
             /// <summary>
-            /// Reads a BufferLayout from a BinaryReaderEx.
+            /// Read a BufferLayout from a stream.
             /// </summary>
             internal BufferLayout(BinaryReaderEx br) : base()
             {
@@ -46,7 +46,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Writes a BufferLayout to a BinaryWriterEx.
+            /// Write a BufferLayout to a stream.
             /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
@@ -57,7 +57,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Writes the members of a BufferLayout to a BinaryWriterEx.
+            /// Writes the members of a BufferLayout to a stream.
             /// </summary>
             internal void WriteMembers(BinaryWriterEx bw, int index)
             {

@@ -66,7 +66,7 @@ namespace SoulsFormats
             public int Unk34 { get; set; }
 
             /// <summary>
-            /// Creates a new dummy point with default values.
+            /// Creates a new Dummy point with default values.
             /// </summary>
             public Dummy()
             {
@@ -75,15 +75,25 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Returns a string representation of the dummy.
+            /// Clone an existing Dummy.
             /// </summary>
-            public override string ToString()
+            public Dummy(Dummy dummy)
             {
-                return $"{ReferenceID}";
+                Position = dummy.Position;
+                Forward = dummy.Forward;
+                Upward = dummy.Upward;
+                ReferenceID = dummy.ReferenceID;
+                ParentBoneIndex = dummy.ParentBoneIndex;
+                AttachBoneIndex = dummy.AttachBoneIndex;
+                Color = dummy.Color;
+                Flag1 = dummy.Flag1;
+                UseUpwardVector = dummy.UseUpwardVector;
+                Unk30 = dummy.Unk30;
+                Unk34 = dummy.Unk34;
             }
 
             /// <summary>
-            /// Reads a dummy point from a BinaryReaderEx using the version found in the FLVER.
+            /// Read a new Dummy from a stream.
             /// </summary>
             internal Dummy(BinaryReaderEx br, int version)
             {
@@ -107,7 +117,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Writes a dummy point to a BinaryWriterEx using the version found in the FLVER.
+            /// Write this Dummy to a stream.
             /// </summary>
             internal void Write(BinaryWriterEx bw, int version)
             {
@@ -127,6 +137,14 @@ namespace SoulsFormats
                 bw.WriteInt32(Unk34);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
+            }
+
+            /// <summary>
+            /// Returns a string representation of the dummy.
+            /// </summary>
+            public override string ToString()
+            {
+                return $"{ReferenceID}";
             }
         }
     }

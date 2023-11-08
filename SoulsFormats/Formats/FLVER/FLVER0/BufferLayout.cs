@@ -19,10 +19,22 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a new empty BufferLayout.
             /// </summary>
-            public BufferLayout() { }
+            public BufferLayout() : base() { }
 
             /// <summary>
-            /// Reads a BufferLayout from a BinaryReaderEx.
+            /// Clone an existing BufferLayout.
+            /// </summary>
+            public BufferLayout(BufferLayout bufferLayout)
+            {
+                Capacity = bufferLayout.Capacity;
+                foreach (var member in bufferLayout)
+                {
+                    Add(new FLVER.LayoutMember(member));
+                }
+            }
+
+            /// <summary>
+            /// Read a BufferLayout from a stream.
             /// </summary>
             internal BufferLayout(BinaryReaderEx br) : base()
             {

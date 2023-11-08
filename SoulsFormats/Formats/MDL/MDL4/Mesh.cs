@@ -34,7 +34,7 @@ namespace SoulsFormats
             /// <summary>
             /// Whether vertices are defined as a triangle strip or individual triangles.
             /// </summary>
-            public byte TriangleStrip;
+            public bool UseTriangleStrips;
 
             /// <summary>
             /// Apparently does nothing. Usually points to a dummy bone named after the model, possibly just for labelling.
@@ -69,7 +69,7 @@ namespace SoulsFormats
                 VertexFormat = br.AssertByte(0, 1, 2);
                 MaterialIndex = br.ReadByte();
                 CullBackfaces = br.ReadBoolean();
-                TriangleStrip = br.ReadByte();
+                UseTriangleStrips = br.ReadBoolean();
                 ushort vertexIndexCount = br.ReadUInt16();
                 DefaultBoneIndex = br.ReadInt16();
                 BoneIndices = br.ReadInt16s(28);
@@ -124,7 +124,7 @@ namespace SoulsFormats
                 bw.WriteByte(VertexFormat);
                 bw.WriteByte(MaterialIndex);
                 bw.WriteBoolean(CullBackfaces);
-                bw.WriteByte(TriangleStrip);
+                bw.WriteBoolean(UseTriangleStrips);
                 bw.WriteUInt16((ushort)VertexIndices.Length); // Vertex Index Count
                 bw.WriteInt16(DefaultBoneIndex);
                 bw.WriteInt16s(BoneIndices);
@@ -132,33 +132,30 @@ namespace SoulsFormats
                 bw.ReserveInt32($"VertexIndicesOffset_{index}");
                 bw.ReserveInt32($"BufferLength_{index}");
                 bw.ReserveInt32($"BufferOffset_{index}");
+            }   
+
+            /// <summary>
+            /// Get the calculated face count from the VertexIndices of this Mesh.
+            /// </summary>
+            public int GetFaceCount()
+            {
+                return GetFaceIndices().Count;
             }
 
             /// <summary>
-            /// Gets a list of the faces used by this mesh as a list of vertex arrays.
+            /// Get the calculated strip count from the VertexIndices of this Mesh.
             /// </summary>
-            public List<Vertex[]> GetFaces()
+            public int GetStripCount()
             {
-                ushort[] indices = ToTriangleList();
-                var faces = new List<Vertex[]>();
-                for (int i = 0; i < indices.Length; i += 3)
-                {
-                    faces.Add(new Vertex[]
-                    {
-                        Vertices[indices[i + 0]],
-                        Vertices[indices[i + 1]],
-                        Vertices[indices[i + 2]],
-                    });
-                }
-                return faces;
+                return new TriangleStripCollection(VertexIndices, 65535).StripCount;
             }
 
             /// <summary>
-            /// Gets a list of the indices of faces used by this mesh as a list of int arrays.
+            /// Get a list of faces as index arrays.
             /// </summary>
-            public List<int[]> GetFaceVertexIndices()
+            public List<int[]> GetFaceIndices()
             {
-                ushort[] indices = ToTriangleList();
+                ushort[] indices = Triangulate();
                 var faces = new List<int[]>();
                 for (int i = 0; i < indices.Length; i += 3)
                 {
@@ -173,11 +170,49 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Gets the indices of triangles in this mesh as an unsigned short array.
+            /// Get a list of faces as index arrays.
             /// </summary>
-            public ushort[] ToTriangleList()
+            public List<ushort[]> GetFaceIndicesUShort()
             {
-                var converted = new List<ushort>();
+                ushort[] indices = Triangulate();
+                var faces = new List<ushort[]>();
+                for (int i = 0; i < indices.Length; i += 3)
+                {
+                    faces.Add(new ushort[]
+                    {
+                        indices[i + 0],
+                        indices[i + 1],
+                        indices[i + 2],
+                    });
+                }
+                return faces;
+            }
+
+            /// <summary>
+            /// Get a list of faces as vertex arrays.
+            /// </summary>
+            public List<Vertex[]> GetFaces()
+            {
+                ushort[] indices = Triangulate();
+                var faces = new List<Vertex[]>();
+                for (int i = 0; i < indices.Length; i += 3)
+                {
+                    faces.Add(new Vertex[]
+                    {
+                        Vertices[indices[i + 0]],
+                        Vertices[indices[i + 1]],
+                        Vertices[indices[i + 2]],
+                    });
+                }
+                return faces;
+            }
+
+            /// <summary>
+            /// Get a triangulated face index list.
+            /// </summary>
+            public ushort[] Triangulate()
+            {
+                var triangles = new List<ushort>();
                 bool flip = false;
                 for (int i = 0; i < VertexIndices.Length - 2; i++)
                 {
@@ -195,21 +230,21 @@ namespace SoulsFormats
                         {
                             if (!flip)
                             {
-                                converted.Add(vi1);
-                                converted.Add(vi2);
-                                converted.Add(vi3);
+                                triangles.Add(vi1);
+                                triangles.Add(vi2);
+                                triangles.Add(vi3);
                             }
                             else
                             {
-                                converted.Add(vi3);
-                                converted.Add(vi2);
-                                converted.Add(vi1);
+                                triangles.Add(vi3);
+                                triangles.Add(vi2);
+                                triangles.Add(vi1);
                             }
                         }
                         flip = !flip;
                     }
                 }
-                return converted.ToArray();
+                return triangles.ToArray();
             }
         }
     }

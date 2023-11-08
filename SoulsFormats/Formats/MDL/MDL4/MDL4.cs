@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Collections.Generic;
 using System.Numerics;
-using System.Reflection;
 
 namespace SoulsFormats
 {
@@ -64,11 +61,11 @@ namespace SoulsFormats
             int materialCount = br.ReadInt32();
             int boneCount = br.ReadInt32();
             int meshCount = br.ReadInt32();
-            Header.Unk20 = br.ReadInt32(); // Some kind of count?
+            int vertexBufferCount = br.ReadInt32(); // Vertex Buffer Count Probably
             Header.BoundingBoxMin = br.ReadVector3();
             Header.BoundingBoxMax = br.ReadVector3();
-            Header.TrueFaceCount = br.ReadInt32();
-            Header.TotalFaceCount = br.ReadInt32();
+            int trueFaceCount = br.ReadInt32();
+            int totalFaceCount = br.ReadInt32();
             br.AssertPattern(0x3C, 0x00);
 
             Dummies = new List<Dummy>(dummyCount);
@@ -102,11 +99,11 @@ namespace SoulsFormats
             bw.WriteInt32(Materials.Count);
             bw.WriteInt32(Bones.Count);
             bw.WriteInt32(Meshes.Count);
-            bw.WriteInt32(Header.Unk20); // Some kind of count?
+            bw.WriteInt32(Meshes.Count); // Vertex Buffer Count Probably
             bw.WriteVector3(Header.BoundingBoxMin);
             bw.WriteVector3(Header.BoundingBoxMax);
-            bw.WriteInt32(Header.TrueFaceCount);
-            bw.WriteInt32(Header.TotalFaceCount);
+            bw.WriteInt32(GetFaceCount()); // Not entirely accurate but oh well
+            bw.WriteInt32(GetIndiceCount()); // Not entirely accurate but oh well
             bw.WritePattern(0x3C, 0x00);
 
             foreach (Dummy dummy in Dummies)
@@ -145,6 +142,45 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Get the total indice count from the VertexIndices of all Meshes in this model.
+        /// </summary>
+        public int GetIndiceCount()
+        {
+            int count = 0;
+            foreach (Mesh mesh in Meshes)
+            {
+                count += mesh.VertexIndices.Length;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Get the total calculated face count from the VertexIndices of all Meshes in this model.
+        /// </summary>
+        public int GetFaceCount()
+        {
+            int count = 0;
+            foreach (Mesh mesh in Meshes)
+            {
+                count += mesh.GetFaceCount();
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Get the total calculated strip count from the VertexIndices of all Meshes in this model.
+        /// </summary>
+        public int GetStripCount()
+        {
+            int count = 0;
+            foreach (Mesh mesh in Meshes)
+            {
+                count += mesh.GetStripCount();
+            }
+            return count;
+        }
+
+        /// <summary>
         /// An MDL4 header containing general values for this model.
         /// </summary>
         public class MDLHeader
@@ -155,11 +191,6 @@ namespace SoulsFormats
             public int Version;
 
             /// <summary>
-            /// Unknown.
-            /// </summary>
-            public int Unk20;
-
-            /// <summary>
             /// Minimum extent of the entire model.
             /// </summary>
             public Vector3 BoundingBoxMin;
@@ -168,16 +199,6 @@ namespace SoulsFormats
             /// Maximum extent of the entire model.
             /// </summary>
             public Vector3 BoundingBoxMax;
-
-            /// <summary>
-            /// The true face count of this model.
-            /// </summary>
-            public int TrueFaceCount;
-
-            /// <summary>
-            /// The total face count of this model.
-            /// </summary>
-            public int TotalFaceCount;
 
             /// <summary>
             /// Creates a MDLHeader with default values.

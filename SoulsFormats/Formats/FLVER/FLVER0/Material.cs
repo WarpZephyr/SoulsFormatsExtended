@@ -5,61 +5,62 @@ namespace SoulsFormats
     public partial class FLVER0
     {
         /// <summary>
-        /// A reference to an MTD file, specifying textures to use.
+        /// Determines rendering properties of a mesh.
         /// </summary>
         public class Material : IFlverMaterial
         {
             /// <summary>
-            /// Identifies the mesh that uses this material, may include keywords that determine hideable parts.
+            /// Name of the material, mostly non-functional but may include special flags.
             /// </summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Virtual path to an MTD file.
+            /// Name of an MTD file which configures the shader to use.
             /// </summary>
             public string MTD { get; set; }
 
             /// <summary>
-            /// Textures used by this material.
+            /// Various texture maps applied to the mesh.
             /// </summary>
             public List<Texture> Textures { get; set; }
-
-            /// <summary>
-            /// A readonly list of textures used by a material.
-            /// </summary>
             IReadOnlyList<IFlverTexture> IFlverMaterial.Textures => Textures;
 
             /// <summary>
-            /// Layouts determining how to write vertex information.
+            /// The BufferLayouts in this material describing how VertexBuffers using it are laid out.
             /// </summary>
             public List<BufferLayout> Layouts { get; set; }
 
             /// <summary>
-            /// Creates a new Material with null or default values.
+            /// Create a new and empty Material.
             /// </summary>
             public Material()
             {
-                Name = "";
-                MTD = "";
+                Name = string.Empty;
+                MTD = string.Empty;
                 Textures = new List<Texture>();
                 Layouts = new List<BufferLayout>();
             }
 
             /// <summary>
-            /// Creates a new Material with the given values and an empty texture list.
+            /// Clone an existing material.
             /// </summary>
-            public Material(string name, string mtd)
+            public Material(Material material)
             {
-                Name = name;
-                MTD = mtd;
                 Textures = new List<Texture>();
                 Layouts = new List<BufferLayout>();
+
+                Name = material.Name;
+                MTD = material.MTD;
+                foreach (var texture in material.Textures)
+                    Textures.Add(new Texture(texture));
+                foreach (var layout in material.Layouts)
+                    Layouts.Add(new BufferLayout(layout));
             }
 
             /// <summary>
-            /// Reads a material from a BinaryReaderEx.
+            /// Read a Material from a stream.
             /// </summary>
-            internal Material(BinaryReaderEx br, FLVER0 flv)
+            internal Material(BinaryReaderEx br, bool useUnicode)
             {
                 int nameOffset = br.ReadInt32();
                 int mtdOffset = br.ReadInt32();
@@ -70,8 +71,8 @@ namespace SoulsFormats
                 br.AssertInt32(0);
                 br.AssertInt32(0);
 
-                Name = flv.Header.Unicode ? br.GetUTF16(nameOffset) : br.GetShiftJIS(nameOffset);
-                MTD = flv.Header.Unicode ? br.GetUTF16(mtdOffset) : br.GetShiftJIS(mtdOffset);
+                Name = useUnicode ? br.GetUTF16(nameOffset) : br.GetShiftJIS(nameOffset);
+                MTD = useUnicode ? br.GetUTF16(mtdOffset) : br.GetShiftJIS(mtdOffset);
 
                 br.StepIn(texturesOffset);
                 {
@@ -85,7 +86,7 @@ namespace SoulsFormats
 
                     Textures = new List<Texture>(textureCount);
                     for (int i = 0; i < textureCount; i++)
-                        Textures.Add(new Texture(br, flv));
+                        Textures.Add(new Texture(br, useUnicode));
                 }
                 br.StepOut();
 
@@ -122,44 +123,44 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Writes a material to a BinaryWriterEx.
+            /// Write this Material to a stream.
             /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
-                bw.ReserveInt32($"nameOffset{index}");
-                bw.ReserveInt32($"mtdOffset{index}");
-                bw.ReserveInt32($"texturesOffset{index}");
-                bw.ReserveInt32($"layoutsOffset{index}");
-                bw.ReserveInt32($"dataLength{index}"); //TEMPSHIT // Data length from name offset to end of buffer layouts
-                bw.ReserveInt32($"layoutHeaderOffset{index}");
+                // This data must be written after the entire material list is written
+                bw.ReserveInt32($"MaterialName{index}");
+                bw.ReserveInt32($"MaterialMTD{index}");
+                bw.ReserveInt32($"TextureOffset{index}");
+                bw.ReserveInt32($"LayoutsOffset{index}");
+
+                bw.ReserveInt32($"MatOffsetDataLength{index}");
+                bw.ReserveInt32($"LayoutHeaderOffset{index}");
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
             }
 
             /// <summary>
-            /// Writes strings for materials to a BinaryWriterEx.
+            /// Write the Textures and BufferLayouts of this Material to a stream.
             /// </summary>
-            internal void WriteStrings(BinaryWriterEx bw, bool Unicode, int index)
+            internal void WriteSubStructs(BinaryWriterEx bw, bool Unicode, int index)
             {
-                bw.FillInt32($"nameOffset{index}", (int)bw.Position);
+                // Write Material Name
+                int matNameOffset = (int)bw.Position;
+                bw.FillInt32($"MaterialName{index}", matNameOffset);
                 if (Unicode)
                     bw.WriteUTF16(Name, true);
                 else
                     bw.WriteShiftJIS(Name, true);
 
-                bw.FillInt32($"mtdOffset{index}", (int)bw.Position);
+                // Write MTD
+                bw.FillInt32($"MaterialMTD{index}", (int)bw.Position);
                 if (Unicode)
                     bw.WriteUTF16(MTD, true);
                 else
                     bw.WriteShiftJIS(MTD, true);
-            }
 
-            /// <summary>
-            /// Writes textures for materials to a BinaryWriterEx.
-            /// </summary>
-            internal void WriteTextures(BinaryWriterEx bw, bool Unicode, int index)
-            {
-                bw.FillInt32($"texturesOffset{index}", (int)bw.Position);
+                // Write texture info
+                bw.FillInt32($"TextureOffset{index}", (int)bw.Position);
                 bw.WriteByte((byte)Textures.Count);
                 bw.WriteByte(0);
                 bw.WriteByte(0);
@@ -167,43 +168,51 @@ namespace SoulsFormats
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
-                for (int i = 0; i < Textures.Count; i++)
-                    Textures[i].Write(bw, i);
-                for (int i = 0; i < Textures.Count; i++)
-                    Textures[i].WriteStrings(bw, Unicode, i);
-            }
 
-            /// <summary>
-            /// Writes layouts for materials to a BinaryWriterEx.
-            /// </summary>
-            internal void WriteLayouts(BinaryWriterEx bw, int index)
-            {
-                bw.FillInt32($"layoutHeaderOffset{index}", (int)bw.Position);
+                // Write texture list data
+                for (int i = 0; i < Textures.Count; i++)
+                {
+                    Textures[i].Write(bw, index, i);
+                }
+
+                // Write texture string data
+                for (int i = 0; i < Textures.Count; i++)
+                {
+                    Textures[i].WriteStrings(bw, index, i, Unicode);
+                }
+
+                // Write Layout Header
+                bw.FillInt32($"LayoutHeaderOffset{index}", (int)bw.Position);
                 bw.WriteInt32(Layouts.Count);
-                bw.ReserveInt32($"layoutOffsetsOffset{index}");
+                bw.WriteInt32((int)bw.Position + 0xC);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
-                bw.FillInt32($"layoutOffsetsOffset{index}", (int)bw.Position);
-                int layoutsOffset = 0;
+
+                // Write Layout Offsets
                 for (int i = 0; i < Layouts.Count; i++)
                 {
-                    bw.ReserveInt32($"layoutOffset{index}");
-                    bw.FillInt32($"layoutOffset{index}", (int)bw.Position);
-                    if (i == 0)
-                        layoutsOffset = (int)bw.Position;
-                    bw.WriteInt16((short)Layouts[i].Count);
-                    bw.WriteInt16((short)Layouts[i].Size);//tempshit structSize
+                    bw.ReserveInt32($"LayoutOffset_{index}_{i}");
+                }
+
+                // Write Vertex Layouts
+                bw.FillInt32($"LayoutsOffset{index}", (int)bw.Position);
+                for (int i = 0; i < Layouts.Count; i++)
+                {
+                    bw.FillInt32($"LayoutOffset_{index}_{i}", (int)bw.Position);
+                    bw.WriteUInt16((ushort)Layouts[i].Count);
+                    bw.WriteUInt16((ushort)Layouts[i].Size);
                     bw.WriteInt32(0);
                     bw.WriteInt32(0);
                     bw.WriteInt32(0);
-                    int memberSize = 0;
-                    for (int m = 0; m < Layouts[i].Count; m++)
+
+                    int vertOffset = 0;
+                    foreach (var vertData in Layouts[i])
                     {
-                        Layouts[i][m].Write(bw, memberSize);
-                        memberSize += Layouts[i][m].Size;
+                        vertData.Write(bw, vertOffset);
+                        vertOffset += vertData.Size;
                     }
                 }
-                bw.FillInt32($"layoutsOffset{index}", layoutsOffset);
+                bw.FillInt32($"MatOffsetDataLength{index}", (int)bw.Position - matNameOffset);
             }
         }
     }

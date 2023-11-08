@@ -2,24 +2,24 @@
 
 namespace SoulsFormats
 {
-    public partial class MDL4
+    public partial class SMD4
     {
         /// <summary>
-        /// Four weights for binding a vertex to bones, accessed like an array. Unused bones should be set to 0.
+        /// Four indices of bones to bind a vertex to, accessed like an array. Unused bones should be set to -1.
         /// </summary>
-        public struct VertexBoneWeights
+        public struct VertexBoneIndices
         {
-            private float A, B, C, D;
+            private short A, B, C, D;
 
             /// <summary>
-            /// Length of bone weights is always 4.
+            /// Length of bone indices is always 4.
             /// </summary>
             public int Length => 4;
 
             /// <summary>
-            /// Accesses bone weights as a float[4].
+            /// Accesses bone indices as an int[4].
             /// </summary>
-            public float this[int i]
+            public short this[int i]
             {
                 get
                 {
@@ -49,37 +49,14 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Creates a VertexBoneWeights with the given ABCD values in float form.
+            /// Create a new VertexBoneIndices array using the specified indices.
             /// </summary>
-            public VertexBoneWeights(float a, float b, float c, float d)
+            public VertexBoneIndices(short a, short b, short c, short d)
             {
                 A = a;
                 B = b;
                 C = c;
                 D = d;
-            }
-
-            /// <summary>
-            /// Read a VertexBoneWeight from a stream.
-            /// </summary>
-            internal static VertexBoneWeights ReadBoneWeights(BinaryReaderEx br)
-            {
-                float a = br.ReadSingle();
-                float b = br.ReadSingle();
-                float c = br.ReadSingle();
-                float d = br.ReadSingle();
-                return new VertexBoneWeights(a, b, c, d);
-            }
-
-            /// <summary>
-            /// Write this VertexBoneWeight to a stream.
-            /// </summary>
-            internal void WriteBoneWeights(BinaryWriterEx bw)
-            {
-                bw.WriteSingle(A);
-                bw.WriteSingle(B);
-                bw.WriteSingle(C);
-                bw.WriteSingle(D);
             }
         }
     }

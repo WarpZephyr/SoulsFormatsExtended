@@ -5,30 +5,53 @@ namespace SoulsFormats
     public partial class FLVER0
     {
         /// <summary>
-        /// Temp comment.
+        /// A header for vertex buffers containing basic information.
         /// </summary>
-        public class VertexBuffer
+        private class VertexBuffer
         {
             /// <summary>
-            /// Temp comment.
+            /// The index of the BufferLayout used by this buffer.
             /// </summary>
-            public int LayoutIndex;
+            internal int LayoutIndex;
 
             /// <summary>
-            /// Temp comment.
+            /// The length in bytes of this buffer.
             /// </summary>
-            public int BufferLength;
+            internal int BufferLength;
 
             /// <summary>
-            /// Temp comment.
+            /// The offset of this buffer.
             /// </summary>
-            public int BufferOffset;
+            internal int BufferOffset;
 
             /// <summary>
-            /// Temp comment.
+            /// Create a new vertex buffer header.
             /// </summary>
-            public VertexBuffer() { }
+            internal VertexBuffer(){}
 
+            /// <summary>
+            /// Create a new vertex buffer header with the specified values.
+            /// </summary>
+            internal VertexBuffer(int layoutIndex, int bufferLength, int bufferOffset)
+            {
+                LayoutIndex = layoutIndex;
+                BufferLength = bufferLength;
+                BufferOffset = bufferOffset;
+            }
+
+            /// <summary>
+            /// Clone an existing vertex buffer header.
+            /// </summary>
+            internal VertexBuffer(VertexBuffer vertexBuffer)
+            {
+                LayoutIndex = vertexBuffer.LayoutIndex;
+                BufferLength = vertexBuffer.BufferLength;
+                BufferOffset = vertexBuffer.BufferOffset;
+            }
+
+            /// <summary>
+            /// Read a vertex buffer header from a stream.
+            /// </summary>
             internal VertexBuffer(BinaryReaderEx br)
             {
                 LayoutIndex = br.ReadInt32();
@@ -36,6 +59,10 @@ namespace SoulsFormats
                 BufferOffset = br.ReadInt32();
                 br.AssertInt32(0);
             }
+
+            /// <summary>
+            /// Read a collection of vertex buffer headers from a stream.
+            /// </summary>
             internal static List<VertexBuffer> ReadVertexBuffers(BinaryReaderEx br)
             {
                 int bufferCount = br.ReadInt32();
@@ -51,17 +78,6 @@ namespace SoulsFormats
                 }
                 br.StepOut();
                 return buffers;
-            }
-
-            internal void WriteVertexBuffers(BinaryWriterEx bw, int bufferCount, int meshIndex)
-            {
-                for (int i = 0; i < bufferCount; i++)
-                {
-                    bw.WriteInt32(LayoutIndex);
-                    bw.ReserveInt32($"BufferLength1_{meshIndex}");
-                    bw.ReserveInt32($"BufferOffset1_{meshIndex}");
-                    bw.WriteInt32(0);
-                }
             }
         }
     }

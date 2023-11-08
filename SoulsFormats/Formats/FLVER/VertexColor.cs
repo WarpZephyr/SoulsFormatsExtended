@@ -42,7 +42,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Creates a VertexColor with the given ARGB values divided by 255.
+            /// Creates a VertexColor with the given ARGB values.
             /// </summary>
             public VertexColor(byte a, byte r, byte g, byte b)
             {
@@ -52,6 +52,9 @@ namespace SoulsFormats
                 B = b / 255f;
             }
 
+            /// <summary>
+            /// Read a VertexColor from a stream as floats in RGBA order.
+            /// </summary>
             internal static VertexColor ReadFloatRGBA(BinaryReaderEx br)
             {
                 float r = br.ReadSingle();
@@ -61,6 +64,9 @@ namespace SoulsFormats
                 return new VertexColor(a, r, g, b);
             }
 
+            /// <summary>
+            /// Read a VertexColor from a stream as bytes in ARGA order.
+            /// </summary>
             internal static VertexColor ReadByteARGB(BinaryReaderEx br)
             {
                 byte a = br.ReadByte();
@@ -70,6 +76,9 @@ namespace SoulsFormats
                 return new VertexColor(a, r, g, b);
             }
 
+            /// <summary>
+            /// Read a VertexColor from a stream as bytes in RGBA order.
+            /// </summary>
             internal static VertexColor ReadByteRGBA(BinaryReaderEx br)
             {
                 byte r = br.ReadByte();
@@ -79,6 +88,9 @@ namespace SoulsFormats
                 return new VertexColor(a, r, g, b);
             }
 
+            /// <summary>
+            /// Write this VertexColor to a stream as floats in RGBA order.
+            /// </summary>
             internal void WriteFloatRGBA(BinaryWriterEx bw)
             {
                 bw.WriteSingle(R);
@@ -87,6 +99,9 @@ namespace SoulsFormats
                 bw.WriteSingle(A);
             }
 
+            /// <summary>
+            /// Write this VertexColor to a stream as bytes in ARGB order.
+            /// </summary>
             internal void WriteByteARGB(BinaryWriterEx bw)
             {
                 bw.WriteByte((byte)Math.Round(A * 255));
@@ -95,6 +110,9 @@ namespace SoulsFormats
                 bw.WriteByte((byte)Math.Round(B * 255));
             }
 
+            /// <summary>
+            /// Write this VertexColor to a stream as bytes in RGBA order.
+            /// </summary>
             internal void WriteByteRGBA(BinaryWriterEx bw)
             {
                 bw.WriteByte((byte)Math.Round(R * 255));
