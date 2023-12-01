@@ -38,7 +38,30 @@ namespace SoulsFormats
             /// <summary>
             /// Indexes of bones in the bone collection which may be used by vertices in this mesh.
             /// </summary>
+            /// <remarks>
+            /// Always has 28 indices; Unused indices are set to -1.
+            /// </remarks>
             public short[] BoneIndices { get; set; }
+
+            /// <summary>
+            /// Get the number of used bone indices.
+            /// </summary>
+            public int BoneCount
+            {
+                get
+                {
+                    int count = 0;
+                    for (int i = 0; i < 28; i++)
+                    {
+                        short index = BoneIndices[i];
+                        if (index != -1)
+                        {
+                            count++;
+                        }
+                    }
+                    return count;
+                }
+            }
 
             /// <summary>
             /// The vertex indices in this mesh.

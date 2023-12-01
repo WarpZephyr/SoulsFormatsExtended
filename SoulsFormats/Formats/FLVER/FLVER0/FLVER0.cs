@@ -39,7 +39,7 @@ namespace SoulsFormats
         IReadOnlyList<IFlverMesh> IFlver.Meshes => Meshes;
 
         /// <summary>
-        /// Create a new and empty FLVER0.
+        /// Create a new and empty <see cref="FLVER0"/>.
         /// </summary>
         public FLVER0()
         {
@@ -51,7 +51,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Clone an existing FLVER0.
+        /// Clone an existing <see cref="FLVER0"/>.
         /// </summary>
         public FLVER0(FLVER0 flver0)
         {

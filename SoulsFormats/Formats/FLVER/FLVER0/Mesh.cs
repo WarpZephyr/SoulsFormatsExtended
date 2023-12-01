@@ -46,6 +46,26 @@ namespace SoulsFormats
             public short[] BoneIndices { get; private set; }
 
             /// <summary>
+            /// Get the number of used bone indices.
+            /// </summary>
+            public int BoneCount
+            {
+                get
+                {
+                    int count = 0;
+                    for (int i = 0; i < 28; i++)
+                    {
+                        short index = BoneIndices[i];
+                        if (index != -1)
+                        {
+                            count++;
+                        }
+                    }
+                    return count;
+                }
+            }
+
+            /// <summary>
             /// Unknown.
             /// </summary>
             public short Unk46 { get; set; }
