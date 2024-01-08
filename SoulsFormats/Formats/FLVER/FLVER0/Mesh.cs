@@ -151,8 +151,8 @@ namespace SoulsFormats
                 int vertexIndicesOffset = br.ReadInt32();
                 int bufferDataLength = br.ReadInt32();
                 int bufferDataOffset = br.ReadInt32();
-                int vertexBuffersOffset1 = br.ReadInt32();
-                int vertexBuffersOffset2 = br.ReadInt32();
+                int vertexBuffersOffset1 = ReadVarEndianInt32(br, flv.Header.Version);
+                int vertexBuffersOffset2 = ReadVarEndianInt32(br, flv.Header.Version);
                 br.AssertInt32(0);
 
                 if (flv.Header.VertexIndexSize == 16)
@@ -181,7 +181,7 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersOffset1);
                     {
-                        List<VertexBuffer> vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br);
+                        List<VertexBuffer> vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br, flv.Header.Version);
                         if (vertexBuffers1.Count == 0)
                             throw new NotSupportedException("First vertex buffer list is expected to contain at least 1 buffer.");
                         for (int i = 1; i < vertexBuffers1.Count; i++)
@@ -196,7 +196,7 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersOffset2);
                     {
-                        List<VertexBuffer> vertexBuffers2 = VertexBuffer.ReadVertexBuffers(br);
+                        List<VertexBuffer> vertexBuffers2 = VertexBuffer.ReadVertexBuffers(br, flv.Header.Version);
                         if (vertexBuffers2.Count != 0)
                             throw new NotSupportedException("Second vertex buffer list is expected to contain exactly 0 buffers.");
                     }
@@ -286,7 +286,7 @@ namespace SoulsFormats
             /// <param name="index">The index of this Mesh for reserving offset values to be filled later.</param>
             internal void WriteVertexBufferHeader(BinaryWriterEx bw, FLVER0 flv, int index)
             {
-                bw.FillInt32($"VertexBufferListOffset{index}", (int)bw.Position);
+                FillVarEndian32(bw, flv.Header.Version, $"VertexBufferListOffset{index}", (int)bw.Position);
 
                 bw.WriteInt32(1); //bufferCount
                 bw.ReserveInt32($"VertexBufferInfoOffset{index}");

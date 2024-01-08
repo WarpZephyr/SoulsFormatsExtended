@@ -98,7 +98,7 @@ namespace SoulsFormats
             br.BigEndian = Header.BigEndian;
 
             // 10002, 10003 - Another Century's Episode R
-            Header.Version = br.AssertInt32(0x0E, 0x0F, 0x10, 0x12, 0x13, 0x14, 0x15,
+            Header.Version = br.AssertInt32(0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
                 0x10002, 0x10003);
             int dataOffset = br.ReadInt32();
             br.ReadInt32(); // Data length
@@ -131,7 +131,7 @@ namespace SoulsFormats
 
             Materials = new List<Material>(materialCount);
             for (int i = 0; i < materialCount; i++)
-                Materials.Add(new Material(br, Header.Unicode));
+                Materials.Add(new Material(br, Header.Unicode, Header.Version));
 
             Bones = new List<FLVER.Bone>(boneCount);
             for (int i = 0; i < boneCount; i++)
@@ -208,7 +208,7 @@ namespace SoulsFormats
                 Meshes[i].Write(bw, this, i);
 
             for (int i = 0; i < Materials.Count; i++)
-                Materials[i].WriteSubStructs(bw, Header.Unicode, i);
+                Materials[i].WriteSubStructs(bw, Header.Unicode, i, Header.Version);
 
             for (int i = 0; i < Bones.Count; i++)
                 Bones[i].WriteStrings(bw, Header.Unicode, i);
@@ -248,6 +248,102 @@ namespace SoulsFormats
 
             return matrix;
         }
+
+        #region Version 17 Endianness Hack Helpers
+
+        internal static int ReadVarEndianInt32(BinaryReaderEx br, int version)
+        {
+            if (br.BigEndian)
+            {
+                if (version == 0x11)
+                {
+                    long pos = br.Position;
+                    br.BigEndian = false;
+                    int leValue = br.ReadInt32();
+                    br.BigEndian = true;
+
+                    br.Position = pos;
+                    int beValue = br.ReadInt32();
+
+                    if (leValue < 0)
+                    {
+                        return beValue;
+                    }
+                    else if (beValue < 0)
+                    {
+                        return leValue;
+                    }
+                    else
+                    {
+                        if (leValue < beValue)
+                        {
+                            return leValue;
+                        }
+                        else if (leValue > beValue)
+                        {
+                            return beValue;
+                        }
+                        else
+                        {
+                            return beValue;
+                        }
+                    }
+                }
+            }
+
+            return br.ReadInt32();
+        }
+
+        internal static int AssertVarEndianInt32(BinaryReaderEx br, int version, params int[] asserts)
+        {
+            if (br.BigEndian)
+            {
+                if (version == 0x11)
+                {
+                    int value;
+                    br.BigEndian = false;
+                    value = br.AssertInt32(asserts);
+                    br.BigEndian = true;
+                    return value;
+                }
+            }
+
+            return br.AssertInt32(asserts);
+        }
+
+        internal static void WriteVarEndian32(BinaryWriterEx bw, int version, int value)
+        {
+            if (bw.BigEndian)
+            {
+                if (version == 0x11)
+                {
+                    bw.BigEndian = false;
+                    bw.WriteInt32(value);
+                    bw.BigEndian = true;
+                    return;
+                }
+            }
+
+            bw.WriteInt32(value);
+        }
+
+        internal static void FillVarEndian32(BinaryWriterEx bw, int version, string reservation, int value)
+        {
+            if (bw.BigEndian)
+            {
+                if (version == 0x11)
+                {
+                    bw.BigEndian = false;
+                    bw.FillInt32(reservation, value);
+                    bw.BigEndian = true;
+                    return;
+                }
+            }
+
+            bw.FillInt32(reservation, value);
+        }
+
+        #endregion
 
         /// <summary>
         /// General metadata about a FLVER0.

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SoulsFormats
 {
@@ -52,21 +53,21 @@ namespace SoulsFormats
             /// <summary>
             /// Read a vertex buffer header from a stream.
             /// </summary>
-            internal VertexBuffer(BinaryReaderEx br)
+            internal VertexBuffer(BinaryReaderEx br, int version)
             {
                 LayoutIndex = br.ReadInt32();
-                BufferLength = br.ReadInt32();
-                BufferOffset = br.ReadInt32();
+                BufferLength = ReadVarEndianInt32(br, version);
+                BufferOffset = ReadVarEndianInt32(br, version);
                 br.AssertInt32(0);
             }
 
             /// <summary>
             /// Read a collection of vertex buffer headers from a stream.
             /// </summary>
-            internal static List<VertexBuffer> ReadVertexBuffers(BinaryReaderEx br)
+            internal static List<VertexBuffer> ReadVertexBuffers(BinaryReaderEx br, int version)
             {
-                int bufferCount = br.ReadInt32();
-                int buffersOffset = br.ReadInt32();
+                int bufferCount = ReadVarEndianInt32(br, version);
+                int buffersOffset = ReadVarEndianInt32(br, version);
                 br.AssertInt32(0);
                 br.AssertInt32(0);
 
@@ -74,7 +75,7 @@ namespace SoulsFormats
                 br.StepIn(buffersOffset);
                 {
                     for (int i = 0; i < bufferCount; i++)
-                        buffers.Add(new VertexBuffer(br));
+                        buffers.Add(new VertexBuffer(br, version));
                 }
                 br.StepOut();
                 return buffers;

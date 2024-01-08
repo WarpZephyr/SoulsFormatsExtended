@@ -60,14 +60,15 @@ namespace SoulsFormats
             /// <summary>
             /// Read a Material from a stream.
             /// </summary>
-            internal Material(BinaryReaderEx br, bool useUnicode)
+            internal Material(BinaryReaderEx br, bool useUnicode, int version)
             {
                 int nameOffset = br.ReadInt32();
                 int mtdOffset = br.ReadInt32();
                 int texturesOffset = br.ReadInt32();
                 int layoutsOffset = br.ReadInt32();
                 br.ReadInt32(); // Data length from name offset to end of buffer layouts
-                int layoutHeaderOffset = br.ReadInt32();
+                int layoutHeaderOffset = ReadVarEndianInt32(br, version);
+
                 br.AssertInt32(0);
                 br.AssertInt32(0);
 
@@ -94,14 +95,14 @@ namespace SoulsFormats
                 {
                     br.StepIn(layoutHeaderOffset);
                     {
-                        int layoutCount = br.ReadInt32();
-                        br.AssertInt32((int)br.Position + 0xC);
+                        int layoutCount = ReadVarEndianInt32(br, version);
+                        AssertVarEndianInt32(br, version, (int)br.Position + 0xC);
                         br.AssertInt32(0);
                         br.AssertInt32(0);
                         Layouts = new List<BufferLayout>(layoutCount);
                         for (int i = 0; i < layoutCount; i++)
                         {
-                            int layoutOffset = br.ReadInt32();
+                            int layoutOffset = ReadVarEndianInt32(br, version);
                             br.StepIn(layoutOffset);
                             {
                                 Layouts.Add(new BufferLayout(br));
@@ -142,7 +143,7 @@ namespace SoulsFormats
             /// <summary>
             /// Write the Textures and BufferLayouts of this Material to a stream.
             /// </summary>
-            internal void WriteSubStructs(BinaryWriterEx bw, bool Unicode, int index)
+            internal void WriteSubStructs(BinaryWriterEx bw, bool Unicode, int index, int version)
             {
                 // Write Material Name
                 int matNameOffset = (int)bw.Position;
@@ -182,9 +183,9 @@ namespace SoulsFormats
                 }
 
                 // Write Layout Header
-                bw.FillInt32($"LayoutHeaderOffset{index}", (int)bw.Position);
-                bw.WriteInt32(Layouts.Count);
-                bw.WriteInt32((int)bw.Position + 0xC);
+                FillVarEndian32(bw, version, $"LayoutHeaderOffset{index}", (int)bw.Position);
+                WriteVarEndian32(bw, version, Layouts.Count);
+                WriteVarEndian32(bw, version, (int)bw.Position + 0xC);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
 
@@ -198,7 +199,7 @@ namespace SoulsFormats
                 bw.FillInt32($"LayoutsOffset{index}", (int)bw.Position);
                 for (int i = 0; i < Layouts.Count; i++)
                 {
-                    bw.FillInt32($"LayoutOffset_{index}_{i}", (int)bw.Position);
+                    FillVarEndian32(bw, version, $"LayoutOffset_{index}_{i}", (int)bw.Position);
                     bw.WriteUInt16((ushort)Layouts[i].Count);
                     bw.WriteUInt16((ushort)Layouts[i].Size);
                     bw.WriteInt32(0);
