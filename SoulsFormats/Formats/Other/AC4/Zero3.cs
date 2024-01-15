@@ -40,6 +40,17 @@ namespace SoulsFormats.AC4
         /// </summary>
         public static bool Is(BinaryReaderEx br)
         {
+            if (BND3.IsRead(br.GetBytes(0, (int)br.Length), out BND3 bnd3))
+            {
+                foreach (var file in bnd3.Files)
+                {
+                    if (file.Name.EndsWith(".000"))
+                    {
+                        return Is(file.Bytes);
+                    }
+                }
+            }
+
             if (br.Length < 0x50 || br.GetInt32(4) != 0x10 || br.GetInt32(8) != 0x10 || br.GetInt32(0xC) != 0x800000)
                 return false;
 
@@ -48,7 +59,21 @@ namespace SoulsFormats.AC4
                 if (br.GetInt32(0x10 + i * 4) != 0)
                     return false;
             }
+
             return true;
+        }
+
+        private static BinaryReaderEx FindZero3InBND3(BND3 bnd3, string indexString)
+        {
+            foreach (var file in bnd3.Files)
+            {
+                if (file.Name.EndsWith(indexString))
+                {
+                    return new BinaryReaderEx(true, file.Bytes);
+                }
+            }
+
+            throw new InvalidDataException("File was a BND3 but did not contain a valid Zero3.");
         }
 
         /// <summary>
@@ -58,12 +83,49 @@ namespace SoulsFormats.AC4
         {
             var containers = new List<BinaryReaderEx>();
             int index = 0;
-            string containerPath = Path.ChangeExtension(path, index.ToString("D3"));
+            string indexString = index.ToString("D3");
+            string containerPath = Path.ChangeExtension(path, indexString);
+
             while (System.IO.File.Exists(containerPath))
             {
                 containers.Add(new BinaryReaderEx(true, System.IO.File.OpenRead(containerPath)));
                 index++;
-                containerPath = Path.ChangeExtension(path, index.ToString("D3"));
+                indexString = index.ToString("D3");
+                containerPath = Path.ChangeExtension(path, indexString);
+            }
+
+            var result = new Zero3(containers[0], containers);
+            foreach (BinaryReaderEx br in containers)
+                br.Stream.Close();
+            return result;
+        }
+
+        /// <summary>
+        /// Read file data from the given .000 header file and associated data files.
+        /// </summary>
+        public static Zero3 ReadFromPacked(string path)
+        {
+            var containers = new List<BinaryReaderEx>();
+            int index = 0;
+            string indexString = index.ToString("D3");
+            string containerPath = Path.ChangeExtension(path, indexString);
+
+            while (System.IO.File.Exists(containerPath))
+            {
+                BinaryReaderEx br;
+                if (BND3.IsRead(containerPath, out BND3 bnd3))
+                {
+                    br = FindZero3InBND3(bnd3, indexString);
+                }
+                else
+                {
+                    throw new InvalidDataException("File was not packed into a BND3.");
+                }
+
+                containers.Add(br);
+                index++;
+                indexString = index.ToString("D3");
+                containerPath = Path.ChangeExtension(path, indexString);
             }
 
             var result = new Zero3(containers[0], containers);
