@@ -5,7 +5,7 @@ namespace SoulsFormats.Kuon
 {
     /// <summary>
     /// The format of the Binder files acting as Kuon's main archive, ALL/ELL. Extension: .bnd
-    /// <para>The difference is that this one does include a size field in file entries.</para>
+    /// <para>The difference is that this one does include a size field in file entries. This one includes padding before file entries.</para>
     /// </summary>
     public class DVDBND : SoulsFile<DVDBND>
     {
@@ -36,6 +36,31 @@ namespace SoulsFormats.Kuon
         {
             Files = new List<File>();
             FileVersion = version;
+        }
+
+        /// <summary>
+        /// Converts a <see cref="BND"/> to a <see cref="DVDBND"/>.
+        /// </summary>
+        public DVDBND(BND bnd)
+        {
+            Files = new List<File>(bnd.Files.Count);
+            for (int i = 0; i < bnd.Files.Count; i++)
+            {
+                Files.Add(new File(bnd.Files[i].ID, bnd.Files[i].Name, bnd.Files[i].Bytes));
+            }
+
+            FileVersion = 202;
+        }
+
+        /// <summary>
+        /// Checks whether the data appears to be a <see cref="DVDBND"/>.
+        /// </summary>
+        protected override bool Is(BinaryReaderEx br)
+        {
+            if (br.Length < 16)
+                return false;
+
+            return br.GetASCII(0, 4) == "BND\0";
         }
 
         /// <summary>
@@ -71,7 +96,6 @@ namespace SoulsFormats.Kuon
             {
                 Files[i].Write(bw, i);
             }
-            bw.Pad(0x800);
 
             for (int i = 0; i < Files.Count; i++)
             {
@@ -81,10 +105,12 @@ namespace SoulsFormats.Kuon
 
             for (int i = 0; i < Files.Count; i++)
             {
+                bw.Pad(0x800);
                 bw.FillInt32($"DataOffset_{i}", (int)bw.Position);
                 bw.WriteBytes(Files[i].Bytes);
-                bw.Pad(0x800);
             }
+
+            bw.FillInt32("FileSize", (int)bw.Position);
         }
 
         /// <summary>

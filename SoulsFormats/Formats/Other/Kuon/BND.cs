@@ -5,7 +5,7 @@ namespace SoulsFormats.Kuon
 {
     /// <summary>
     /// The format of Binder files in Kuon except for the main archive.
-    /// <para>The difference is that these do not include a size field in file entries.</para>
+    /// <para>The difference is that these do not include a size field in file entries. They have no padding before file entries.</para>
     /// </summary>
     public class BND : SoulsFile<BND>
     {
@@ -39,15 +39,28 @@ namespace SoulsFormats.Kuon
         }
 
         /// <summary>
-        /// Checks whether the data appears to be a file of this format.
+        /// Converts a <see cref="DVDBND"/> to a <see cref="BND"/>.
+        /// </summary>
+        public BND(DVDBND bnd)
+        {
+            Files = new List<File>(bnd.Files.Count);
+            for (int i = 0; i < bnd.Files.Count; i++)
+            {
+                Files.Add(new File(bnd.Files[i].ID, bnd.Files[i].Name, bnd.Files[i].Bytes));
+            }
+
+            FileVersion = 200;
+        }
+
+        /// <summary>
+        /// Checks whether the data appears to be a <see cref="BND"/>.
         /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
-            if (br.Length < 4)
+            if (br.Length < 16)
                 return false;
 
-            string magic = br.GetASCII(0, 4);
-            return magic == "BND\0";
+            return br.GetASCII(0, 4) == "BND\0";
         }
 
         /// <summary>
@@ -91,8 +104,7 @@ namespace SoulsFormats.Kuon
             {
                 Files[i].Write(bw, i);
             }
-            bw.Pad(0x800);
-
+            
             for (int i = 0; i < Files.Count; i++)
             {
                 bw.FillInt32($"NameOffset_{i}", (int)bw.Position);
@@ -103,8 +115,9 @@ namespace SoulsFormats.Kuon
             {
                 bw.FillInt32($"DataOffset_{i}", (int)bw.Position);
                 bw.WriteBytes(Files[i].Bytes);
-                bw.Pad(0x800);
             }
+
+            bw.FillInt32("FileSize", (int)bw.Position);
         }
 
         /// <summary>

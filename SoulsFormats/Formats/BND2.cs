@@ -176,7 +176,7 @@ namespace SoulsFormats
 
             br.AssertASCII("BND\0");
             br.AssertUInt32(0xFFFF);
-            FileVersion = br.AssertInt32(202, 211); // Versions between 202 and 211 not seen.
+            FileVersion = br.ReadInt32(); // Versions between 202 and 211 not seen.
             br.Position += 4; // File Size
             int fileCount = br.ReadInt32();
             int namesOffset = br.ReadInt32();

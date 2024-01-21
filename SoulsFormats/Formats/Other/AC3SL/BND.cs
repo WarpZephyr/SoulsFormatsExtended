@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SoulsFormats.AC3SL
 {
@@ -8,6 +9,12 @@ namespace SoulsFormats.AC3SL
     /// </summary>
     public class BND : SoulsFile<BND>
     {
+        /// <summary>
+        /// Presumed to be an 8 char file version.
+        /// <para>Only seen as "LTL"</para>
+        /// </summary>
+        public string FileVersion { get; set; }
+
         /// <summary>
         /// The alignment of each <see cref="File"/>.
         /// <para>The bigger the aligment, the more empty bytes are added as padding. This increases the size of the archive.</para>
@@ -29,6 +36,7 @@ namespace SoulsFormats.AC3SL
         /// </summary>
         public BND()
         {
+            FileVersion = "LTL";
             AlignmentSize = 2048;
             Unk1E = 4;
             Files = new List<File>();
@@ -53,8 +61,7 @@ namespace SoulsFormats.AC3SL
                 return false;
             }
 
-            bool expectedUnk04 = br.ReadASCII(4) == "LTL\0";
-            bool expectedUnk08 = br.ReadInt32() == 0;
+            br.Position += 8; // File Version
             br.Position += 4; // File Size
             int fileNum = br.ReadInt32();
             int totalFileSize = br.ReadInt32();
@@ -87,7 +94,7 @@ namespace SoulsFormats.AC3SL
                 }
 
                 // Ensure offset is not less than the previous offset
-                if (offset < previousOffset)
+                if (size > 0 && offset < previousOffset)
                 {
                     return false;
                 }
@@ -108,7 +115,7 @@ namespace SoulsFormats.AC3SL
             }
 
             bool validTotalFileSize = detectedTotalFileSize == totalFileSize;
-            return expectedUnk04 && expectedUnk08 && expectedUnk18 && expectedAligmentSize && validTotalFileSize;
+            return expectedUnk18 && expectedAligmentSize && validTotalFileSize;
         }
 
         /// <summary>
@@ -118,21 +125,18 @@ namespace SoulsFormats.AC3SL
         {
             br.BigEndian = false;
             br.AssertASCII("BND\0");
-            br.AssertASCII("LTL\0");
-            br.AssertInt32(0);
+            br.ReadASCII(8);
             br.Position += 4; // File Size
             int fileNum = br.ReadInt32();
             br.Position += 4; // Total File Size (Not including padding)
             br.AssertInt32(0);
             AlignmentSize = br.ReadInt16();
             Unk1E = br.ReadInt16();
-            br.Pad(AlignmentSize);
 
             Files = new List<File>(fileNum);
             for (int i = 0; i < fileNum; i++)
             {
                 Files.Add(new File(br));
-                br.Pad(AlignmentSize);
             }
         }
 
@@ -143,8 +147,7 @@ namespace SoulsFormats.AC3SL
         {
             bw.BigEndian = false;
             bw.WriteASCII("BND\0");
-            bw.WriteASCII("LTL\0");
-            bw.WriteInt32(0);
+            bw.WriteFixStr(FileVersion, 8);
             bw.ReserveInt32("FileSize");
             bw.WriteInt32(Files.Count);
             bw.ReserveInt32("TotalFileSize");
@@ -161,7 +164,11 @@ namespace SoulsFormats.AC3SL
             int totalFileSize = 0;
             for (int i = 0; i < Files.Count; i++)
             {
-                bw.FillInt32($"FileOffset_{i}", (int)bw.Position);
+                if (Files[i].Bytes.Length > 0)
+                {
+                    bw.FillInt32($"FileOffset_{i}", (int)bw.Position);
+                }
+
                 bw.WriteBytes(Files[i].Bytes);
                 bw.Pad(AlignmentSize);
                 totalFileSize += Files[i].Bytes.Length;
@@ -255,7 +262,16 @@ namespace SoulsFormats.AC3SL
             {
                 bw.WriteInt32(ID);
                 bw.WriteInt32(Bytes.Length);
-                bw.ReserveInt32($"FileOffset_{index}");
+
+                if (Bytes.Length > 0)
+                {
+                    bw.ReserveInt32($"FileOffset_{index}");
+                }
+                else
+                {
+                    bw.WriteInt32(0);
+                }
+
                 bw.WriteInt32(0);
             }
         }

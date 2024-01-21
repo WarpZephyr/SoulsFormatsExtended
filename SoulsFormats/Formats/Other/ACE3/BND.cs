@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SoulsFormats.ACE3
 {
@@ -150,6 +151,42 @@ namespace SoulsFormats.ACE3
             /// The raw data of this <see cref="File"/>.
             /// </summary>
             public byte[] Bytes { get; set; }
+
+            /// <summary>
+            /// Creates a <see cref="File"/>.
+            /// </summary>
+            public File()
+            {
+                ID = -1;
+                Bytes = Array.Empty<byte>();
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an ID.
+            /// </summary>
+            public File(int id)
+            {
+                ID = id;
+                Bytes = Array.Empty<byte>();
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with bytes.
+            /// </summary>
+            public File(byte[] bytes)
+            {
+                ID = -1;
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an ID and bytes.
+            /// </summary>
+            public File(int id, byte[] bytes)
+            {
+                ID = id;
+                Bytes = bytes;
+            }
 
             /// <summary>
             /// Reads a <see cref="File"/> from a stream.

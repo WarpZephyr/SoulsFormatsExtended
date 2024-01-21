@@ -124,7 +124,7 @@ namespace SoulsFormats
             bw.WriteByte(0);
 
             bw.WriteInt32(fileHeaders.Count);
-            //bw.ReserveInt32("FileHeadersEnd");
+            bw.ReserveInt32("FileHeadersEnd");
             bw.WriteInt32(0);
             bw.WriteInt32(bnd.Unk18);
             bw.WriteInt32(0);
@@ -135,7 +135,7 @@ namespace SoulsFormats
             for (int i = 0; i < fileHeaders.Count; i++)
                 fileHeaders[i].WriteFileName(bw, bnd.Format, false, i);
 
-            //bw.FillInt32($"FileHeadersEnd", (int)bw.Position);
+            bw.FillInt32($"FileHeadersEnd", (int)bw.Position);
         }
     }
 }
