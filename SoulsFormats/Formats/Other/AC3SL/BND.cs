@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace SoulsFormats.AC3SL
 {
     /// <summary>
-    /// The format for the Binder file found in Armored Core 3 Silent Line.
+    /// The format of the Binder file found in Armored Core 3 Silent Line.
     /// </summary>
     public class BND : SoulsFile<BND>
     {

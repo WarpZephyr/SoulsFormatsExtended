@@ -3,7 +3,7 @@
 namespace SoulsFormats.ACE3
 {
     /// <summary>
-    /// A file container used in A.C.E. 3.
+    /// The format of the Binder files used in Another Century's Episode 3.
     /// </summary>
     public class BND : SoulsFile<BND>
     {

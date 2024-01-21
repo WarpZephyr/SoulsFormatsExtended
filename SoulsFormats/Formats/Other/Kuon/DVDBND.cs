@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace SoulsFormats.Kuon
 {
     /// <summary>
-    /// The format for Binders acting as Kuon's main archive, ALL/ELL. Extension: .bnd
-    /// <para>The difference is that these do include a size field in file entries.</para>
+    /// The format of the Binder files acting as Kuon's main archive, ALL/ELL. Extension: .bnd
+    /// <para>The difference is that this one does include a size field in file entries.</para>
     /// </summary>
     public class DVDBND : SoulsFile<DVDBND>
     {
