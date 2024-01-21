@@ -1,16 +1,15 @@
-﻿using SoulsFormats;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace SoulsFormatsExtended.ACSL
+namespace SoulsFormats.AC3SL
 {
     /// <summary>
-    /// The format for the Binder file found in Armored Core Silent Line.
+    /// The format for the Binder file found in Armored Core 3 Silent Line.
     /// </summary>
     public class BND : SoulsFile<BND>
     {
         /// <summary>
-        /// The alignment of each file.
+        /// The alignment of each <see cref="File"/>.
         /// <para>The bigger the aligment, the more empty bytes are added as padding. This increases the size of the archive.</para>
         /// </summary>
         public short AlignmentSize { get; set; }
@@ -24,6 +23,16 @@ namespace SoulsFormatsExtended.ACSL
         /// Files in this <see cref="BND"/>.
         /// </summary>
         public List<File> Files { get; set; }
+
+        /// <summary>
+        /// Creates a <see cref="BND"/>.
+        /// </summary>
+        public BND()
+        {
+            AlignmentSize = 2048;
+            Unk1E = 4;
+            Files = new List<File>();
+        }
 
         /// <summary>
         /// Returns true if the data appears to be a <see cref="BND"/> of this type.
@@ -119,6 +128,7 @@ namespace SoulsFormatsExtended.ACSL
             Unk1E = br.ReadInt16();
             br.Pad(AlignmentSize);
 
+            Files = new List<File>(fileNum);
             for (int i = 0; i < fileNum; i++)
             {
                 Files.Add(new File(br));
@@ -176,12 +186,39 @@ namespace SoulsFormatsExtended.ACSL
             public byte[] Bytes { get; set; }
 
             /// <summary>
-            /// Creates a new <see cref="File"/>.
+            /// Creates a <see cref="File"/>.
             /// </summary>
             public File()
             {
                 ID = -1;
                 Bytes = Array.Empty<byte>();
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an ID.
+            /// </summary>
+            public File(int id)
+            {
+                ID = id;
+                Bytes = Array.Empty<byte>();
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with bytes.
+            /// </summary>
+            public File(byte[] bytes)
+            {
+                ID = -1;
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an ID and bytes.
+            /// </summary>
+            public File(int id, byte[] bytes)
+            {
+                ID = id;
+                Bytes = bytes;
             }
 
             /// <summary>

@@ -38,12 +38,13 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// File version.
+        /// The version of this <see cref="BND2"/>.
+        /// <para>Only 202 and 211 have been seen.</para>
         /// </summary>
         public int FileVersion { get; set; }
 
         /// <summary>
-        /// The alignment of each file.
+        /// The alignment of each <see cref="File"/>.
         /// <para>The bigger the aligment, the more empty bytes are added as padding. This increases the size of the archive.</para>
         /// </summary>
         public ushort AlignmentSize { get; set; }
@@ -61,17 +62,17 @@ namespace SoulsFormats
 
         /// <summary>
         /// The base directory of all files.
-        /// <para>Only used in <see cref="FilePathModeEnum.NamesOffset"/>.</para>
+        /// <para>Only used when <see cref="FilePathModeEnum.NamesOffset"/> is set on <see cref="FilePathMode"/>.</para>
         /// </summary>
         public string BaseDirectory { get; set; }
 
         /// <summary>
-        /// Files in this <see cref="BND2"/>.
+        /// The files in this <see cref="BND2"/>.
         /// </summary>
         public List<File> Files { get; set; }
 
         /// <summary>
-        /// Creates an empty <see cref="BND2"/>.
+        /// Creates a <see cref="BND2"/>.
         /// </summary>
         public BND2()
         {
@@ -84,7 +85,20 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Creates an empty <see cref="BND2"/> with the specified <see cref="FilePathMode"/>.
+        /// Creates a <see cref="BND2"/> with the specified version.
+        /// </summary>
+        public BND2(int version)
+        {
+            FileVersion = version;
+            AlignmentSize = 2048;
+            FilePathMode = FilePathModeEnum.NamesNoOffset;
+            Unk1B = 0;
+            BaseDirectory = string.Empty;
+            Files = new List<File>();
+        }
+
+        /// <summary>
+        /// Creates a <see cref="BND2"/> with the specified <see cref="FilePathMode"/>.
         /// </summary>
         public BND2(FilePathModeEnum filePathMode)
         {
@@ -97,7 +111,20 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Checks whether the data appears to be a file of this format.
+        /// Creates a <see cref="BND2"/> with the specified version and <see cref="FilePathMode"/>.
+        /// </summary>
+        public BND2(int version, FilePathModeEnum filePathMode)
+        {
+            FileVersion = version;
+            AlignmentSize = 2048;
+            FilePathMode = filePathMode;
+            Unk1B = 0;
+            BaseDirectory = string.Empty;
+            Files = new List<File>();
+        }
+
+        /// <summary>
+        /// Returns true if the data appears to be a <see cref="BND2"/>.
         /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
@@ -141,7 +168,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Deserializes file data from a stream.
+        /// Reads a <see cref="BND2"/> from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
@@ -173,7 +200,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Serializes file data to a stream.
+        /// Writes this <see cref="BND2"/> to a stream.
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
@@ -246,7 +273,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// A file in a <see cref="BND2"/>.
+        /// A <see cref="File"/> in a <see cref="BND2"/>.
         /// </summary>
         public class File
         {
@@ -269,37 +296,37 @@ namespace SoulsFormats
             public byte[] Bytes { get; set; }
 
             /// <summary>
-            /// Creates a File.
+            /// Creates a <see cref="File"/>.
             /// </summary>
             public File()
             {
                 ID = -1;
                 Name = string.Empty;
-                Bytes = null;
+                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
-            /// Creates a File with an ID.
+            /// Creates a <see cref="File"/> with an ID.
             /// </summary>
             public File(int id)
             {
                 ID = id;
                 Name = string.Empty;
-                Bytes = null;
+                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
-            /// Creates a File with a name.
+            /// Creates a <see cref="File"/> with a name.
             /// </summary>
             public File(string name)
             {
                 ID = -1;
                 Name = name;
-                Bytes = null;
+                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
-            /// Creates a File with bytes.
+            /// Creates a <see cref="File"/> with bytes.
             /// </summary>
             public File(byte[] bytes)
             {
@@ -309,17 +336,17 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Creates a File with an ID and name.
+            /// Creates a <see cref="File"/> with an ID and name.
             /// </summary>
             public File(int id, string name)
             {
                 ID = id;
                 Name = name;
-                Bytes = null;
+                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
-            /// Creates a File with an ID and bytes.
+            /// Creates a <see cref="File"/> with an ID and bytes.
             /// </summary>
             public File(int id, byte[] bytes)
             {
@@ -328,7 +355,17 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Creates a File with an id, name, and bytes.
+            /// Creates a <see cref="File"/> with a name and bytes.
+            /// </summary>
+            public File(string name, byte[] bytes)
+            {
+                ID = -1;
+                Name = name;
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an id, name, and bytes.
             /// </summary>
             public File(int id, string name, byte[] bytes)
             {
@@ -337,6 +374,9 @@ namespace SoulsFormats
                 Bytes = bytes;
             }
 
+            /// <summary>
+            /// Reads a <see cref="File"/> from a stream.
+            /// </summary>
             internal File(BinaryReaderEx br, FilePathModeEnum filePathMode)
             {
                 ID = br.ReadInt32();
@@ -362,7 +402,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Serializes file data to a stream.
+            /// Writes this <see cref="File"/> entry to a stream.
             /// </summary>
             internal void Write(BinaryWriterEx bw, FilePathModeEnum filePathMode, int index)
             {

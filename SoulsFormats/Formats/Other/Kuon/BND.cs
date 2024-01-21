@@ -10,14 +10,33 @@ namespace SoulsFormats.Kuon
     public class BND : SoulsFile<BND>
     {
         /// <summary>
-        /// Files in this BND.
+        /// The files in this <see cref="BND"/>.
         /// </summary>
-        public List<File> Files;
+        public List<File> Files { get; set; }
 
         /// <summary>
-        /// The version of the file.
+        /// The version of this <see cref="BND"/>.
+        /// <para>Only 200 and 202 have been seen.</para>
         /// </summary>
-        public int FileVersion;
+        public int FileVersion { get; set; }
+
+        /// <summary>
+        /// Creates a <see cref="BND"/>.
+        /// </summary>
+        public BND()
+        {
+            Files = new List<File>();
+            FileVersion = 200;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="BND"/> with the specified version.
+        /// </summary>
+        public BND(int version)
+        {
+            Files = new List<File>();
+            FileVersion = version;
+        }
 
         /// <summary>
         /// Checks whether the data appears to be a file of this format.
@@ -32,14 +51,14 @@ namespace SoulsFormats.Kuon
         }
 
         /// <summary>
-        /// Deserializes file data from a stream.
+        /// Reads a <see cref="BND"/> from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
             br.BigEndian = false;
 
             br.AssertASCII("BND\0");
-            FileVersion = br.AssertInt32(0xC8, 0xCA);
+            FileVersion = br.ReadInt32();
             int fileSize = br.ReadInt32();
             int fileCount = br.ReadInt32();
 
@@ -57,7 +76,7 @@ namespace SoulsFormats.Kuon
         }
 
         /// <summary>
-        /// Serializes file data to a stream.
+        /// Writes this <see cref="BND"/> to a stream.
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
@@ -77,7 +96,7 @@ namespace SoulsFormats.Kuon
             for (int i = 0; i < Files.Count; i++)
             {
                 bw.FillInt32($"NameOffset_{i}", (int)bw.Position);
-                bw.WriteShiftJIS(Files[i].Name);
+                bw.WriteShiftJIS(Files[i].Name, true);
             }
 
             for (int i = 0; i < Files.Count; i++)
@@ -96,17 +115,17 @@ namespace SoulsFormats.Kuon
             /// <summary>
             /// The ID of this <see cref="File"/>.
             /// </summary>
-            public int ID;
+            public int ID { get; set; }
 
             /// <summary>
             /// Name of this <see cref="File"/>.
             /// </summary>
-            public string Name;
+            public string Name { get; set; }
 
             /// <summary>
             /// The raw data of this <see cref="File"/>.
             /// </summary>
-            public byte[] Bytes;
+            public byte[] Bytes { get; set; }
 
             /// <summary>
             /// Creates a <see cref="File"/>.
@@ -187,6 +206,9 @@ namespace SoulsFormats.Kuon
                 Bytes = bytes;
             }
 
+            /// <summary>
+            /// Reads a <see cref="File"/> from a stream.
+            /// </summary>
             internal File(BinaryReaderEx br, int nextOffset)
             {
                 ID = br.ReadInt32();
@@ -198,7 +220,7 @@ namespace SoulsFormats.Kuon
             }
 
             /// <summary>
-            /// Serializes file data to a stream.
+            /// Writes this <see cref="File"/> entry to a stream.
             /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {

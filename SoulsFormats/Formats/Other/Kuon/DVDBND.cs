@@ -10,17 +10,36 @@ namespace SoulsFormats.Kuon
     public class DVDBND : SoulsFile<DVDBND>
     {
         /// <summary>
-        /// Files in this <see cref="DVDBND"/>.
+        /// The files in this <see cref="DVDBND"/>.
         /// </summary>
-        public List<File> Files;
+        public List<File> Files { get; set; }
 
         /// <summary>
-        /// The version of the file.
+        /// The version of this <see cref="DVDBND"/>.
+        /// <para>Only 202 has been seen.</para>
         /// </summary>
-        public int FileVersion;
+        public int FileVersion { get; set; }
 
         /// <summary>
-        /// Deserializes file data from a stream.
+        /// Creates a <see cref="DVDBND"/>.
+        /// </summary>
+        public DVDBND()
+        {
+            Files = new List<File>();
+            FileVersion = 202;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="DVDBND"/> with the specified version.
+        /// </summary>
+        public DVDBND(int version)
+        {
+            Files = new List<File>();
+            FileVersion = version;
+        }
+
+        /// <summary>
+        /// Reads a <see cref="DVDBND"/> from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
@@ -37,7 +56,7 @@ namespace SoulsFormats.Kuon
         }
 
         /// <summary>
-        /// Serializes file data to a stream.
+        /// Writes this <see cref="DVDBND"/> to a stream.
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
@@ -76,17 +95,17 @@ namespace SoulsFormats.Kuon
             /// <summary>
             /// The ID of this <see cref="File"/>.
             /// </summary>
-            public int ID;
+            public int ID { get; set; }
 
             /// <summary>
             /// Name of this <see cref="File"/>.
             /// </summary>
-            public string Name;
+            public string Name { get; set; }
 
             /// <summary>
             /// The raw data of this <see cref="File"/>.
             /// </summary>
-            public byte[] Bytes;
+            public byte[] Bytes { get; set; }
 
             /// <summary>
             /// Creates a <see cref="File"/>.
@@ -167,6 +186,9 @@ namespace SoulsFormats.Kuon
                 Bytes = bytes;
             }
 
+            /// <summary>
+            /// Reads a <see cref="File"/> from a stream.
+            /// </summary>
             internal File(BinaryReaderEx br)
             {
                 ID = br.ReadInt32();
@@ -178,6 +200,9 @@ namespace SoulsFormats.Kuon
                 Bytes = br.GetBytes(dataOffset, dataSize);
             }
 
+            /// <summary>
+            /// Writes this <see cref="File"/> entry to a stream.
+            /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
                 bw.WriteInt32(ID);
