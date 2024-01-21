@@ -4,31 +4,20 @@ using System.Collections.Generic;
 namespace SoulsFormats.Kuon
 {
     /// <summary>
-    /// Most BNDs inside ALL/ELL. Extension: .bnd
+    /// The format for Binders acting as Kuon's main archive, ALL/ELL. Extension: .bnd
+    /// <para>The difference is that these do include a size field in file entries.</para>
     /// </summary>
-    public class BND0 : SoulsFile<BND0>
+    public class DVDBND : SoulsFile<DVDBND>
     {
         /// <summary>
-        /// Files in this BND.
+        /// Files in this <see cref="DVDBND"/>.
         /// </summary>
         public List<File> Files;
 
         /// <summary>
-        /// Unknown; 0xC8 or 0xCA.
+        /// The version of the file.
         /// </summary>
-        public int Unk04;
-
-        /// <summary>
-        /// Checks whether the data appears to be a file of this format.
-        /// </summary>
-        protected override bool Is(BinaryReaderEx br)
-        {
-            if (br.Length < 4)
-                return false;
-
-            string magic = br.GetASCII(0, 4);
-            return magic == "BND\0";
-        }
+        public int FileVersion;
 
         /// <summary>
         /// Deserializes file data from a stream.
@@ -38,18 +27,13 @@ namespace SoulsFormats.Kuon
             br.BigEndian = false;
 
             br.AssertASCII("BND\0");
-            Unk04 = br.AssertInt32(0xC8, 0xCA);
-            int fileSize = br.ReadInt32();
+            FileVersion = br.ReadInt32();
+            br.Position += 4; // File Size
             int fileCount = br.ReadInt32();
 
             Files = new List<File>(fileCount);
             for (int i = 0; i < fileCount; i++)
-            {
-                int nextOffset = fileSize;
-                if (i < fileCount - 1)
-                    nextOffset = br.GetInt32(br.Position + 0xC + 4);
-                Files.Add(new File(br, nextOffset));
-            }
+                Files.Add(new File(br));
         }
 
         /// <summary>
@@ -60,80 +44,102 @@ namespace SoulsFormats.Kuon
             bw.BigEndian = false;
 
             bw.WriteASCII("BND\0");
-            bw.WriteInt32(Unk04);
+            bw.WriteInt32(FileVersion);
             bw.ReserveInt32("FileSize");
             bw.WriteInt32(Files.Count);
 
             for (int i = 0; i < Files.Count; i++)
+            {
                 Files[i].Write(bw, i);
+            }
+            bw.Pad(0x800);
 
-            // This makes an assumpation based on things I've seen before
-            // I need a sample to actually finish this.
             for (int i = 0; i < Files.Count; i++)
             {
                 bw.FillInt32($"NameOffset_{i}", (int)bw.Position);
-                bw.WriteShiftJIS(Files[i].Name);
+                bw.WriteShiftJIS(Files[i].Name, true);
             }
 
             for (int i = 0; i < Files.Count; i++)
             {
                 bw.FillInt32($"DataOffset_{i}", (int)bw.Position);
                 bw.WriteBytes(Files[i].Bytes);
+                bw.Pad(0x800);
             }
         }
 
         /// <summary>
-        /// A file in a BND0.
+        /// A <see cref="File"/> in a <see cref="DVDBND"/>.
         /// </summary>
         public class File
         {
             /// <summary>
-            /// ID of this file.
+            /// The ID of this <see cref="File"/>.
             /// </summary>
             public int ID;
 
             /// <summary>
-            /// Name of this file.
+            /// Name of this <see cref="File"/>.
             /// </summary>
             public string Name;
 
             /// <summary>
-            /// File data.
+            /// The raw data of this <see cref="File"/>.
             /// </summary>
             public byte[] Bytes;
 
             /// <summary>
-            /// Creates a new blank File.
+            /// Creates a <see cref="File"/>.
             /// </summary>
-            public File() { }
+            public File()
+            {
+                ID = -1;
+                Name = string.Empty;
+                Bytes = Array.Empty<byte>();
+            }
 
             /// <summary>
-            /// Creates a new file with an ID.
+            /// Creates a <see cref="File"/> with an ID.
             /// </summary>
             public File(int id)
             {
                 ID = id;
+                Name = string.Empty;
+                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
-            /// Creates a new file with a name.
+            /// Creates a <see cref="File"/> with a name.
             /// </summary>
-            /// <param name="name"></param>
             public File(string name)
             {
+                ID = -1;
                 Name = name;
+                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
-            /// Creates a new file with bytes.
+            /// Creates a <see cref="File"/> with bytes.
             /// </summary>
             public File(byte[] bytes)
             {
+                ID = -1;
+                Name = string.Empty;
                 Bytes = bytes;
             }
 
             /// <summary>
-            /// Creates a new File with an ID and bytes.
+            /// Creates a <see cref="File"/> with an ID and name.
+            /// </summary>
+            public File(int id, string name)
+            {
+                ID = id;
+                Name = name;
+                Bytes = Array.Empty<byte>();
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an ID and bytes.
             /// </summary>
             public File(int id, byte[] bytes)
             {
@@ -142,7 +148,17 @@ namespace SoulsFormats.Kuon
             }
 
             /// <summary>
-            /// Creates a new File with an id, name, and bytes.
+            /// Creates a <see cref="File"/> with a name and bytes.
+            /// </summary>
+            public File(string name, byte[] bytes)
+            {
+                ID = -1;
+                Name = name;
+                Bytes = bytes;
+            }
+
+            /// <summary>
+            /// Creates a <see cref="File"/> with an id, name, and bytes.
             /// </summary>
             public File(int id, string name, byte[] bytes)
             {
@@ -151,23 +167,22 @@ namespace SoulsFormats.Kuon
                 Bytes = bytes;
             }
 
-            internal File(BinaryReaderEx br, int nextOffset)
+            internal File(BinaryReaderEx br)
             {
                 ID = br.ReadInt32();
                 int dataOffset = br.ReadInt32();
+                int dataSize = br.ReadInt32();
                 int nameOffset = br.ReadInt32();
 
                 Name = br.GetShiftJIS(nameOffset);
-                Bytes = br.GetBytes(dataOffset, nextOffset - dataOffset);
+                Bytes = br.GetBytes(dataOffset, dataSize);
             }
 
-            /// <summary>
-            /// Serializes file data to a stream.
-            /// </summary>
             internal void Write(BinaryWriterEx bw, int index)
             {
                 bw.WriteInt32(ID);
                 bw.ReserveInt32($"DataOffset_{index}");
+                bw.WriteInt32(Bytes.Length);
                 bw.ReserveInt32($"NameOffset_{index}");
             }
         }

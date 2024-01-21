@@ -246,17 +246,17 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// A file in a BND0.
+        /// A file in a <see cref="BND2"/>.
         /// </summary>
         public class File
         {
             /// <summary>
-            /// ID of this file.
+            /// The ID of this <see cref="File"/>.
             /// </summary>
             public int ID { get; set; }
 
             /// <summary>
-            /// The name of this file.
+            /// The name of this <see cref="File"/>.
             /// <para>Will be set to ID if name does not exist.</para>
             /// <para>Will be a path with a drive letter if <see cref="FilePathModeEnum.Paths"/> is set.</para>
             /// <para>Will need <see cref="BaseDirectory"/> added as the base directory if <see cref="FilePathModeEnum.NamesOffset"/> is set.</para>
@@ -264,7 +264,7 @@ namespace SoulsFormats
             public string Name { get; set; }
 
             /// <summary>
-            /// The raw data of this file.
+            /// The raw data of this <see cref="File"/>.
             /// </summary>
             public byte[] Bytes { get; set; }
 
