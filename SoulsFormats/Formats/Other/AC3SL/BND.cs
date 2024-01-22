@@ -66,8 +66,7 @@ namespace SoulsFormats.AC3SL
             int fileNum = br.ReadInt32();
             int totalFileSize = br.ReadInt32();
             bool expectedUnk18 = br.ReadInt32() == 0;
-            bool expectedAligmentSize = br.ReadInt16() % 2 == 0;
-            br.Position += 2; // Unk1E
+            br.Position += 4; // Alignment Size, Unk1E
 
             int fileEntrySize = 16;
             int entryLength = fileNum * fileEntrySize;
@@ -115,7 +114,7 @@ namespace SoulsFormats.AC3SL
             }
 
             bool validTotalFileSize = detectedTotalFileSize == totalFileSize;
-            return expectedUnk18 && expectedAligmentSize && validTotalFileSize;
+            return expectedUnk18 && validTotalFileSize;
         }
 
         /// <summary>

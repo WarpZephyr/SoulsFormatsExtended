@@ -136,7 +136,7 @@ namespace SoulsFormats
             int fileVersion = br.ReadInt32();
             br.Position += 8; // File Size, File Num
             int namesOffset = br.ReadInt32();
-            ushort alignmentSize = br.ReadUInt16();
+            br.Position += 2; // Alignment Size
             byte filePathMode = br.ReadByte();
             byte unk1B = br.ReadByte();
             uint unk1C = br.ReadUInt32();
@@ -160,11 +160,10 @@ namespace SoulsFormats
 
             bool validMagic = magic == "BND\0";
             bool expectedUnk04 = unk04 == 0xFFFF;
-            bool expectedAligmentSize = alignmentSize % 2 == 0;
             bool expectedFileVersion = fileVersion >= 202 && fileVersion <= 211;
             bool expectedUnk1B = unk1B == 0 || unk1B == 1;
             bool expectedUnk1C = unk1C == 0;
-            return validMagic && expectedUnk04 && expectedFileVersion && validNamesOffset && expectedAligmentSize && expectedUnk1B && expectedUnk1C;
+            return validMagic && expectedUnk04 && expectedFileVersion && validNamesOffset && expectedUnk1B && expectedUnk1C;
         }
 
         /// <summary>
@@ -187,9 +186,11 @@ namespace SoulsFormats
 
             if (FilePathMode == FilePathModeEnum.NamesOffset)
             {
-                br.StepIn(namesOffset);
-                BaseDirectory = br.ReadShiftJIS();
-                br.StepOut();
+                BaseDirectory = br.GetShiftJIS(namesOffset);
+            }
+            else
+            {
+                BaseDirectory = string.Empty;
             }
 
             Files = new List<File>(fileCount);
