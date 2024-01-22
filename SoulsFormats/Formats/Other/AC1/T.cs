@@ -8,9 +8,9 @@ namespace SoulsFormats.AC1
     public class T : SoulsFile<T>
     {
         /// <summary>
-        /// Unknown, seen as 1.
+        /// The size of each block.
         /// </summary>
-        public int Unk04;
+        private const int BLOCK_SIZE = 0x800;
 
         /// <summary>
         /// The files inside of the archive.
@@ -23,19 +23,23 @@ namespace SoulsFormats.AC1
         protected override void Read(BinaryReaderEx br)
         {
             br.BigEndian = false;
-            int fileCount = br.ReadInt32();
-            Unk04 = br.ReadInt32();
+            int fileCount = br.ReadInt16();
+            br.Position += 2; // Block count for the headers?
 
             var alignSizes = new List<ushort>();
             for (int i = 0; i < fileCount; i++)
+            {
                 alignSizes.Add(br.ReadUInt16());
+            }
 
-            br.Pad(0x800);
+            br.Pad(BLOCK_SIZE);
 
             // Seems to include padding, I'm not sure how to determine what is and isn't padding.
-            // There is a strange int or prehaps 2 ushorts at the end of each padding.
+            // There is a strange 4 bytes at the end of each padding.
             for (int i = 0; i < fileCount; i++)
-                Files.Add(br.ReadBytes((alignSizes[i] * 0x800) - (int)br.Position));
+            {
+                Files.Add(br.ReadBytes((alignSizes[i] * BLOCK_SIZE) - (int)br.Position));
+            }
         }
 
         /// <summary>
@@ -44,16 +48,22 @@ namespace SoulsFormats.AC1
         protected override void Write(BinaryWriterEx bw)
         {
             bw.BigEndian = false;
-            bw.WriteInt32(Files.Count);
-            bw.WriteInt32(Unk04);
+            bw.WriteInt16((short)Files.Count);
+            bw.WriteInt16(1); // Block count for the headers?
 
+            short blockCount = 0;
             foreach (byte[] file in Files)
-                bw.WriteUInt16((ushort)((file.Length + (int)bw.Position) / 0x800));
+            {
+                blockCount += (short)(file.Length / BLOCK_SIZE);
+                bw.WriteInt16(blockCount);
+            }
 
-            bw.Pad(0x800);
-
+            bw.Pad(BLOCK_SIZE);
             foreach (byte[] file in Files)
+            {
                 bw.WriteBytes(file);
+                bw.Pad(BLOCK_SIZE);
+            }
         }
     }
 }
