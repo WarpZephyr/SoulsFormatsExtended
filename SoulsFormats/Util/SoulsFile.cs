@@ -9,7 +9,7 @@ namespace SoulsFormats
     public abstract class SoulsFile<TFormat> : ISoulsFile where TFormat : SoulsFile<TFormat>, new()
     {
         /// <summary>
-        /// The type of DCX compression to be used when writing.
+        /// The type of <see cref="DCX"/> compression to be used when writing.
         /// </summary>
         public DCX.Type Compression { get; set; } = DCX.Type.None;
 
@@ -17,9 +17,17 @@ namespace SoulsFormats
         /// Returns true if the data appears to be a file of this type.
         /// </summary>
         // This should really be a static method, but interfaces do not allow static inheritance; hence the dummy objects below.
-        protected virtual bool Is(BinaryReaderEx br)
+        protected virtual bool Is(BinaryReaderEx br) => throw new NotImplementedException($"{nameof(Is)} is not implemented for this format.");
+
+        /// <summary>
+        /// Returns true if the stream appears to be a file of this type.
+        /// </summary>
+        public static bool Is(Stream stream)
         {
-            throw new NotImplementedException("Is is not implemented for this format.");
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            {
+                return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
+            }
         }
 
         /// <summary>
@@ -28,11 +36,15 @@ namespace SoulsFormats
         public static bool Is(byte[] bytes)
         {
             if (bytes.Length == 0)
+            {
                 return false;
+            }
 
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            var dummy = new TFormat();
-            return dummy.Is(SFUtil.GetDecompressedBR(br, out _));
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
+            }
         }
 
         /// <summary>
@@ -40,23 +52,37 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(string path)
         {
-            using (FileStream stream = File.OpenRead(path))
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                if (stream.Length == 0)
+                if (fs.Length == 0)
+                {
                     return false;
+                }
 
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
-                var dummy = new TFormat();
-                return dummy.Is(SFUtil.GetDecompressedBR(br, out _));
+                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
+                {
+                    return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
+                }
             }
         }
 
         /// <summary>
         /// Loads file data from a BinaryReaderEx.
         /// </summary>
-        protected virtual void Read(BinaryReaderEx br)
+        protected virtual void Read(BinaryReaderEx br) => throw new NotImplementedException($"{nameof(Read)} is not implemented for this format.");
+
+        /// <summary>
+        /// Loads a file from a stream, automatically decompressing it if necessary.
+        /// </summary>
+        public static TFormat Read(Stream stream)
         {
-            throw new NotImplementedException("Read is not implemented for this format.");
+            TFormat file = new TFormat();
+            using (BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, stream), out DCX.Type compression))
+            {
+                file.Compression = compression;
+                file.Read(br);
+            }
+            return file;
         }
 
         /// <summary>
@@ -64,11 +90,13 @@ namespace SoulsFormats
         /// </summary>
         public static TFormat Read(byte[] bytes)
         {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
             TFormat file = new TFormat();
-            br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
-            file.Compression = compression;
-            file.Read(br);
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, ms), out DCX.Type compression))
+            {
+                file.Compression = compression;
+                file.Read(br);
+            }
             return file;
         }
 
@@ -77,33 +105,46 @@ namespace SoulsFormats
         /// </summary>
         public static TFormat Read(string path)
         {
-            using (FileStream stream = File.OpenRead(path))
+            TFormat file = new TFormat();
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, fs), out DCX.Type compression))
             {
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
-                TFormat file = new TFormat();
-                br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
                 file.Compression = compression;
                 file.Read(br);
-                return file;
             }
+            return file;
         }
 
+        /// <summary>
+        /// Returns whether the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so, automatically decompressing it if necessary.
+        /// </summary>
         private static bool IsRead(BinaryReaderEx br, out TFormat file)
         {
-            var test = new TFormat();
-            br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
-            if (test.Is(br))
+            var dummy = new TFormat();
+            using (br = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression))
             {
-                br.Position = 0;
-                test.Compression = compression;
-                test.Read(br);
-                file = test;
-                return true;
+                if (dummy.Is(br))
+                {
+                    br.Position = 0;
+                    dummy.Compression = compression;
+                    dummy.Read(br);
+                    file = dummy;
+                    return true;
+                }
             }
-            else
+
+            file = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Returns whether the stream appears to be a file of this type and reads it if so.
+        /// </summary>
+        public static bool IsRead(Stream stream, out TFormat file)
+        {
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
             {
-                file = null;
-                return false;
+                return IsRead(br, out file);
             }
         }
 
@@ -112,8 +153,11 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsRead(byte[] bytes, out TFormat file)
         {
-            var br = new BinaryReaderEx(false, bytes);
-            return IsRead(br, out file);
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return IsRead(br, out file);
+            }
         }
 
         /// <summary>
@@ -121,10 +165,88 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsRead(string path, out TFormat file)
         {
-            using (FileStream fs = File.OpenRead(path))
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
             {
-                var br = new BinaryReaderEx(false, fs);
                 return IsRead(br, out file);
+            }
+        }
+
+        /// <summary>
+        /// Writes file data to a <see cref="BinaryWriterEx"/>.
+        /// </summary>
+        protected virtual void Write(BinaryWriterEx bw) => throw new NotImplementedException($"{nameof(Write)} is not implemented for this format.");
+
+        /// <summary>
+        /// Writes file data to a <see cref="BinaryWriterEx"/>, compressing it afterwards if specified.
+        /// </summary>
+        private void Write(BinaryWriterEx bw, DCX.Type compression)
+        {
+            if (compression == DCX.Type.None)
+            {
+                Write(bw);
+            }
+            else
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    BinaryWriterEx bwd = new BinaryWriterEx(false, ms);
+                    Write(bwd);
+                    DCX.Compress(bwd.FinishBytes(), bw, compression);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Writes the file to an array of bytes, automatically compressing it if necessary.
+        /// </summary>
+        public byte[] Write()
+        {
+            return Write(Compression);
+        }
+
+        /// <summary>
+        /// Writes the file to an array of bytes, compressing it as specified.
+        /// </summary>
+        public byte[] Write(DCX.Type compression)
+        {
+            if (!Validate(out Exception ex))
+            {
+                throw ex;
+            }
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryWriterEx bw = new BinaryWriterEx(false, ms);
+                Write(bw, compression);
+                return bw.FinishBytes();
+            }
+        }
+
+        /// <summary>
+        /// Writes the file to the specified path, automatically compressing it if necessary.
+        /// </summary>
+        public void Write(string path)
+        {
+            Write(path, Compression);
+        }
+
+        /// <summary>
+        /// Writes the file to the specified path, compressing it as specified.
+        /// </summary>
+        public void Write(string path, DCX.Type compression)
+        {
+            if (!Validate(out Exception ex))
+            {
+                throw ex;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? throw new NullReferenceException($"Failed to get directory name for: {path}"));
+            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096))
+            using (BinaryWriterEx bw = new BinaryWriterEx(false, fs))
+            {
+                Write(bw, compression);
+                bw.Finish();
             }
         }
 
@@ -147,11 +269,9 @@ namespace SoulsFormats
                 ex = new NullReferenceException(message);
                 return false;
             }
-            else
-            {
-                ex = null;
-                return true;
-            }
+
+            ex = null;
+            return true;
         }
 
         /// <summary>
@@ -164,83 +284,9 @@ namespace SoulsFormats
                 ex = new IndexOutOfRangeException(message);
                 return false;
             }
-            else
-            {
-                ex = null;
-                return true;
-            }
-        }
 
-        /// <summary>
-        /// Writes file data to a BinaryWriterEx.
-        /// </summary>
-        protected virtual void Write(BinaryWriterEx bw)
-        {
-            throw new NotImplementedException("Write is not implemented for this format.");
-        }
-
-        /// <summary>
-        /// Writes file data to a BinaryWriterEx, compressing it afterwards if specified.
-        /// </summary>
-        private void Write(BinaryWriterEx bw, DCX.Type compression)
-        {
-            if (compression == DCX.Type.None)
-            {
-                Write(bw);
-            }
-            else
-            {
-                BinaryWriterEx bwUncompressed = new BinaryWriterEx(false);
-                Write(bwUncompressed);
-                byte[] uncompressed = bwUncompressed.FinishBytes();
-                DCX.Compress(uncompressed, bw, compression);
-            }
-        }
-
-        /// <summary>
-        /// Writes the file to an array of bytes, automatically compressing it if necessary.
-        /// </summary>
-        public byte[] Write()
-        {
-            return Write(Compression);
-        }
-
-        /// <summary>
-        /// Writes the file to an array of bytes, compressing it as specified.
-        /// </summary>
-        public byte[] Write(DCX.Type compression)
-        {
-            if (!Validate(out Exception ex))
-                throw ex;
-
-            BinaryWriterEx bw = new BinaryWriterEx(false);
-            Write(bw, compression);
-            return bw.FinishBytes();
-        }
-
-        /// <summary>
-        /// Writes the file to the specified path, automatically compressing it if necessary.
-        /// </summary>
-        public void Write(string path)
-        {
-            Write(path, Compression);
-        }
-
-        /// <summary>
-        /// Writes the file to the specified path, compressing it as specified.
-        /// </summary>
-        public void Write(string path, DCX.Type compression)
-        {
-            if (!Validate(out Exception ex))
-                throw ex;
-
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            using (FileStream stream = File.Create(path))
-            {
-                BinaryWriterEx bw = new BinaryWriterEx(false, stream);
-                Write(bw, compression);
-                bw.Finish();
-            }
+            ex = null;
+            return true;
         }
     }
 }

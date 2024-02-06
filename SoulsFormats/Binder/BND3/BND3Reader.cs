@@ -3,7 +3,7 @@
 namespace SoulsFormats
 {
     /// <summary>
-    /// An on-demand reader for BND3 containers.
+    /// An on-demand reader for <see cref="BND3"/> containers.
     /// </summary>
     public class BND3Reader : BinderReader, IBND3
     {
@@ -18,7 +18,7 @@ namespace SoulsFormats
         public DCX.Type Compression { get; set; }
 
         /// <summary>
-        /// Reads a BND3 from the given path, decompressing if necessary.
+        /// Reads a <see cref="BND3"/> from the given path, decompressing if necessary.
         /// </summary>
         public BND3Reader(string path)
         {
@@ -28,7 +28,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BND3 from the given bytes, decompressing if necessary.
+        /// Reads a <see cref="BND3"/> from the given bytes, decompressing if necessary.
         /// </summary>
         public BND3Reader(byte[] bytes)
         {
@@ -39,7 +39,7 @@ namespace SoulsFormats
 
         private void Read(BinaryReaderEx br)
         {
-            br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
+            br = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
             Compression = compression;
             Files = BND3.ReadHeader(this, br);
             DataBR = br;

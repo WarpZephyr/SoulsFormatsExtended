@@ -15,6 +15,16 @@ namespace SoulsFormats
     public static class SFUtil
     {
         /// <summary>
+        /// The prime for computing 32-bit FromSoftware path hashes.
+        /// </summary>
+        public const uint FROM_HASH_PRIME32 = 37u;
+
+        /// <summary>
+        /// The prime for computing 64-bit FromSoftware path hashes.
+        /// </summary>
+        public const ulong FROM_HASH_PRIME64 = 0x85ul;
+
+        /// <summary>
         /// Guesses the path a file should be in based on it's extension.
         /// </summary>
         /// <returns></returns>
@@ -72,10 +82,7 @@ namespace SoulsFormats
 
             if (ext == ".bnd")
             {
-                IBinder bnd = ReadBinder(bytes);
-                if (bnd == null)
-                    throw new InvalidDataException("Extension was guessed to be BND, but it failed to be read as a BND.");
-
+                IBinder bnd = ReadBinder(bytes) ?? throw new InvalidDataException("Extension was guessed to be BND, but it failed to be read as a BND.");
                 string folder = GuessFolderBinder(bnd);
                 return folder;
             }
@@ -386,9 +393,9 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Decompresses data and returns a new BinaryReaderEx if necessary.
+        /// Decompresses data and returns a new <see cref="BinaryReaderEx"/> if necessary.
         /// </summary>
-        public static BinaryReaderEx GetDecompressedBR(BinaryReaderEx br, out DCX.Type compression)
+        public static BinaryReaderEx GetDecompressedBinaryReader(BinaryReaderEx br, out DCX.Type compression)
         {
             if (DCX.Is(br))
             {
@@ -403,14 +410,45 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// FromSoft's basic filename hashing algorithm, used in some BND and BXF formats.
+        /// Computes a 32-bit hash for paths used in FromSoftware games.
         /// </summary>
-        public static uint FromPathHash(string text)
+        public static uint ComputeFromPathHash32(string text)
         {
-            string hashable = text.ToLowerInvariant().Replace('\\', '/');
+            string hashable = text.Trim().ToLowerInvariant().Replace('\\', '/');
             if (!hashable.StartsWith("/"))
+            {
                 hashable = '/' + hashable;
-            return hashable.Aggregate(0u, (i, c) => i * 37u + c);
+            }
+
+            return hashable.Aggregate(0u, (i, c) => i * FROM_HASH_PRIME32 + c);
+        }
+
+        /// <summary>
+        /// Computes a 64-bit hash for paths used in FromSoftware games.
+        /// </summary>
+        public static ulong ComputeFromPathHash64(string text)
+        {
+            string hashable = text.Trim().ToLowerInvariant().Replace('\\', '/');
+            if (!hashable.StartsWith("/"))
+            {
+                hashable = '/' + hashable;
+            }
+
+            return hashable.Aggregate(0ul, (i, c) => i * FROM_HASH_PRIME64 + c);
+        }
+
+        /// <summary>
+        /// Computes a 32-bit or 64-bit hash for paths used in FromSoftware games.
+        /// </summary>
+        public static ulong ComputeFromPathHash(string text, bool bit64 = false)
+        {
+            string hashable = text.Trim().ToLowerInvariant().Replace('\\', '/');
+            if (!hashable.StartsWith("/"))
+            {
+                hashable = '/' + hashable;
+            }
+
+            return bit64 ? hashable.Aggregate(0ul, (i, c) => i * FROM_HASH_PRIME64 + c) : hashable.Aggregate(0u, (i, c) => i * FROM_HASH_PRIME32 + c);
         }
 
         /// <summary>

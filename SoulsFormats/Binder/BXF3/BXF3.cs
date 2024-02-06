@@ -5,55 +5,60 @@ using System.IO;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A general-purpose headered file container used in DS1 and DSR. Extensions: .*bhd (header) and .*bdt (data)
+    /// A general-purpose split header and data binder.
+    /// <para>Header Extensions: .bhd, .*bhd</para>
+    /// <para>Data Extensions: .bdt, .*bdt</para>
     /// </summary>
     public class BXF3 : IBinder, IBXF3
     {
-        #region Public Is
         /// <summary>
-        /// Returns true if the bytes appear to be a BXF3 header file.
+        /// The files contained within this <see cref="BXF3"/>.
         /// </summary>
-        public static bool IsBHD(byte[] bytes)
-        {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            return IsBHD(SFUtil.GetDecompressedBR(br, out _));
-        }
+        public List<BinderFile> Files { get; set; }
 
         /// <summary>
-        /// Returns true if the file appears to be a BXF3 header file.
+        ///A timestamp or version number, 8 characters maximum.
         /// </summary>
-        public static bool IsBHD(string path)
+        public string Version { get; set; }
+
+        /// <summary>
+        /// Indicates the format of this <see cref="BXF3"/>.
+        /// </summary>
+        public Binder.Format Format { get; set; }
+
+        /// <summary>
+        /// Whether to use big-endian byte ordering.
+        /// </summary>
+        public bool BigEndian { get; set; }
+
+        /// <summary>
+        /// Controls ordering of flag bits.
+        /// </summary>
+        public bool BitBigEndian { get; set; }
+
+        /// <summary>
+        /// Creates an empty <see cref="BXF3"/> formatted for DS1.
+        /// </summary>
+        public BXF3()
         {
-            using (FileStream fs = System.IO.File.OpenRead(path))
+            Files = new List<BinderFile>();
+            Version = SFUtil.DateToBinderTimestamp(DateTime.Now);
+            Format = Binder.Format.IDs | Binder.Format.Names1 | Binder.Format.Names2 | Binder.Format.Compression;
+        }
+
+        private BXF3(BinaryReaderEx bhdReader, BinaryReaderEx bdtReader)
+        {
+            ReadBDFHeader(bdtReader);
+            List<BinderFileHeader> fileHeaders = ReadBHFHeader(this, bhdReader);
+            Files = new List<BinderFile>(fileHeaders.Count);
+            foreach (BinderFileHeader fileHeader in fileHeaders)
             {
-                BinaryReaderEx br = new BinaryReaderEx(false, fs);
-                return IsBHD(SFUtil.GetDecompressedBR(br, out _));
+                Files.Add(fileHeader.ReadFileData(bdtReader));
             }
         }
 
-        /// <summary>
-        /// Returns true if the file appears to be a BXF3 data file.
-        /// </summary>
-        public static bool IsBDT(byte[] bytes)
-        {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            return IsBDT(SFUtil.GetDecompressedBR(br, out _));
-        }
+        #region Read
 
-        /// <summary>
-        /// Returns true if the file appears to be a BXF3 data file.
-        /// </summary>
-        public static bool IsBDT(string path)
-        {
-            using (FileStream fs = System.IO.File.OpenRead(path))
-            {
-                BinaryReaderEx br = new BinaryReaderEx(false, fs);
-                return IsBDT(SFUtil.GetDecompressedBR(br, out _));
-            }
-        }
-        #endregion
-
-        #region Public Read
         /// <summary>
         /// Reads two arrays of bytes as the BHD and BDT.
         /// </summary>
@@ -103,9 +108,44 @@ namespace SoulsFormats
                 return new BXF3(bhdReader, bdtReader);
             }
         }
+
+        internal static void ReadBDFHeader(BinaryReaderEx br)
+        {
+            br.AssertASCII("BDF3");
+            br.ReadFixStr(8); // Version
+            br.AssertInt32(0);
+        }
+
+        internal static List<BinderFileHeader> ReadBHFHeader(IBXF3 bxf, BinaryReaderEx br)
+        {
+            br.AssertASCII("BHF3");
+            bxf.Version = br.ReadFixStr(8);
+
+            bxf.BitBigEndian = br.GetBoolean(0xE);
+
+            bxf.Format = Binder.ReadFormat(br, bxf.BitBigEndian);
+            bxf.BigEndian = br.ReadBoolean();
+            br.AssertBoolean(bxf.BitBigEndian);
+            br.AssertByte(0);
+
+            br.BigEndian = bxf.BigEndian || Binder.ForceBigEndian(bxf.Format);
+
+            int fileCount = br.ReadInt32();
+            br.AssertInt32(0);
+            br.AssertInt32(0);
+            br.AssertInt32(0);
+
+            var fileHeaders = new List<BinderFileHeader>(fileCount);
+            for (int i = 0; i < fileCount; i++)
+                fileHeaders.Add(BinderFileHeader.ReadBinder3FileHeader(br, bxf.Format, bxf.BitBigEndian));
+
+            return fileHeaders;
+        }
+
         #endregion
 
-        #region Public Write
+        #region Write
+
         /// <summary>
         /// Writes the BHD and BDT as two arrays of bytes.
         /// </summary>
@@ -167,102 +207,6 @@ namespace SoulsFormats
                 bdtWriter.Finish();
             }
         }
-        #endregion
-
-        /// <summary>
-        /// The files contained within this BXF3.
-        /// </summary>
-        public List<BinderFile> Files { get; set; }
-
-        /// <summary>
-        ///A timestamp or version number, 8 characters maximum.
-        /// </summary>
-        public string Version { get; set; }
-
-        /// <summary>
-        /// Indicates the format of this BXF3.
-        /// </summary>
-        public Binder.Format Format { get; set; }
-
-        /// <summary>
-        /// Write file in big-endian mode for PS3/X360.
-        /// </summary>
-        public bool BigEndian { get; set; }
-
-        /// <summary>
-        /// Controls ordering of flag bits.
-        /// </summary>
-        public bool BitBigEndian { get; set; }
-
-        /// <summary>
-        /// Creates an empty BXF3 formatted for DS1.
-        /// </summary>
-        public BXF3()
-        {
-            Files = new List<BinderFile>();
-            Version = SFUtil.DateToBinderTimestamp(DateTime.Now);
-            Format = Binder.Format.IDs | Binder.Format.Names1 | Binder.Format.Names2 | Binder.Format.Compression;
-        }
-
-        private static bool IsBHD(BinaryReaderEx br)
-        {
-            if (br.Length < 4)
-                return false;
-
-            string magic = br.GetASCII(0, 4);
-            return magic == "BHF3";
-        }
-
-        private static bool IsBDT(BinaryReaderEx br)
-        {
-            if (br.Length < 4)
-                return false;
-
-            string magic = br.GetASCII(0, 4);
-            return magic == "BDF3";
-        }
-
-        private BXF3(BinaryReaderEx bhdReader, BinaryReaderEx bdtReader)
-        {
-            ReadBDFHeader(bdtReader);
-            List<BinderFileHeader> fileHeaders = ReadBHFHeader(this, bhdReader);
-            Files = new List<BinderFile>(fileHeaders.Count);
-            foreach (BinderFileHeader fileHeader in fileHeaders)
-                Files.Add(fileHeader.ReadFileData(bdtReader));
-        }
-
-        internal static void ReadBDFHeader(BinaryReaderEx br)
-        {
-            br.AssertASCII("BDF3");
-            br.ReadFixStr(8); // Version
-            br.AssertInt32(0);
-        }
-
-        internal static List<BinderFileHeader> ReadBHFHeader(IBXF3 bxf, BinaryReaderEx br)
-        {
-            br.AssertASCII("BHF3");
-            bxf.Version = br.ReadFixStr(8);
-
-            bxf.BitBigEndian = br.GetBoolean(0xE);
-
-            bxf.Format = Binder.ReadFormat(br, bxf.BitBigEndian);
-            bxf.BigEndian = br.ReadBoolean();
-            br.AssertBoolean(bxf.BitBigEndian);
-            br.AssertByte(0);
-
-            br.BigEndian = bxf.BigEndian || Binder.ForceBigEndian(bxf.Format);
-
-            int fileCount = br.ReadInt32();
-            br.AssertInt32(0);
-            br.AssertInt32(0);
-            br.AssertInt32(0);
-
-            var fileHeaders = new List<BinderFileHeader>(fileCount);
-            for (int i = 0; i < fileCount; i++)
-                fileHeaders.Add(BinderFileHeader.ReadBinder3FileHeader(br, bxf.Format, bxf.BitBigEndian));
-
-            return fileHeaders;
-        }
 
         private void Write(BinaryWriterEx bhdWriter, BinaryWriterEx bdtWriter)
         {
@@ -306,5 +250,115 @@ namespace SoulsFormats
             for (int i = 0; i < fileHeaders.Count; i++)
                 fileHeaders[i].WriteFileName(bw, bxf.Format, false, i);
         }
+
+        #endregion
+
+        #region Is
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                if (fs.Length < 4)
+                {
+                    return false;
+                }
+
+                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
+                {
+                    return IsHeader(br);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(byte[] bytes)
+        {
+            if (bytes.Length < 4)
+            {
+                return false;
+            }
+
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return IsHeader(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(Stream stream)
+        {
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            {
+                return IsHeader(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BHF3";
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        public static bool IsData(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                if (fs.Length < 4)
+                {
+                    return false;
+                }
+
+                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
+                {
+                    return IsData(br);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        public static bool IsData(byte[] bytes)
+        {
+            if (bytes.Length < 4)
+            {
+                return false;
+            }
+
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return IsData(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsData(Stream stream)
+        {
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            {
+                return IsData(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        public static bool IsData(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BDF3";
+
+        #endregion
     }
 }

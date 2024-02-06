@@ -91,7 +91,7 @@ namespace SoulsFormats
             public PathHash(int index, string path)
             {
                 Index = index;
-                Hash = SFUtil.FromPathHash(path);
+                Hash = SFUtil.ComputeFromPathHash32(path);
             }
 
             public void Write(BinaryWriterEx bw)

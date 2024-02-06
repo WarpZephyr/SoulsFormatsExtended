@@ -67,7 +67,7 @@ namespace SoulsFormats
             {
                 BinaryReaderEx br = new BinaryReaderEx(false, stream);
                 DBPPARAM file = new DBPPARAM();
-                br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
+                br = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
                 file.Compression = compression;
                 file.BigEndian = bigendian;
                 file.Read(br);
@@ -85,7 +85,7 @@ namespace SoulsFormats
         {
             BinaryReaderEx br = new BinaryReaderEx(false, bytes);
             DBPPARAM file = new DBPPARAM();
-            br = SFUtil.GetDecompressedBR(br, out DCX.Type compression);
+            br = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
             file.Compression = compression;
             file.BigEndian = bigendian;
             file.Read(br);

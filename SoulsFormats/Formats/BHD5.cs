@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace SoulsFormats
 {
@@ -10,6 +11,32 @@ namespace SoulsFormats
     /// </summary>
     public class BHD5
     {
+        /// <summary>
+        /// Indicates the format of a dvdbnd.
+        /// </summary>
+        public enum Game
+        {
+            /// <summary>
+            /// Dark Souls 1, both PC and console versions.
+            /// </summary>
+            DarkSouls1,
+
+            /// <summary>
+            /// Dark Souls 2 and Scholar of the First Sin on PC.
+            /// </summary>
+            DarkSouls2,
+
+            /// <summary>
+            /// Dark Souls 3 and Sekiro on PC.
+            /// </summary>
+            DarkSouls3,
+
+            /// <summary>
+            /// Elden Ring on PC.
+            /// </summary>
+            EldenRing,
+        }
+
         /// <summary>
         /// Format the file should be written in.
         /// </summary>
@@ -34,91 +61,6 @@ namespace SoulsFormats
         /// Collections of files grouped by their hash value for faster lookup.
         /// </summary>
         public List<Bucket> Buckets { get; set; }
-
-        /// <summary>
-        /// Returns true if the bytes appear to be a BHD5 header file.
-        /// </summary>
-        public static bool IsBHD(byte[] bytes)
-        {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            return IsBHD(SFUtil.GetDecompressedBR(br, out _));
-        }
-
-        /// <summary>
-        /// Returns true if the file appears to be a BHD5 header file.
-        /// </summary>
-        public static bool IsBHD(string path)
-        {
-            using (FileStream fs = File.OpenRead(path))
-            {
-                BinaryReaderEx br = new BinaryReaderEx(false, fs);
-                return IsBHD(br);
-            }
-        }
-
-        /// <summary>
-        /// Checks whether the data appears to be a file of this format.
-        /// </summary>
-        public static bool IsBHD(BinaryReaderEx br)
-        {
-            if (br.Length < 4)
-                return false;
-
-            string magic = br.GetASCII(0, 4);
-            return magic == "BHD5";
-        }
-
-        /// <summary>
-        /// Returns true if the bytes appear to be a BHD5 data file.
-        /// </summary>
-        public static bool IsBDT(byte[] bytes)
-        {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            return IsBDT(SFUtil.GetDecompressedBR(br, out _));
-        }
-
-        /// <summary>
-        /// Returns true if the file appears to be a BHD5 data file.
-        /// </summary>
-        public static bool IsBDT(string path)
-        {
-            using (FileStream fs = File.OpenRead(path))
-            {
-                BinaryReaderEx br = new BinaryReaderEx(false, fs);
-                return IsBDT(br);
-            }
-        }
-
-        /// <summary>
-        /// Checks whether the data appears to be a file of this format.
-        /// </summary>
-        public static bool IsBDT(BinaryReaderEx br)
-        {
-            if (br.Length < 4)
-                return false;
-
-            string magic = br.GetASCII(0, 4);
-            return magic == "BDF3" || magic == "BDF4";
-        }
-
-        /// <summary>
-        /// Read a dvdbnd header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
-        /// </summary>
-        public static BHD5 Read(Stream bhdStream, Game game)
-        {
-            var br = new BinaryReaderEx(false, bhdStream);
-            return new BHD5(br, game);
-        }
-
-        /// <summary>
-        /// Write a dvdbnd header to the given stream.
-        /// </summary>
-        public void Write(Stream bhdStream)
-        {
-            var bw = new BinaryWriterEx(false, bhdStream);
-            Write(bw);
-            bw.Finish();
-        }
 
         /// <summary>
         /// Creates an empty BHD5.
@@ -155,9 +97,90 @@ namespace SoulsFormats
             br.Position = bucketsOffset;
             Buckets = new List<Bucket>(bucketCount);
             for (int i = 0; i < bucketCount; i++)
+            {
                 Buckets.Add(new Bucket(br, game));
+            }
         }
 
+        #region Read
+
+        /// <summary>
+        /// Read a header from the given path, formatted for the given game. Must already be decrypted, if applicable.
+        /// </summary>
+        public static BHD5 Read(string path, Game game)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
+            {
+                return new BHD5(br, game);
+            }
+        }
+
+        /// <summary>
+        /// Read a header from the given bytes, formatted for the given game. Must already be decrypted, if applicable.
+        /// </summary>
+        public static BHD5 Read(byte[] bytes, Game game)
+        {
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return new BHD5(br, game);
+            }
+        }
+
+        /// <summary>
+        /// Read a header from the given stream, formatted for the given game. Must already be decrypted, if applicable.
+        /// </summary>
+        public static BHD5 Read(Stream stream, Game game)
+        {
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            {
+                return new BHD5(br, game);
+            }
+        }
+
+        #endregion
+
+        #region Write
+
+        /// <summary>
+        /// Write a header to the given path.
+        /// </summary>
+        public void Write(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
+            using (BinaryWriterEx bw = new BinaryWriterEx(false, fs))
+            {
+                Write(bw);
+            }
+        }
+
+        /// <summary>
+        /// Write a header to the given bytes.
+        /// </summary>
+        public void Write(byte[] bytes)
+        {
+            using (MemoryStream ms = new MemoryStream(bytes, true))
+            using (BinaryWriterEx bw = new BinaryWriterEx(false, ms))
+            {
+                Write(bw);
+            }
+        }
+
+        /// <summary>
+        /// Write a header to the given <see cref="Stream"/>.
+        /// </summary>
+        public void Write(Stream stream)
+        {
+            using (BinaryWriterEx bw = new BinaryWriterEx(false, stream))
+            {
+                Write(bw);
+            }
+        }
+
+        /// <summary>
+        /// Write a header to the given <see cref="BinaryWriterEx"/>.
+        /// </summary>
         private void Write(BinaryWriterEx bw)
         {
             bw.BigEndian = BigEndian;
@@ -191,31 +214,126 @@ namespace SoulsFormats
             bw.FillInt32("FileSize", (int)bw.Position);
         }
 
+        #endregion
+
+        #region Is
+
         /// <summary>
-        /// Indicates the format of a dvdbnd.
+        /// Whether or not the data appears to be a header file.
         /// </summary>
-        public enum Game
+        public static bool IsHeader(string path)
         {
-            /// <summary>
-            /// Dark Souls 1, both PC and console versions.
-            /// </summary>
-            DarkSouls1,
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                if (fs.Length < 4)
+                {
+                    return false;
+                }
 
-            /// <summary>
-            /// Dark Souls 2 and Scholar of the First Sin on PC.
-            /// </summary>
-            DarkSouls2,
-
-            /// <summary>
-            /// Dark Souls 3 and Sekiro on PC.
-            /// </summary>
-            DarkSouls3,
-
-            /// <summary>
-            /// Elden Ring on PC.
-            /// </summary>
-            EldenRing,
+                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
+                {
+                    return IsHeader(br);
+                }
+            }
         }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(byte[] bytes)
+        {
+            if (bytes.Length < 4)
+            {
+                return false;
+            }
+
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return IsHeader(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(Stream stream)
+        {
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            {
+                return IsHeader(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsHeader(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BHD5";
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        public static bool IsData(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                if (fs.Length < 4)
+                {
+                    return false;
+                }
+
+                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
+                {
+                    return IsData(br);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        public static bool IsData(byte[] bytes)
+        {
+            if (bytes.Length < 4)
+            {
+                return false;
+            }
+
+            using (MemoryStream ms = new MemoryStream(bytes, false))
+            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
+            {
+                return IsData(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a header file.
+        /// </summary>
+        public static bool IsData(Stream stream)
+        {
+            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            {
+                return IsData(br);
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        public static bool IsData(BinaryReaderEx br)
+        {
+            if (br.Remaining < 4)
+            {
+                return false;
+            }
+
+            string magic = br.GetASCII(br.Position, 4);
+            return magic == "BDF3" || magic == "BDF4";
+        }
+
+        #endregion
+
+        #region Bucket
 
         /// <summary>
         /// A collection of files grouped by their hash.
@@ -254,6 +372,10 @@ namespace SoulsFormats
                     this[i].Write(bw, game, index, i);
             }
         }
+
+        #endregion
+
+        #region FileHeader
 
         /// <summary>
         /// Information about an individual file in the dvdbnd.
@@ -404,7 +526,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Read and decrypt (if necessary) file data from the BDT.
+            /// Read and decrypt (if necessary) file data from the data stream.
             /// </summary>
             public byte[] ReadFile(FileStream bdtStream)
             {
@@ -414,7 +536,23 @@ namespace SoulsFormats
                 AESKey?.Decrypt(bytes);
                 return bytes;
             }
+
+            /// <summary>
+            /// Read and decrypt (if necessary) file data from the data stream async.
+            /// </summary>
+            public async Task<byte[]> ReadFileAsync(FileStream bdtStream)
+            {
+                byte[] bytes = new byte[PaddedFileSize];
+                bdtStream.Position = FileOffset;
+                await bdtStream.ReadAsync(bytes, 0, PaddedFileSize);
+                AESKey?.Decrypt(bytes);
+                return bytes;
+            }
         }
+
+        #endregion
+
+        #region SHAHash
 
         /// <summary>
         /// Hash information for a file in the dvdbnd.
@@ -460,6 +598,10 @@ namespace SoulsFormats
                     range.Write(bw);
             }
         }
+
+        #endregion
+
+        #region AESKey
 
         /// <summary>
         /// Encryption information for a file in the dvdbnd.
@@ -522,7 +664,27 @@ namespace SoulsFormats
                     }
                 }
             }
+
+            /// <summary>
+            /// Decrypt file data in-place on parallel threads.
+            /// </summary>
+            public void DecryptParallel(byte[] bytes)
+            {
+                using (ICryptoTransform decryptor = AES.CreateDecryptor(Key, new byte[16]))
+                {
+                    Parallel.ForEach(Ranges.Where(r => r.StartOffset != -1 && r.EndOffset != -1 && r.StartOffset != r.EndOffset), range =>
+                    {
+                        int start = (int)range.StartOffset;
+                        int count = (int)(range.EndOffset - range.StartOffset);
+                        decryptor.TransformBlock(bytes, start, count, bytes, start);
+                    });
+                }
+            }
         }
+
+        #endregion
+
+        #region Range
 
         /// <summary>
         /// Indicates a hashed or encrypted section of a file.
@@ -560,5 +722,7 @@ namespace SoulsFormats
                 bw.WriteInt64(EndOffset);
             }
         }
+
+        #endregion
     }
 }

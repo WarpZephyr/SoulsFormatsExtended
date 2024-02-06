@@ -3,7 +3,7 @@
 namespace SoulsFormats
 {
     /// <summary>
-    /// An on-demand reader for BXF4 containers.
+    /// An on-demand reader for <see cref="BXF4"/> containers.
     /// </summary>
     public class BXF4Reader : BinderReader, IBXF4
     {
@@ -28,7 +28,7 @@ namespace SoulsFormats
         public byte Extended { get; set; }
 
         /// <summary>
-        /// Reads a BXF4 from the given BHD and BDT paths.
+        /// Reads a <see cref="BXF4"/> from the given header and data paths.
         /// </summary>
         public BXF4Reader(string bhdPath, string bdtPath)
         {
@@ -42,7 +42,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BXF4 from the given BHD path and BDT bytes.
+        /// Reads a <see cref="BXF4"/> from the given header path and data bytes.
         /// </summary>
         public BXF4Reader(string bhdPath, byte[] bdtBytes)
         {
@@ -56,7 +56,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BXF4 from the given BHD bytes and BDT path.
+        /// Reads a <see cref="BXF4"/> from the given header bytes and data path.
         /// </summary>
         public BXF4Reader(byte[] bhdBytes, string bdtPath)
         {
@@ -70,7 +70,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BXF4 from the given BHD and BDT bytes.
+        /// Reads a <see cref="BXF4"/> from the given header and data bytes.
         /// </summary>
         public BXF4Reader(byte[] bhdBytes, byte[] bdtBytes)
         {

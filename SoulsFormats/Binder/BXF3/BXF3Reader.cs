@@ -3,12 +3,12 @@
 namespace SoulsFormats
 {
     /// <summary>
-    /// An on-demand reader for BXF3 containers.
+    /// An on-demand reader for <see cref="BXF3"/> containers.
     /// </summary>
     public class BXF3Reader : BinderReader, IBXF3
     {
         /// <summary>
-        /// Reads a BXF3 from the given BHD and BDT paths.
+        /// Reads a <see cref="BXF3"/> from the given header and data paths.
         /// </summary>
         public BXF3Reader(string bhdPath, string bdtPath)
         {
@@ -22,7 +22,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BXF3 from the given BHD path and BDT bytes.
+        /// Reads a <see cref="BXF3"/> from the given header path and data bytes.
         /// </summary>
         public BXF3Reader(string bhdPath, byte[] bdtBytes)
         {
@@ -36,7 +36,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BXF3 from the given BHD bytes and BDT path.
+        /// Reads a <see cref="BXF3"/> from the given header bytes and data path.
         /// </summary>
         public BXF3Reader(byte[] bhdBytes, string bdtPath)
         {
@@ -50,7 +50,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a BXF3 from the given BHD and BDT bytes.
+        /// Reads a <see cref="BXF3"/> from the given header and data bytes.
         /// </summary>
         public BXF3Reader(byte[] bhdBytes, byte[] bdtBytes)
         {
