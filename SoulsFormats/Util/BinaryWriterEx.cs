@@ -10,11 +10,27 @@ namespace SoulsFormats
     /// <summary>
     /// An extended writer for binary data supporting big and little endianness, value reservation, and arrays.
     /// </summary>
-    public class BinaryWriterEx
+    public class BinaryWriterEx : IDisposable
     {
-        private BinaryWriter bw;
-        private Stack<long> steps;
-        private Dictionary<string, long> reservations;
+        /// <summary>
+        /// The underlying <see cref="BinaryWriter"/>.
+        /// </summary>
+        private readonly BinaryWriter _bw;
+
+        /// <summary>
+        /// The steps into positions on the stream.
+        /// </summary>
+        private readonly Stack<long> _steps;
+
+        /// <summary>
+        /// A dictionary of name to position reservations for later filling on the stream.
+        /// </summary>
+        private readonly Dictionary<string, long> _reservations;
+
+        /// <summary>
+        /// Whether or not the <see cref="BinaryWriterEx"/> has been disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Interpret values as big-endian if set, or little-endian if not.
@@ -51,46 +67,74 @@ namespace SoulsFormats
         public long Length => Stream.Length;
 
         /// <summary>
-        /// Initializes a new <c>BinaryWriterEx</c> writing to an empty <c>MemoryStream</c>
+        /// The amount of bytes from the current position to the end of the stream.
+        /// </summary>
+        public long Remaining => Stream.Length - Position;
+
+        /// <summary>
+        /// Initializes a new <see cref="BinaryWriterEx"/> writing to an empty <see cref="MemoryStream"/>.
         /// </summary>
         public BinaryWriterEx(bool bigEndian) : this(bigEndian, new MemoryStream()) { }
 
         /// <summary>
-        /// Initializes a new <c>BinaryWriterEx</c> writing to the specified stream.
+        /// Initializes a new <see cref="BinaryWriterEx"/> writing to the specified <see cref="System.IO.Stream"/>.
         /// </summary>
         public BinaryWriterEx(bool bigEndian, Stream stream)
         {
             BigEndian = bigEndian;
-            steps = new Stack<long>();
-            reservations = new Dictionary<string, long>();
+            _steps = new Stack<long>();
+            _reservations = new Dictionary<string, long>();
             Stream = stream;
-            bw = new BinaryWriter(stream);
+            _bw = new BinaryWriter(stream);
         }
 
+        /// <summary>
+        /// Reverse, then write an array of bytes.
+        /// </summary>
+        /// <param name="bytes">An array of bytes.</param>
         private void WriteReversedBytes(byte[] bytes)
         {
             Array.Reverse(bytes);
-            bw.Write(bytes);
+            _bw.Write(bytes);
         }
 
+        /// <summary>
+        /// Make a reservation on the stream.
+        /// </summary>
+        /// <param name="name">The name of the reservation.</param>
+        /// <param name="typeName">The name of the type for this reservation.</param>
+        /// <param name="length">The length of the reservation in bytes.</param>
+        /// <exception cref="ArgumentException">A key was already reserved.</exception>
         private void Reserve(string name, string typeName, int length)
         {
             name = $"{name}:{typeName}";
-            if (reservations.ContainsKey(name))
+            if (_reservations.ContainsKey(name))
+            {
                 throw new ArgumentException("Key already reserved: " + name);
+            }
 
-            reservations[name] = Stream.Position;
+            _reservations[name] = Stream.Position;
             for (int i = 0; i < length; i++)
+            {
                 WriteByte(0xFE);
+            }
         }
 
+        /// <summary>
+        /// Fill a reservation on the stream.
+        /// </summary>
+        /// <param name="name">The name of the reservation to fill.</param>
+        /// <param name="typeName">The name of the type of the reservation to fill.</param>
+        /// <exception cref="ArgumentException">The provided key was not reserved.</exception>
         private long Fill(string name, string typeName)
         {
             name = $"{name}:{typeName}";
-            if (!reservations.TryGetValue(name, out long jump))
+            if (!_reservations.TryGetValue(name, out long jump))
+            {
                 throw new ArgumentException("Key is not reserved: " + name);
+            }
 
-            reservations.Remove(name);
+            _reservations.Remove(name);
             return jump;
         }
 
@@ -99,11 +143,7 @@ namespace SoulsFormats
         /// </summary>
         public void Finish()
         {
-            if (reservations.Count > 0)
-            {
-                throw new InvalidOperationException("Not all reservations filled: " + string.Join(", ", reservations.Keys));
-            }
-            bw.Close();
+            Dispose();
         }
 
         /// <summary>
@@ -111,9 +151,8 @@ namespace SoulsFormats
         /// </summary>
         public byte[] FinishBytes()
         {
-            MemoryStream ms = (MemoryStream)Stream;
-            byte[] result = ms.ToArray();
-            Finish();
+            byte[] result = ((MemoryStream)Stream).ToArray();
+            Dispose();
             return result;
         }
 
@@ -122,7 +161,7 @@ namespace SoulsFormats
         /// </summary>
         public void StepIn(long offset)
         {
-            steps.Push(Stream.Position);
+            _steps.Push(Stream.Position);
             Stream.Position = offset;
         }
 
@@ -131,10 +170,10 @@ namespace SoulsFormats
         /// </summary>
         public void StepOut()
         {
-            if (steps.Count == 0)
+            if (_steps.Count == 0)
                 throw new InvalidOperationException("Writer is already stepped all the way out.");
 
-            Stream.Position = steps.Pop();
+            Stream.Position = _steps.Pop();
         }
 
         /// <summary>
@@ -161,7 +200,7 @@ namespace SoulsFormats
         /// </summary>
         public void WriteBoolean(bool value)
         {
-            bw.Write(value);
+            _bw.Write(value);
         }
 
         /// <summary>
@@ -198,7 +237,7 @@ namespace SoulsFormats
         /// </summary>
         public void WriteSByte(sbyte value)
         {
-            bw.Write(value);
+            _bw.Write(value);
         }
 
         /// <summary>
@@ -235,7 +274,7 @@ namespace SoulsFormats
         /// </summary>
         public void WriteByte(byte value)
         {
-            bw.Write(value);
+            _bw.Write(value);
         }
 
         /// <summary>
@@ -243,7 +282,7 @@ namespace SoulsFormats
         /// </summary>
         public void WriteBytes(byte[] bytes)
         {
-            bw.Write(bytes);
+            _bw.Write(bytes);
         }
 
         /// <summary>
@@ -283,7 +322,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -323,7 +362,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -363,7 +402,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -403,7 +442,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -443,7 +482,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -483,7 +522,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -580,7 +619,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -620,7 +659,7 @@ namespace SoulsFormats
             if (BigEndian)
                 WriteReversedBytes(BitConverter.GetBytes(value));
             else
-                bw.Write(value);
+                _bw.Write(value);
         }
 
         /// <summary>
@@ -657,7 +696,7 @@ namespace SoulsFormats
             if (terminate)
                 text += '\0';
             byte[] bytes = encoding.GetBytes(text);
-            bw.Write(bytes);
+            _bw.Write(bytes);
         }
 
         /// <summary>
@@ -698,7 +737,7 @@ namespace SoulsFormats
 
             byte[] bytes = SFEncoding.ShiftJIS.GetBytes(text + '\0');
             Array.Copy(bytes, fixstr, Math.Min(size, bytes.Length));
-            bw.Write(fixstr);
+            _bw.Write(fixstr);
         }
 
         /// <summary>
@@ -716,7 +755,7 @@ namespace SoulsFormats
             else
                 bytes = SFEncoding.UTF16.GetBytes(text + '\0');
             Array.Copy(bytes, fixstr, Math.Min(size, bytes.Length));
-            bw.Write(fixstr);
+            _bw.Write(fixstr);
         }
         #endregion
 
@@ -770,10 +809,10 @@ namespace SoulsFormats
         /// </summary>
         public void WriteARGB(Color color)
         {
-            bw.Write(color.A);
-            bw.Write(color.R);
-            bw.Write(color.G);
-            bw.Write(color.B);
+            _bw.Write(color.A);
+            _bw.Write(color.R);
+            _bw.Write(color.G);
+            _bw.Write(color.B);
         }
 
         /// <summary>
@@ -781,10 +820,10 @@ namespace SoulsFormats
         /// </summary>
         public void WriteABGR(Color color)
         {
-            bw.Write(color.A);
-            bw.Write(color.B);
-            bw.Write(color.G);
-            bw.Write(color.R);
+            _bw.Write(color.A);
+            _bw.Write(color.B);
+            _bw.Write(color.G);
+            _bw.Write(color.R);
         }
 
         /// <summary>
@@ -792,10 +831,10 @@ namespace SoulsFormats
         /// </summary>
         public void WriteRGBA(Color color)
         {
-            bw.Write(color.R);
-            bw.Write(color.G);
-            bw.Write(color.B);
-            bw.Write(color.A);
+            _bw.Write(color.R);
+            _bw.Write(color.G);
+            _bw.Write(color.B);
+            _bw.Write(color.A);
         }
 
         /// <summary>
@@ -803,11 +842,48 @@ namespace SoulsFormats
         /// </summary>
         public void WriteBGRA(Color color)
         {
-            bw.Write(color.B);
-            bw.Write(color.G);
-            bw.Write(color.R);
-            bw.Write(color.A);
+            _bw.Write(color.B);
+            _bw.Write(color.G);
+            _bw.Write(color.R);
+            _bw.Write(color.A);
         }
+        #endregion
+
+        #region IDisposable Support
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// <para>Verifies that all reservations are filled.</para>
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    _bw.Dispose();
+                    _steps.Clear();
+
+                    if (_reservations.Count > 0)
+                    {
+                        throw new InvalidOperationException("Not all reservations filled: " + string.Join(", ", _reservations.Keys));
+                    }
+                }
+
+                IsDisposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// <para>Verifies that all reservations are filled.</para>
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
         #endregion
     }
 }

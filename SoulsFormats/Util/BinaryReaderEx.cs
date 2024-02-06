@@ -13,11 +13,18 @@ namespace SoulsFormats
     /// </summary>
     public class BinaryReaderEx : IDisposable
     {
-        private BinaryReader br;
-        private Stack<long> steps;
+        /// <summary>
+        /// The underlying <see cref="BinaryReader"/>.
+        /// </summary>
+        private readonly BinaryReader _br;
 
         /// <summary>
-        /// Whether or not the BinaryReaderEx has been disposed.
+        /// The steps into positions on the stream.
+        /// </summary>
+        private readonly Stack<long> _steps;
+
+        /// <summary>
+        /// Whether or not the <see cref="BinaryReaderEx"/> has been disposed.
         /// </summary>
         public bool IsDisposed { get; private set; }
 
@@ -56,6 +63,11 @@ namespace SoulsFormats
         public long Length => Stream.Length;
 
         /// <summary>
+        /// The amount of bytes from the current position to the end of the stream.
+        /// </summary>
+        public long Remaining => Stream.Length - Position;
+
+        /// <summary>
         /// Initializes a new BinaryReaderEx reading from the specified byte array.
         /// </summary>
         public BinaryReaderEx(bool bigEndian, byte[] input) : this(bigEndian, new MemoryStream(input)) { }
@@ -66,9 +78,9 @@ namespace SoulsFormats
         public BinaryReaderEx(bool bigEndian, Stream stream)
         {
             BigEndian = bigEndian;
-            steps = new Stack<long>();
+            _steps = new Stack<long>();
             Stream = stream;
-            br = new BinaryReader(stream);
+            _br = new BinaryReader(stream);
         }
 
         /// <summary>
@@ -122,7 +134,7 @@ namespace SoulsFormats
         /// </summary>
         public void StepIn(long offset)
         {
-            steps.Push(Stream.Position);
+            _steps.Push(Stream.Position);
             Stream.Position = offset;
         }
 
@@ -131,10 +143,12 @@ namespace SoulsFormats
         /// </summary>
         public void StepOut()
         {
-            if (steps.Count == 0)
+            if (_steps.Count == 0)
+            {
                 throw new InvalidOperationException("Reader is already stepped all the way out.");
+            }
 
-            Stream.Position = steps.Pop();
+            Stream.Position = _steps.Pop();
         }
 
         /// <summary>
@@ -142,8 +156,11 @@ namespace SoulsFormats
         /// </summary>
         public void Pad(int align)
         {
-            if (Stream.Position % align > 0)
-                Stream.Position += align - (Stream.Position % align);
+            long remainder = Stream.Position % align;
+            if (remainder > 0)
+            {
+                Stream.Position += align - remainder;
+            }
         }
 
         /// <summary>
@@ -171,7 +188,7 @@ namespace SoulsFormats
         public bool ReadBoolean()
         {
             // BinaryReader.ReadBoolean accepts any non-zero value as true, which I don't want.
-            byte b = br.ReadByte();
+            byte b = _br.ReadByte();
             if (b == 0)
                 return false;
             else if (b == 1)
@@ -222,7 +239,7 @@ namespace SoulsFormats
         /// </summary>
         public sbyte ReadSByte()
         {
-            return br.ReadSByte();
+            return _br.ReadSByte();
         }
 
         /// <summary>
@@ -267,7 +284,7 @@ namespace SoulsFormats
         /// </summary>
         public byte ReadByte()
         {
-            return br.ReadByte();
+            return _br.ReadByte();
         }
 
         /// <summary>
@@ -275,7 +292,7 @@ namespace SoulsFormats
         /// </summary>
         public byte[] ReadBytes(int count)
         {
-            byte[] result = br.ReadBytes(count);
+            byte[] result = _br.ReadBytes(count);
             if (result.Length != count)
                 throw new EndOfStreamException("Remaining size of stream was smaller than requested number of bytes.");
             return result;
@@ -286,7 +303,7 @@ namespace SoulsFormats
         /// </summary>
         public void ReadBytes(byte[] buffer, int index, int count)
         {
-            int read = br.Read(buffer, index, count);
+            int read = _br.Read(buffer, index, count);
             if (read != count)
                 throw new EndOfStreamException("Remaining size of stream was smaller than requested number of bytes.");
         }
@@ -338,7 +355,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToInt16(ReadReversedBytes(2), 0);
             else
-                return br.ReadInt16();
+                return _br.ReadInt16();
         }
 
         /// <summary>
@@ -386,7 +403,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToUInt16(ReadReversedBytes(2), 0);
             else
-                return br.ReadUInt16();
+                return _br.ReadUInt16();
         }
 
         /// <summary>
@@ -434,7 +451,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToInt32(ReadReversedBytes(4), 0);
             else
-                return br.ReadInt32();
+                return _br.ReadInt32();
         }
 
         /// <summary>
@@ -482,7 +499,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToUInt32(ReadReversedBytes(4), 0);
             else
-                return br.ReadUInt32();
+                return _br.ReadUInt32();
         }
 
         /// <summary>
@@ -530,7 +547,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToInt64(ReadReversedBytes(8), 0);
             else
-                return br.ReadInt64();
+                return _br.ReadInt64();
         }
 
         /// <summary>
@@ -578,7 +595,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToUInt64(ReadReversedBytes(8), 0);
             else
-                return br.ReadUInt64();
+                return _br.ReadUInt64();
         }
 
         /// <summary>
@@ -682,7 +699,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToSingle(ReadReversedBytes(4), 0);
             else
-                return br.ReadSingle();
+                return _br.ReadSingle();
         }
 
         /// <summary>
@@ -730,7 +747,7 @@ namespace SoulsFormats
             if (BigEndian)
                 return BitConverter.ToDouble(ReadReversedBytes(8), 0);
             else
-                return br.ReadDouble();
+                return _br.ReadDouble();
         }
 
         /// <summary>
@@ -1102,10 +1119,10 @@ namespace SoulsFormats
         /// </summary>
         public Color ReadARGB()
         {
-            byte a = br.ReadByte();
-            byte r = br.ReadByte();
-            byte g = br.ReadByte();
-            byte b = br.ReadByte();
+            byte a = _br.ReadByte();
+            byte r = _br.ReadByte();
+            byte g = _br.ReadByte();
+            byte b = _br.ReadByte();
             return Color.FromArgb(a, r, g, b);
         }
 
@@ -1114,10 +1131,10 @@ namespace SoulsFormats
         /// </summary>
         public Color ReadABGR()
         {
-            byte a = br.ReadByte();
-            byte b = br.ReadByte();
-            byte g = br.ReadByte();
-            byte r = br.ReadByte();
+            byte a = _br.ReadByte();
+            byte b = _br.ReadByte();
+            byte g = _br.ReadByte();
+            byte r = _br.ReadByte();
             return Color.FromArgb(a, r, g, b);
         }
 
@@ -1126,10 +1143,10 @@ namespace SoulsFormats
         /// </summary>
         public Color ReadRGBA()
         {
-            byte r = br.ReadByte();
-            byte g = br.ReadByte();
-            byte b = br.ReadByte();
-            byte a = br.ReadByte();
+            byte r = _br.ReadByte();
+            byte g = _br.ReadByte();
+            byte b = _br.ReadByte();
+            byte a = _br.ReadByte();
             return Color.FromArgb(a, r, g, b);
         }
 
@@ -1138,10 +1155,10 @@ namespace SoulsFormats
         /// </summary>
         public Color ReadBGRA()
         {
-            byte b = br.ReadByte();
-            byte g = br.ReadByte();
-            byte r = br.ReadByte();
-            byte a = br.ReadByte();
+            byte b = _br.ReadByte();
+            byte g = _br.ReadByte();
+            byte r = _br.ReadByte();
+            byte a = _br.ReadByte();
             return Color.FromArgb(a, r, g, b);
         }
 
@@ -1150,15 +1167,29 @@ namespace SoulsFormats
         #region IDisposable Support
 
         /// <summary>
-        /// Releases all resources used by the <see cref="BinaryReaderEx" />
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        protected virtual void Dispose(bool disposing)
         {
             if (!IsDisposed)
             {
-                ((IDisposable)br).Dispose();
+                if (disposing)
+                {
+                    _br.Dispose();
+                    _steps.Clear();
+                }
+                
                 IsDisposed = true;
             }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
         #endregion

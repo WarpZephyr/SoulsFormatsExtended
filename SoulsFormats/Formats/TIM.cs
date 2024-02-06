@@ -134,8 +134,8 @@ namespace SoulsFormats
             }
 
             uint magic = br.ReadUInt32();
-            TIM.TIMType type = (TIM.TIMType)br.ReadUInt32();
-            bool bTypeAssert = type == TIM.TIMType.BPP8NoCLUT || type == TIM.TIMType.BPP4NoCLUT || type == TIM.TIMType.BPP16 || type == TIM.TIMType.BPP24 || type == TIM.TIMType.BPP4 || type == TIM.TIMType.BPP8;
+            TIMType type = (TIMType)br.ReadUInt32();
+            bool bTypeAssert = type == TIMType.BPP8NoCLUT || type == TIMType.BPP4NoCLUT || type == TIMType.BPP16 || type == TIMType.BPP24 || type == TIMType.BPP4 || type == TIMType.BPP8;
 
             return magic == 0x10 && bTypeAssert;
         }
