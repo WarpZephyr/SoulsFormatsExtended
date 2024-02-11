@@ -18,7 +18,7 @@
         /// <summary>
         /// The address entry start blocks base themselves from.
         /// </summary>
-        public const int BASE_ADDRESS = ENTRY_COUNT * 4;
+        public const int BASE_ADDRESS = ENTRY_COUNT * 8;
 
         /// <summary>
         /// The number of entries.
