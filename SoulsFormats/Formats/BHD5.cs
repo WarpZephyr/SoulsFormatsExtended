@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoulsFormats
@@ -30,7 +31,7 @@ namespace SoulsFormats
 
             /// <summary>
             /// Dark Souls 3 and Sekiro on PC.
-            /// <para>Includes size fields that identify how big the archive is without padding.</para>
+            /// <para>Includes size fields that identify how big the archive or its files are without padding.</para>
             /// </summary>
             DarkSouls3,
 

@@ -29,7 +29,7 @@ namespace SoulsFormats
         public bool BigEndian { get; set; }
 
         /// <summary>
-        /// Unknown; usually false.
+        /// Controls ordering of flag bits.
         /// </summary>
         public bool BitBigEndian { get; set; }
 

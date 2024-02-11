@@ -44,7 +44,7 @@ namespace SoulsFormats
         public bool BitBigEndian { get; set; }
 
         /// <summary>
-        /// Whether to encode filenames as UTF-8 or Shift JIS.
+        /// Whether to encode filenames as UTF-16 or Shift JIS.
         /// </summary>
         public bool Unicode { get; set; }
 
