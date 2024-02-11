@@ -72,20 +72,30 @@ namespace SoulsFormats
         public long Remaining => Stream.Length - Position;
 
         /// <summary>
-        /// Initializes a new <see cref="BinaryWriterEx"/> writing to an empty <see cref="MemoryStream"/>.
+        /// Initializes a new <see cref="BinaryWriterEx"/>.
         /// </summary>
-        public BinaryWriterEx(bool bigEndian) : this(bigEndian, new MemoryStream()) { }
+        public BinaryWriterEx(bool bigEndian) : this(bigEndian, new MemoryStream(), false) { }
+
+        /// <summary>
+        /// Initializes a new <see cref="BinaryWriterEx"/> writing to the specified bytes.
+        /// </summary>
+        public BinaryWriterEx(bool bigEndian, byte[] bytes) : this(bigEndian, new MemoryStream(bytes, true), false) { }
+
+        /// <summary>
+        /// Initializes a new <see cref="BinaryWriterEx"/> writing to the specified path.
+        /// </summary>
+        public BinaryWriterEx(bool bigEndian, string path) : this(bigEndian, new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read), false) { }
 
         /// <summary>
         /// Initializes a new <see cref="BinaryWriterEx"/> writing to the specified <see cref="System.IO.Stream"/>.
         /// </summary>
-        public BinaryWriterEx(bool bigEndian, Stream stream)
+        public BinaryWriterEx(bool bigEndian, Stream stream, bool leaveOpen = false)
         {
             BigEndian = bigEndian;
             _steps = new Stack<long>();
             _reservations = new Dictionary<string, long>();
             Stream = stream;
-            _bw = new BinaryWriter(stream);
+            _bw = new BinaryWriter(stream, Encoding.Default, leaveOpen);
         }
 
         /// <summary>

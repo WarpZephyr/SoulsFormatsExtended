@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
 namespace SoulsFormats
 {
-    public partial class PARAMDBP : SoulsFile<PARAMDBP>
+    public partial class PARAMDBP
     {
         /// <summary>
         /// The default, ShiftJIS encoding.

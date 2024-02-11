@@ -203,8 +203,7 @@ namespace SoulsFormats
             for (int i = 0; i < fieldCount; i++)
             {
                 string displayName = br.ReadShiftJIS();
-                if (displayName == null)
-                    displayName = "";
+                displayName ??= "";
                 Fields[i].DisplayName = displayName;
                 Fields[i].DisplayFormat = br.ReadShiftJIS();
             }

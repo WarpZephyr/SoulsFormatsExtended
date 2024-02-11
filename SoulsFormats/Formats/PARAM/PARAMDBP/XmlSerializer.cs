@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Xml;
 
 namespace SoulsFormats
 {
-    public partial class PARAMDBP : SoulsFile<PARAMDBP>
+    public partial class PARAMDBP
     {
         /// <summary>
         /// Serializes params and dbps to xml.

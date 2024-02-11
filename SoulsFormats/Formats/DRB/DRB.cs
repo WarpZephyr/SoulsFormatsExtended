@@ -78,10 +78,12 @@ namespace SoulsFormats
 
         private static bool Is(BinaryReaderEx br)
         {
-            if (br.Length < 4)
+            if (br.Remaining < 4)
+            {
                 return false;
+            }
 
-            string magic = br.GetASCII(0, 4);
+            string magic = br.GetASCII(br.Position, 4);
             return magic == "DRB\0" || magic == "\0BRD";
         }
 
@@ -784,14 +786,30 @@ namespace SoulsFormats
         public DCX.Type Compression = DCX.Type.None;
 
         /// <summary>
+        /// Returns true if the stream appears to be a DRB.
+        /// </summary>
+        public static bool Is(Stream stream)
+        {
+            if ((stream.Length - stream.Position) < 4)
+            {
+                return false;
+            }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            return Is(SFUtil.GetDecompressedBinaryReader(br, out _));
+        }
+
+        /// <summary>
         /// Returns true if the bytes appear to be a DRB.
         /// </summary>
         public static bool Is(byte[] bytes)
         {
-            if (bytes.Length == 0)
+            if (bytes.Length < 4)
+            {
                 return false;
+            }
 
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
             return Is(SFUtil.GetDecompressedBinaryReader(br, out _));
         }
 
@@ -800,14 +818,8 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(string path)
         {
-            using (FileStream stream = File.OpenRead(path))
-            {
-                if (stream.Length == 0)
-                    return false;
-
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
-                return Is(SFUtil.GetDecompressedBinaryReader(br, out _));
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, path);
+            return Is(SFUtil.GetDecompressedBinaryReader(br, out _));
         }
 
         /// <summary>

@@ -60,53 +60,51 @@ namespace SoulsFormats
         #region Read
 
         /// <summary>
-        /// Reads two arrays of bytes as the BHD and BDT.
+        /// Reads two arrays of bytes as the header and data.
         /// </summary>
         public static BXF3 Read(byte[] bhdBytes, byte[] bdtBytes)
         {
-            BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
-            BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
-            return new BXF3(bhdReader, bdtReader);
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF3(bhdReaderDecompressed, bdtReaderDecompressed);
         }
 
         /// <summary>
-        /// Reads an array of bytes as the BHD and a file as the BDT.
+        /// Reads an array of bytes as the header and a file as the data.
         /// </summary>
         public static BXF3 Read(byte[] bhdBytes, string bdtPath)
         {
-            using (FileStream bdtStream = System.IO.File.OpenRead(bdtPath))
-            {
-                BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
-                BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtStream);
-                return new BXF3(bhdReader, bdtReader);
-            }
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtPath);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF3(bhdReaderDecompressed, bdtReaderDecompressed);
         }
 
         /// <summary>
-        /// Reads a file as the BHD and an array of bytes as the BDT.
+        /// Reads a file as the header and an array of bytes as the data.
         /// </summary>
         public static BXF3 Read(string bhdPath, byte[] bdtBytes)
         {
-            using (FileStream bhdStream = System.IO.File.OpenRead(bhdPath))
-            {
-                BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdStream);
-                BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
-                return new BXF3(bhdReader, bdtReader);
-            }
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdPath);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF3(bhdReaderDecompressed, bdtReaderDecompressed);
         }
 
         /// <summary>
-        /// Reads a file as the BHD and a file as the BDT.
+        /// Reads a file as the header and a file as the data.
         /// </summary>
         public static BXF3 Read(string bhdPath, string bdtPath)
         {
-            using (FileStream bhdStream = System.IO.File.OpenRead(bhdPath))
-            using (FileStream bdtStream = System.IO.File.OpenRead(bdtPath))
-            {
-                BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdStream);
-                BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtStream);
-                return new BXF3(bhdReader, bdtReader);
-            }
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdPath);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtPath);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF3(bhdReaderDecompressed, bdtReaderDecompressed);
         }
 
         internal static void ReadBDFHeader(BinaryReaderEx br)
@@ -164,14 +162,12 @@ namespace SoulsFormats
         public void Write(out byte[] bhdBytes, string bdtPath)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(bdtPath));
-            using (FileStream bdtStream = System.IO.File.Create(bdtPath))
-            {
-                BinaryWriterEx bhdWriter = new BinaryWriterEx(false);
-                BinaryWriterEx bdtWriter = new BinaryWriterEx(false, bdtStream);
-                Write(bhdWriter, bdtWriter);
-                bdtWriter.Finish();
-                bhdBytes = bhdWriter.FinishBytes();
-            }
+            using FileStream bdtStream = File.Create(bdtPath);
+            BinaryWriterEx bhdWriter = new BinaryWriterEx(false);
+            BinaryWriterEx bdtWriter = new BinaryWriterEx(false, bdtStream);
+            Write(bhdWriter, bdtWriter);
+            bdtWriter.Finish();
+            bhdBytes = bhdWriter.FinishBytes();
         }
 
         /// <summary>
@@ -180,14 +176,12 @@ namespace SoulsFormats
         public void Write(string bhdPath, out byte[] bdtBytes)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(bhdPath));
-            using (FileStream bhdStream = System.IO.File.Create(bhdPath))
-            {
-                BinaryWriterEx bhdWriter = new BinaryWriterEx(false, bhdStream);
-                BinaryWriterEx bdtWriter = new BinaryWriterEx(false);
-                Write(bhdWriter, bdtWriter);
-                bhdWriter.Finish();
-                bdtBytes = bdtWriter.FinishBytes();
-            }
+            using FileStream bhdStream = File.Create(bhdPath);
+            BinaryWriterEx bhdWriter = new BinaryWriterEx(false, bhdStream);
+            BinaryWriterEx bdtWriter = new BinaryWriterEx(false);
+            Write(bhdWriter, bdtWriter);
+            bhdWriter.Finish();
+            bdtBytes = bdtWriter.FinishBytes();
         }
 
         /// <summary>
@@ -197,15 +191,13 @@ namespace SoulsFormats
         {
             Directory.CreateDirectory(Path.GetDirectoryName(bhdPath));
             Directory.CreateDirectory(Path.GetDirectoryName(bdtPath));
-            using (FileStream bhdStream = System.IO.File.Create(bhdPath))
-            using (FileStream bdtStream = System.IO.File.Create(bdtPath))
-            {
-                BinaryWriterEx bhdWriter = new BinaryWriterEx(false, bhdStream);
-                BinaryWriterEx bdtWriter = new BinaryWriterEx(false, bdtStream);
-                Write(bhdWriter, bdtWriter);
-                bhdWriter.Finish();
-                bdtWriter.Finish();
-            }
+            using FileStream bhdStream = File.Create(bhdPath);
+            using FileStream bdtStream = File.Create(bdtPath);
+            BinaryWriterEx bhdWriter = new BinaryWriterEx(false, bhdStream);
+            BinaryWriterEx bdtWriter = new BinaryWriterEx(false, bdtStream);
+            Write(bhdWriter, bdtWriter);
+            bhdWriter.Finish();
+            bdtWriter.Finish();
         }
 
         private void Write(BinaryWriterEx bhdWriter, BinaryWriterEx bdtWriter)
@@ -260,18 +252,15 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsHeader(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (fs.Length < 4)
             {
-                if (fs.Length < 4)
-                {
-                    return false;
-                }
-
-                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-                {
-                    return IsHeader(br);
-                }
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, fs);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            return IsHeader(brd);
         }
 
         /// <summary>
@@ -284,11 +273,9 @@ namespace SoulsFormats
                 return false;
             }
 
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return IsHeader(br);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            return IsHeader(brd);
         }
 
         /// <summary>
@@ -296,34 +283,35 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsHeader(Stream stream)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            if ((stream.Length - stream.Position) < 4)
             {
-                return IsHeader(br);
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            return IsHeader(brd);
         }
 
         /// <summary>
         /// Whether or not the data appears to be a header file.
         /// </summary>
-        public static bool IsHeader(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BHF3";
+        private static bool IsHeader(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BHF3";
 
         /// <summary>
         /// Whether or not the data appears to be a data file.
         /// </summary>
         public static bool IsData(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (fs.Length < 4)
             {
-                if (fs.Length < 4)
-                {
-                    return false;
-                }
-
-                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-                {
-                    return IsData(br);
-                }
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, fs);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            return IsData(brd);
         }
 
         /// <summary>
@@ -336,28 +324,30 @@ namespace SoulsFormats
                 return false;
             }
 
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return IsData(br);
-            }
-        }
-
-        /// <summary>
-        /// Whether or not the data appears to be a header file.
-        /// </summary>
-        public static bool IsData(Stream stream)
-        {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
-            {
-                return IsData(br);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            return IsData(brd);
         }
 
         /// <summary>
         /// Whether or not the data appears to be a data file.
         /// </summary>
-        public static bool IsData(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BDF3";
+        public static bool IsData(Stream stream)
+        {
+            if ((stream.Length - stream.Position) < 4)
+            {
+                return false;
+            }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            return IsData(brd);
+        }
+
+        /// <summary>
+        /// Whether or not the data appears to be a data file.
+        /// </summary>
+        private static bool IsData(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BDF3";
 
         #endregion
     }

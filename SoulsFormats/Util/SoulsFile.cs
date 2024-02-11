@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace SoulsFormats
@@ -24,10 +25,13 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(Stream stream)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            if ((stream.Length - stream.Position) == 0)
             {
-                return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
         }
 
         /// <summary>
@@ -40,11 +44,8 @@ namespace SoulsFormats
                 return false;
             }
 
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
         }
 
         /// <summary>
@@ -52,18 +53,14 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (fs.Length == 0)
             {
-                if (fs.Length == 0)
-                {
-                    return false;
-                }
-
-                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-                {
-                    return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
-                }
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, fs);
+            return new TFormat().Is(SFUtil.GetDecompressedBinaryReader(br, out _));
         }
 
         /// <summary>
@@ -77,11 +74,9 @@ namespace SoulsFormats
         public static TFormat Read(Stream stream)
         {
             TFormat file = new TFormat();
-            using (BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, stream), out DCX.Type compression))
-            {
-                file.Compression = compression;
-                file.Read(br);
-            }
+            using BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, stream, true), out DCX.Type compression);
+            file.Compression = compression;
+            file.Read(br);
             return file;
         }
 
@@ -91,12 +86,9 @@ namespace SoulsFormats
         public static TFormat Read(byte[] bytes)
         {
             TFormat file = new TFormat();
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, ms), out DCX.Type compression))
-            {
-                file.Compression = compression;
-                file.Read(br);
-            }
+            using BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, bytes), out DCX.Type compression);
+            file.Compression = compression;
+            file.Read(br);
             return file;
         }
 
@@ -106,17 +98,68 @@ namespace SoulsFormats
         public static TFormat Read(string path)
         {
             TFormat file = new TFormat();
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (BinaryReaderEx br = SFUtil.GetDecompressedBinaryReader(new BinaryReaderEx(false, fs), out DCX.Type compression))
-            {
-                file.Compression = compression;
-                file.Read(br);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, path);
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression);
+            file.Compression = compression;
+            file.Read(brd);
             return file;
         }
 
         /// <summary>
-        /// Returns whether the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so, automatically decompressing it if necessary.
+        /// Returns whether or not the <see cref="Stream"/> read as this format correctly.
+        /// </summary>
+        public static bool TryRead(Stream stream, out TFormat file)
+        {
+            long pos = stream.Position;
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            bool result = TryRead(br, out file);
+            stream.Position = pos;
+            return result;
+        }
+
+        /// <summary>
+        /// Returns whether or not the bytes read as this format correctly.
+        /// </summary>
+        public static bool TryRead(byte[] bytes, out TFormat file)
+        {
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return TryRead(br, out file);
+        }
+
+        /// <summary>
+        /// Returns whether or not file read as this format correctly.
+        /// </summary>
+        public static bool TryRead(string path, out TFormat file)
+        {
+            using BinaryReaderEx br = new BinaryReaderEx(false, path);
+            return TryRead(br, out file);
+        }
+
+        /// <summary>
+        /// Returns whether or not the <see cref="BinaryReaderEx"/> read as this format correctly.
+        /// </summary>
+        private static bool TryRead(BinaryReaderEx br, out TFormat file)
+        {
+            var dummy = new TFormat();
+            using (br = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression))
+            {
+                try
+                {
+                    dummy.Compression = compression;
+                    dummy.Read(br);
+                    file = dummy;
+                    return true;
+                }
+                catch
+                {
+                    file = null;
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns whether or not the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so, automatically decompressing it if necessary.
         /// </summary>
         private static bool IsRead(BinaryReaderEx br, out TFormat file)
         {
@@ -142,10 +185,8 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsRead(Stream stream, out TFormat file)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
-            {
-                return IsRead(br, out file);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream);
+            return IsRead(br, out file);
         }
 
         /// <summary>
@@ -153,11 +194,8 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsRead(byte[] bytes, out TFormat file)
         {
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return IsRead(br, out file);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return IsRead(br, out file);
         }
 
         /// <summary>
@@ -165,11 +203,8 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsRead(string path, out TFormat file)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-            {
-                return IsRead(br, out file);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, path);
+            return IsRead(br, out file);
         }
 
         /// <summary>
@@ -188,12 +223,9 @@ namespace SoulsFormats
             }
             else
             {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    BinaryWriterEx bwd = new BinaryWriterEx(false, ms);
-                    Write(bwd);
-                    DCX.Compress(bwd.FinishBytes(), bw, compression);
-                }
+                BinaryWriterEx bwd = new BinaryWriterEx(false);
+                Write(bwd);
+                DCX.Compress(bwd.FinishBytes(), bw, compression);
             }
         }
 
@@ -215,12 +247,9 @@ namespace SoulsFormats
                 throw ex;
             }
 
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BinaryWriterEx bw = new BinaryWriterEx(false, ms);
-                Write(bw, compression);
-                return bw.FinishBytes();
-            }
+            BinaryWriterEx bw = new BinaryWriterEx(false);
+            Write(bw, compression);
+            return bw.FinishBytes();
         }
 
         /// <summary>
@@ -242,12 +271,9 @@ namespace SoulsFormats
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(path) ?? throw new NullReferenceException($"Failed to get directory name for: {path}"));
-            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096))
-            using (BinaryWriterEx bw = new BinaryWriterEx(false, fs))
-            {
-                Write(bw, compression);
-                bw.Finish();
-            }
+            using BinaryWriterEx bw = new BinaryWriterEx(false, path);
+            Write(bw, compression);
+            bw.Finish();
         }
 
         /// <summary>

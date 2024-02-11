@@ -1,9 +1,9 @@
 ﻿namespace SoulsFormats
 {
     /// <summary>
-    /// FMOD sound banks.
+    /// FMOD events.
     /// </summary>
-    public class FSB4 : SoulsFile<FSB4>
+    public class FEV1 : SoulsFile<FEV1>
     {
         /// <summary>
         /// Checks whether the data appears to be a file of this format.
@@ -14,7 +14,7 @@
                 return false;
 
             string magic = br.GetASCII(br.Position, 4);
-            return magic == "FSB4";
+            return magic == "FEV1";
         }
     }
 }

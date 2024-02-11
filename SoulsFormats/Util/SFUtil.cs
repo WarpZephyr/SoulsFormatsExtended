@@ -225,19 +225,6 @@ namespace SoulsFormats
                 return false;
             }
 
-            bool tryReadFmg()
-            {
-                try 
-                {
-                    FMG.Read(bytes);
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-
             string ext = "";
             using (var ms = new MemoryStream(bytes))
             {
@@ -332,7 +319,7 @@ namespace SoulsFormats
                 else if (magic == "ACB\0")
                     ext = ".acb";
                 // This is pretty sketchy
-                else if (br.Length >= 0xC && br.GetByte(0) == 0 && br.GetByte(3) == 0 && br.GetInt32(4) == br.Length && br.GetInt16(0xA) == 0 || tryReadFmg())
+                else if (br.Length >= 0xC && br.GetByte(0) == 0 && br.GetByte(3) == 0 && br.GetInt32(4) == br.Length && br.GetInt16(0xA) == 0 || FMG.TryRead(bytes, out _))
                     ext = ".fmg";
             }
 

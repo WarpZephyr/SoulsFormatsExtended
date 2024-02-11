@@ -68,19 +68,24 @@ namespace SoulsFormats
         public long Remaining => Stream.Length - Position;
 
         /// <summary>
-        /// Initializes a new BinaryReaderEx reading from the specified byte array.
+        /// Initializes a new <see cref="BinaryReaderEx"/> reading from the specified byte array.
         /// </summary>
-        public BinaryReaderEx(bool bigEndian, byte[] input) : this(bigEndian, new MemoryStream(input)) { }
+        public BinaryReaderEx(bool bigEndian, byte[] input) : this(bigEndian, new MemoryStream(input), false) { }
 
         /// <summary>
-        /// Initializes a new BinaryReaderEx reading from the specified stream.
+        /// Initializes a new <see cref="BinaryReaderEx"/> reading from the specified path.
         /// </summary>
-        public BinaryReaderEx(bool bigEndian, Stream stream)
+        public BinaryReaderEx(bool bigEndian, string path) : this(bigEndian, new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read), false) { }
+
+        /// <summary>
+        /// Initializes a new <see cref="BinaryReaderEx"/> reading from the specified stream.
+        /// </summary>
+        public BinaryReaderEx(bool bigEndian, Stream stream, bool leaveOpen = false)
         {
             BigEndian = bigEndian;
             _steps = new Stack<long>();
             Stream = stream;
-            _br = new BinaryReader(stream);
+            _br = new BinaryReader(stream, Encoding.Default, leaveOpen);
         }
 
         /// <summary>

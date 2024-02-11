@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace SoulsFormats
 {
@@ -32,13 +33,9 @@ namespace SoulsFormats
         /// </summary>
         public BXF4Reader(string bhdPath, string bdtPath)
         {
-            using (FileStream fsHeader = File.OpenRead(bhdPath))
-            {
-                FileStream fsData = File.OpenRead(bdtPath);
-                var brHeader = new BinaryReaderEx(false, fsHeader);
-                var brData = new BinaryReaderEx(false, fsData);
-                Read(brHeader, brData);
-            }
+            using var brHeader = new BinaryReaderEx(false, bhdPath);
+            var brData = new BinaryReaderEx(false, bdtPath);
+            Read(brHeader, brData);
         }
 
         /// <summary>
@@ -46,13 +43,9 @@ namespace SoulsFormats
         /// </summary>
         public BXF4Reader(string bhdPath, byte[] bdtBytes)
         {
-            using (FileStream fsHeader = File.OpenRead(bhdPath))
-            {
-                var msData = new MemoryStream(bdtBytes);
-                var brHeader = new BinaryReaderEx(false, fsHeader);
-                var brData = new BinaryReaderEx(false, msData);
-                Read(brHeader, brData);
-            }
+            using var brHeader = new BinaryReaderEx(false, bhdPath);
+            var brData = new BinaryReaderEx(false, bdtBytes);
+            Read(brHeader, brData);
         }
 
         /// <summary>
@@ -60,13 +53,9 @@ namespace SoulsFormats
         /// </summary>
         public BXF4Reader(byte[] bhdBytes, string bdtPath)
         {
-            using (var msHeader = new MemoryStream(bhdBytes))
-            {
-                FileStream fsData = File.OpenRead(bdtPath);
-                var brHeader = new BinaryReaderEx(false, msHeader);
-                var brData = new BinaryReaderEx(false, fsData);
-                Read(brHeader, brData);
-            }
+            using var brHeader = new BinaryReaderEx(false, bhdBytes);
+            var brData = new BinaryReaderEx(false, bdtPath);
+            Read(brHeader, brData);
         }
 
         /// <summary>
@@ -74,20 +63,59 @@ namespace SoulsFormats
         /// </summary>
         public BXF4Reader(byte[] bhdBytes, byte[] bdtBytes)
         {
-            using (var msHeader = new MemoryStream(bhdBytes))
-            {
-                var msData = new MemoryStream(bdtBytes);
-                var brHeader = new BinaryReaderEx(false, msHeader);
-                var brData = new BinaryReaderEx(false, msData);
-                Read(brHeader, brData);
-            }
+            using var brHeader = new BinaryReaderEx(false, bhdBytes);
+            var brData = new BinaryReaderEx(false, bdtBytes);
+            Read(brHeader, brData);
+        }
+
+        /// <summary>
+        /// Reads only the files of a BHF4 header.
+        /// </summary>
+        private BXF4Reader(BinaryReaderEx br)
+        {
+            using BinaryReaderEx brd = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type _);
+            Files = BXF4.ReadBHFHeader(this, brd);
+        }
+
+        /// <summary>
+        /// Get file headers for a <see cref="BXF4"/> from the given path.
+        /// </summary>
+        public static List<BinderFileHeader> GetFileHeaders(string path)
+        {
+            using BinaryReaderEx br = new BinaryReaderEx(false, path);
+            return new BXF4Reader(br).Files;
+        }
+
+        /// <summary>
+        /// Get file headers for a <see cref="BXF4"/> from the given bytes.
+        /// </summary>
+        public static List<BinderFileHeader> GetFileHeaders(byte[] bytes)
+        {
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return new BXF4Reader(br).Files;
+        }
+
+        /// <summary>
+        /// Get file headers for a <see cref="BXF4"/> from the given <see cref="Stream"/>.
+        /// </summary>
+        public static List<BinderFileHeader> GetFileHeaders(Stream stream)
+        {
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            return new BXF4Reader(br).Files;
         }
 
         private void Read(BinaryReaderEx brHeader, BinaryReaderEx brData)
         {
-            BXF4.ReadBDFHeader(brData);
-            Files = BXF4.ReadBHFHeader(this, brHeader);
-            DataBR = brData;
+            using BinaryReaderEx brHeaderDecompressed = SFUtil.GetDecompressedBinaryReader(brHeader, out DCX.Type _);
+            BinaryReaderEx brDataDecompressed = SFUtil.GetDecompressedBinaryReader(brData, out DCX.Type dataCompression);
+            if (dataCompression != DCX.Type.None)
+            {
+                brData.Dispose();
+            }
+
+            BXF4.ReadBDFHeader(brDataDecompressed);
+            Files = BXF4.ReadBHFHeader(this, brHeaderDecompressed);
+            DataBR = brDataDecompressed;
         }
     }
 }

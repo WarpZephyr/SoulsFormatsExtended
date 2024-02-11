@@ -18,21 +18,25 @@ namespace SoulsFormats
         {
             /// <summary>
             /// Dark Souls 1, both PC and console versions.
+            /// <para>The first known format of this header.</para>
             /// </summary>
             DarkSouls1,
 
             /// <summary>
             /// Dark Souls 2 and Scholar of the First Sin on PC.
+            /// <para>Includes AES encryption and salting.</para>
             /// </summary>
             DarkSouls2,
 
             /// <summary>
             /// Dark Souls 3 and Sekiro on PC.
+            /// <para>Includes size fields that identify how big the archive is without padding.</para>
             /// </summary>
             DarkSouls3,
 
             /// <summary>
             /// Elden Ring on PC.
+            /// <para>Improves the size of many fields by making them 64-bit, changes the unpadded size fields to be 32-bit, and resorts some fields.</para>
             /// </summary>
             EldenRing,
         }
@@ -61,6 +65,21 @@ namespace SoulsFormats
         /// Collections of files grouped by their hash value for faster lookup.
         /// </summary>
         public List<Bucket> Buckets { get; set; }
+
+        /// <summary>
+        /// Whether or not the current format version supports encryption.
+        /// </summary>
+        public bool EncryptionSupported => Format >= Game.DarkSouls2;
+
+        /// <summary>
+        /// Whether or not the current format version supports unpadded size fields.
+        /// </summary>
+        public bool UnpaddedSizeSupported => Format >= Game.DarkSouls3;
+
+        /// <summary>
+        /// Whether or not the current format version supports upgraded 64-bit fields for many things.
+        /// </summary>
+        public bool LongFieldsSupported => Format >= Game.DarkSouls3;
 
         /// <summary>
         /// Creates an empty BHD5.
@@ -109,11 +128,8 @@ namespace SoulsFormats
         /// </summary>
         public static BHD5 Read(string path, Game game)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-            {
-                return new BHD5(br, game);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, path);
+            return new BHD5(br, game);
         }
 
         /// <summary>
@@ -121,11 +137,8 @@ namespace SoulsFormats
         /// </summary>
         public static BHD5 Read(byte[] bytes, Game game)
         {
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return new BHD5(br, game);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return new BHD5(br, game);
         }
 
         /// <summary>
@@ -133,10 +146,8 @@ namespace SoulsFormats
         /// </summary>
         public static BHD5 Read(Stream stream, Game game)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
-            {
-                return new BHD5(br, game);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            return new BHD5(br, game);
         }
 
         #endregion
@@ -148,11 +159,8 @@ namespace SoulsFormats
         /// </summary>
         public void Write(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
-            using (BinaryWriterEx bw = new BinaryWriterEx(false, fs))
-            {
-                Write(bw);
-            }
+            using BinaryWriterEx bw = new BinaryWriterEx(false, path);
+            Write(bw);
         }
 
         /// <summary>
@@ -160,11 +168,8 @@ namespace SoulsFormats
         /// </summary>
         public void Write(byte[] bytes)
         {
-            using (MemoryStream ms = new MemoryStream(bytes, true))
-            using (BinaryWriterEx bw = new BinaryWriterEx(false, ms))
-            {
-                Write(bw);
-            }
+            using BinaryWriterEx bw = new BinaryWriterEx(false, bytes);
+            Write(bw);
         }
 
         /// <summary>
@@ -172,10 +177,8 @@ namespace SoulsFormats
         /// </summary>
         public void Write(Stream stream)
         {
-            using (BinaryWriterEx bw = new BinaryWriterEx(false, stream))
-            {
-                Write(bw);
-            }
+            using BinaryWriterEx bw = new BinaryWriterEx(false, stream, true);
+            Write(bw);
         }
 
         /// <summary>
@@ -223,18 +226,14 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsHeader(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (fs.Length < 4)
             {
-                if (fs.Length < 4)
-                {
-                    return false;
-                }
-
-                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-                {
-                    return IsHeader(br);
-                }
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, fs);
+            return IsHeader(br);
         }
 
         /// <summary>
@@ -247,11 +246,8 @@ namespace SoulsFormats
                 return false;
             }
 
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return IsHeader(br);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return IsHeader(br);
         }
 
         /// <summary>
@@ -259,34 +255,33 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsHeader(Stream stream)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            if ((stream.Length - stream.Position) < 4)
             {
-                return IsHeader(br);
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            return IsHeader(br);
         }
 
         /// <summary>
         /// Whether or not the data appears to be a header file.
         /// </summary>
-        public static bool IsHeader(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BHD5";
+        private static bool IsHeader(BinaryReaderEx br) => br.Remaining >= 4 && br.GetASCII(br.Position, 4) == "BHD5";
 
         /// <summary>
         /// Whether or not the data appears to be a data file.
         /// </summary>
         public static bool IsData(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (fs.Length < 4)
             {
-                if (fs.Length < 4)
-                {
-                    return false;
-                }
-
-                using (BinaryReaderEx br = new BinaryReaderEx(false, fs))
-                {
-                    return IsData(br);
-                }
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, fs);
+            return IsData(br);
         }
 
         /// <summary>
@@ -299,11 +294,8 @@ namespace SoulsFormats
                 return false;
             }
 
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(false, ms))
-            {
-                return IsData(br);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            return IsData(br);
         }
 
         /// <summary>
@@ -311,16 +303,19 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsData(Stream stream)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+            if ((stream.Length - stream.Position) < 4)
             {
-                return IsData(br);
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
+            return IsData(br);
         }
 
         /// <summary>
         /// Whether or not the data appears to be a data file.
         /// </summary>
-        public static bool IsData(BinaryReaderEx br)
+        private static bool IsData(BinaryReaderEx br)
         {
             if (br.Remaining < 4)
             {
@@ -393,7 +388,7 @@ namespace SoulsFormats
             public int PaddedFileSize { get; set; }
 
             /// <summary>
-            /// File size after decryption; only included in DS3.
+            /// File size after decryption; only included in DS3, ER and AC6.
             /// </summary>
             public long UnpaddedFileSize { get; set; }
 
@@ -528,7 +523,7 @@ namespace SoulsFormats
             /// <summary>
             /// Read and decrypt (if necessary) file data from the data stream.
             /// </summary>
-            public byte[] ReadFile(FileStream bdtStream)
+            public byte[] ReadFile(Stream bdtStream)
             {
                 byte[] bytes = new byte[PaddedFileSize];
                 bdtStream.Position = FileOffset;
@@ -540,7 +535,7 @@ namespace SoulsFormats
             /// <summary>
             /// Read and decrypt (if necessary) file data from the data stream async.
             /// </summary>
-            public async Task<byte[]> ReadFileAsync(FileStream bdtStream)
+            public async Task<byte[]> ReadFileAsync(Stream bdtStream)
             {
                 byte[] bytes = new byte[PaddedFileSize];
                 bdtStream.Position = FileOffset;
@@ -654,30 +649,12 @@ namespace SoulsFormats
             /// </summary>
             public void Decrypt(byte[] bytes)
             {
-                using (ICryptoTransform decryptor = AES.CreateDecryptor(Key, new byte[16]))
+                using ICryptoTransform decryptor = AES.CreateDecryptor(Key, new byte[16]);
+                foreach (Range range in Ranges.Where(r => r.StartOffset != -1 && r.EndOffset != -1 && r.StartOffset != r.EndOffset))
                 {
-                    foreach (Range range in Ranges.Where(r => r.StartOffset != -1 && r.EndOffset != -1 && r.StartOffset != r.EndOffset))
-                    {
-                        int start = (int)range.StartOffset;
-                        int count = (int)(range.EndOffset - range.StartOffset);
-                        decryptor.TransformBlock(bytes, start, count, bytes, start);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Decrypt file data in-place on parallel threads.
-            /// </summary>
-            public void DecryptParallel(byte[] bytes)
-            {
-                using (ICryptoTransform decryptor = AES.CreateDecryptor(Key, new byte[16]))
-                {
-                    Parallel.ForEach(Ranges.Where(r => r.StartOffset != -1 && r.EndOffset != -1 && r.StartOffset != r.EndOffset), range =>
-                    {
-                        int start = (int)range.StartOffset;
-                        int count = (int)(range.EndOffset - range.StartOffset);
-                        decryptor.TransformBlock(bytes, start, count, bytes, start);
-                    });
+                    int start = (int)range.StartOffset;
+                    int count = (int)(range.EndOffset - range.StartOffset);
+                    decryptor.TransformBlock(bytes, start, count, bytes, start);
                 }
             }
         }

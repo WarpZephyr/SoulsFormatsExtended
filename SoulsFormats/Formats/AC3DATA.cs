@@ -18,7 +18,7 @@
         /// <summary>
         /// The address entry start blocks base themselves from.
         /// </summary>
-        public const int BASE_ADDRESS = 0x10000;
+        public const int BASE_ADDRESS = ENTRY_COUNT * 4;
 
         /// <summary>
         /// The number of entries.
@@ -58,23 +58,34 @@
             bw.BigEndian = false;
             for (int i = 0; i < ENTRY_COUNT; i++)
             {
-                bw.ReserveInt32($"StartBlock_{i}");
+                if (Files[i] != null)
+                {
+                    bw.ReserveInt32($"StartBlock_{i}");
 
-                int length = Files[i].Length;
-                int remainder = length % BLOCK_SIZE;
-                int remaining = length - remainder;
-                int totalLength = length + remaining;
-                int blockCount = totalLength / BLOCK_SIZE;
-                bw.WriteInt32(blockCount);
+                    int length = Files[i].Length;
+                    int remainder = length % FILE_ALIGNMENT;
+                    int remaining = length - remainder;
+                    int totalLength = length + remaining;
+                    int blockCount = totalLength / BLOCK_SIZE;
+                    bw.WriteInt32(blockCount);
+                }
+                else
+                {
+                    bw.WriteInt32(0);
+                    bw.WriteInt32(0);
+                }
             }
 
             for (int i = 0; i < ENTRY_COUNT; i++)
             {
-                int startByte = (int)(bw.Position - BASE_ADDRESS);
-                int startBlock = startByte / BLOCK_SIZE;
-                bw.FillInt32($"StartBlock_{i}", startBlock);
-                bw.WriteBytes(Files[i]);
-                bw.Pad(FILE_ALIGNMENT);
+                if (Files[i] != null)
+                {
+                    int startByte = (int)(bw.Position - BASE_ADDRESS);
+                    int startBlock = startByte / BLOCK_SIZE;
+                    bw.FillInt32($"StartBlock_{i}", startBlock);
+                    bw.WriteBytes(Files[i]);
+                    bw.Pad(FILE_ALIGNMENT);
+                }
             }
         }
     }

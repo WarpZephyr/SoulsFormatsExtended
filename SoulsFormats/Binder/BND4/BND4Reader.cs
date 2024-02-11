@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace SoulsFormats
 {
@@ -37,8 +39,7 @@ namespace SoulsFormats
         /// </summary>
         public BND4Reader(string path)
         {
-            FileStream fs = File.OpenRead(path);
-            var br = new BinaryReaderEx(false, fs);
+            var br = new BinaryReaderEx(false, path);
             Read(br);
         }
 
@@ -47,9 +48,47 @@ namespace SoulsFormats
         /// </summary>
         public BND4Reader(byte[] bytes)
         {
-            var ms = new MemoryStream(bytes);
-            var br = new BinaryReaderEx(false, ms);
+            var br = new BinaryReaderEx(false, bytes);
             Read(br);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BND4"/> from the given <see cref="Stream"/>, decompressing if necessary.
+        /// </summary>
+        public BND4Reader(Stream stream)
+        {
+            var br = new BinaryReaderEx(false, stream, true);
+            Read(br);
+        }
+
+        /// <summary>
+        /// Get file headers for a <see cref="BND4"/> from the given path.
+        /// </summary>
+        public static List<BinderFileHeader> GetFileHeaders(string path)
+        {
+            var reader = new BND4Reader(path);
+            reader.DataBR.Dispose();
+            return reader.Files;
+        }
+
+        /// <summary>
+        /// Get file headers for a <see cref="BND4"/> from the given bytes.
+        /// </summary>
+        public static List<BinderFileHeader> GetFileHeaders(byte[] bytes)
+        {
+            var reader = new BND4Reader(bytes);
+            reader.DataBR.Dispose();
+            return reader.Files;
+        }
+
+        /// <summary>
+        /// Get file headers for a <see cref="BND4"/> from the given <see cref="Stream"/>.
+        /// </summary>
+        public static List<BinderFileHeader> GetFileHeaders(Stream stream)
+        {
+            var reader = new BND4Reader(stream);
+            reader.DataBR.Dispose();
+            return reader.Files;
         }
 
         private void Read(BinaryReaderEx br)

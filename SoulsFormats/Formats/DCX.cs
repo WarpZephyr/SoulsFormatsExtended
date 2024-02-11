@@ -118,10 +118,13 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(Stream stream)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(true, stream))
+            if ((stream.Length - stream.Position) < 3)
             {
-                return Is(br);
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(true, stream, true);
+            return Is(br);
         }
 
         /// <summary>
@@ -129,11 +132,13 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(byte[] bytes)
         {
-            using (MemoryStream ms = new MemoryStream(bytes, false))
-            using (BinaryReaderEx br = new BinaryReaderEx(true, ms))
+            if (bytes.Length < 4)
             {
-                return Is(br);
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(true, bytes);
+            return Is(br);
         }
 
         /// <summary>
@@ -141,11 +146,14 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (BinaryReaderEx br = new BinaryReaderEx(true, fs))
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (fs.Length < 4)
             {
-                return Is(br);
+                return false;
             }
+
+            using BinaryReaderEx br = new BinaryReaderEx(true, fs);
+            return Is(br);
         }
 
         /// <summary>
@@ -171,11 +179,17 @@ namespace SoulsFormats
         /// </summary>
         public static byte[] Decompress(byte[] bytes, out Type type)
         {
-            using (MemoryStream ms = new MemoryStream(bytes))
-            using (BinaryReaderEx br = new BinaryReaderEx(true, ms))
-            {
-                return Decompress(br, out type);
-            }
+            using BinaryReaderEx br = new BinaryReaderEx(true, bytes);
+            return Decompress(br, out type);
+        }
+
+        /// <summary>
+        /// Decompress a <see cref="DCX"/> file from a <see cref="Stream"/> and return the detected <see cref="DCX"/> type.
+        /// </summary>
+        public static byte[] Decompress(Stream stream, out Type type)
+        {
+            using BinaryReaderEx br = new BinaryReaderEx(true, stream, true);
+            return Decompress(br, out type);
         }
 
         /// <summary>
@@ -184,15 +198,23 @@ namespace SoulsFormats
         public static byte[] Decompress(byte[] data) => Decompress(data, out _);
 
         /// <summary>
+        /// Decompress a <see cref="DCX"/> file from a <see cref="Stream"/>.
+        /// </summary>
+        public static byte[] Decompress(Stream stream) => Decompress(stream, out _);
+
+        /// <summary>
+        /// Decompress a <see cref="DCX"/> file from a <see cref="Stream"/> to a new <see cref="Stream"/>.
+        /// </summary>
+        public static Stream DecompressToStream(Stream stream) => new MemoryStream(Decompress(stream, out _));
+
+        /// <summary>
         /// Decompress a <see cref="DCX"/> file from the specified path and return the detected <see cref="DCX"/> type.
         /// </summary>
         public static byte[] Decompress(string path, out Type type)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (BinaryReaderEx br = new BinaryReaderEx(true, fs))
-            {
-                return Decompress(br, out type);
-            }
+            using FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using BinaryReaderEx br = new BinaryReaderEx(true, fs);
+            return Decompress(br, out type);
         }
 
         /// <summary>
@@ -370,9 +392,9 @@ namespace SoulsFormats
 
                     if (compressed)
                     {
-                        using (MemoryStream cmpStream = new MemoryStream(chunk))
-                        using (DeflateStream dfltStream = new DeflateStream(cmpStream, CompressionMode.Decompress))
-                            dfltStream.CopyTo(dcmpStream);
+                        using MemoryStream cmpStream = new MemoryStream(chunk);
+                        using DeflateStream dfltStream = new DeflateStream(cmpStream, CompressionMode.Decompress);
+                        dfltStream.CopyTo(dcmpStream);
                     }
                     else
                     {
@@ -444,9 +466,9 @@ namespace SoulsFormats
 
                     if (compressed)
                     {
-                        using (MemoryStream cmpStream = new MemoryStream(chunk))
-                        using (DeflateStream dfltStream = new DeflateStream(cmpStream, CompressionMode.Decompress))
-                            dfltStream.CopyTo(dcmpStream);
+                        using MemoryStream cmpStream = new MemoryStream(chunk);
+                        using DeflateStream dfltStream = new DeflateStream(cmpStream, CompressionMode.Decompress);
+                        dfltStream.CopyTo(dcmpStream);
                     }
                     else
                     {
@@ -555,12 +577,10 @@ namespace SoulsFormats
         /// </summary>
         public static byte[] Compress(byte[] data, Type type)
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BinaryWriterEx bw = new BinaryWriterEx(true, ms);
-                Compress(data, bw, type);
-                return bw.FinishBytes();
-            }
+            using MemoryStream ms = new MemoryStream();
+            BinaryWriterEx bw = new BinaryWriterEx(true, ms);
+            Compress(data, bw, type);
+            return bw.FinishBytes();
         }
 
         /// <summary>
@@ -568,11 +588,9 @@ namespace SoulsFormats
         /// </summary>
         public static void Compress(byte[] data, Type type, string path)
         {
-            using (FileStream fs = File.Create(path))
-            using (BinaryWriterEx bw = new BinaryWriterEx(true, fs))
-            {
-                Compress(data, bw, type);
-            }
+            using FileStream fs = File.Create(path);
+            using BinaryWriterEx bw = new BinaryWriterEx(true, fs);
+            Compress(data, bw, type);
         }
 
         /// <summary>
