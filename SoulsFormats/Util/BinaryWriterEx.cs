@@ -69,7 +69,7 @@ namespace SoulsFormats
         /// <summary>
         /// The amount of bytes from the current position to the end of the stream.
         /// </summary>
-        public long Remaining => Stream.Length - Position;
+        public long Remaining => Stream.Length - Stream.Position;
 
         /// <summary>
         /// Initializes a new <see cref="BinaryWriterEx"/>.
