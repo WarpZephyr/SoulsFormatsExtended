@@ -107,10 +107,12 @@ namespace SoulsFormats
                 foreach (int i in faceSetIndices)
                 {
                     if (!faceSetDict.ContainsKey(i))
-                        throw new NotSupportedException("Face set not found or already taken: " + i);
+                        throw new NotSupportedException("Face set not found: " + i);
 
                     FaceSets.Add(faceSetDict[i]);
-                    faceSetDict.Remove(i);
+
+                    // Removed for shared meshes support
+                    //faceSetDict.Remove(i);
                 }
                 faceSetIndices = null;
             }
@@ -121,10 +123,12 @@ namespace SoulsFormats
                 foreach (int i in vertexBufferIndices)
                 {
                     if (!vertexBufferDict.ContainsKey(i))
-                        throw new NotSupportedException("Vertex buffer not found or already taken: " + i);
+                        throw new NotSupportedException("Vertex buffer not found: " + i);
 
                     VertexBuffers.Add(vertexBufferDict[i]);
-                    vertexBufferDict.Remove(i);
+
+                    // Removed for shared meshes support
+                    //vertexBufferDict.Remove(i);
                 }
                 vertexBufferIndices = null;
 
@@ -147,6 +151,8 @@ namespace SoulsFormats
                     }
                 }
 
+                // Removed for shared meshes support
+                /*
                 for (int i = 0; i < VertexBuffers.Count; i++)
                 {
                     VertexBuffer buffer = VertexBuffers[i];
@@ -154,6 +160,7 @@ namespace SoulsFormats
                     if ((buffer.BufferIndex & ~0x60000000) != i)
                         throw new FormatException("Unexpected vertex buffer index.");
                 }
+                */
             }
 
             internal void ReadVertices(BinaryReaderEx br, int dataOffset, List<BufferLayout> layouts, FLVERHeader header)

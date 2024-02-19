@@ -198,10 +198,12 @@ namespace SoulsFormats
                 mesh.TakeVertexBuffers(vertexBufferDict, BufferLayouts);
                 mesh.ReadVertices(br, dataOffset, BufferLayouts, Header);
             }
-            if (faceSetDict.Count != 0)
-                throw new NotSupportedException("Orphaned face sets found.");
-            if (vertexBufferDict.Count != 0)
-                throw new NotSupportedException("Orphaned vertex buffers found.");
+
+            // Removed for shared meshes support
+            //if (faceSetDict.Count != 0)
+            //    throw new NotSupportedException("Orphaned face sets found.");
+            //if (vertexBufferDict.Count != 0)
+            //    throw new NotSupportedException("Orphaned vertex buffers found.");
         }
 
         /// <summary>

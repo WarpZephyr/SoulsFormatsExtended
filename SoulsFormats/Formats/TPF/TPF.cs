@@ -206,7 +206,8 @@ namespace SoulsFormats
 
                     if (platform == TPFPlatform.Xbox360)
                     {
-                        br.AssertInt32(0);
+                        br.AssertInt16(0, 1);
+                        br.AssertInt16(0);
                     }
                     else if (platform == TPFPlatform.PS3)
                     {

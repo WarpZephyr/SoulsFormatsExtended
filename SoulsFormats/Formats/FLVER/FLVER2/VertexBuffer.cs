@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SoulsFormats
@@ -31,6 +32,9 @@ namespace SoulsFormats
             internal VertexBuffer(BinaryReaderEx br)
             {
                 BufferIndex = br.ReadInt32();
+                if ((BufferIndex & ~0x60000000) != BufferIndex)
+                    throw new NotSupportedException("Edge compressed vertex buffers are not supported.");
+
                 LayoutIndex = br.ReadInt32();
                 VertexSize = br.ReadInt32();
                 VertexCount = br.ReadInt32();
@@ -57,10 +61,10 @@ namespace SoulsFormats
                 }
                 br.StepOut();
 
-                VertexSize = -1;
-                BufferIndex = -1;
-                VertexCount = -1;
-                BufferOffset = -1;
+                //VertexSize = -1;
+                //BufferIndex = -1;
+                //VertexCount = -1;
+                //BufferOffset = -1;
             }
 
             internal void Write(BinaryWriterEx bw, FLVERHeader header, int index, int bufferIndex, List<BufferLayout> layouts, int vertexCount)
