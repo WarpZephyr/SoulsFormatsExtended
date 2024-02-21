@@ -10,7 +10,7 @@ namespace SoulsFormats
         public class LayoutMember
         {
             /// <summary>
-            /// Unknown; 0, 1, or 2.
+            /// Unknown; 0, 1, or 2. May by an index that ties into edge and shared mesh optimizations.
             /// </summary>
             public int Unk00 { get; set; }
 
@@ -194,7 +194,7 @@ namespace SoulsFormats
             Byte4E = 0x2F,
 
             /// <summary>
-            /// Unknown but appears to be another form of edge compression; not actually supported.
+            /// Edge compression specified by edge members in face sets.
             /// </summary>
             EdgeCompressed = 0xF0,
         }

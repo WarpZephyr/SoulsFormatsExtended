@@ -34,7 +34,7 @@ namespace SoulsFormats
                 LodLevel2 = 0x0200_0000,
 
                 /// <summary>
-                /// Not confirmed, but suspected to indicate when indices are edge-compressed.
+                /// Indexes are edge-compressed.
                 /// </summary>
                 EdgeCompressed = 0x4000_0000,
 
@@ -70,6 +70,11 @@ namespace SoulsFormats
             public List<int> Indices { get; set; }
 
             /// <summary>
+            /// Edge compression information useful for edge compressed vertex buffers.
+            /// </summary>
+            internal EdgeMemberInfoGroup EdgeMembers { get; private set; }
+
+            /// <summary>
             /// Creates a new FaceSet with default values and no indices.
             /// </summary>
             public FaceSet()
@@ -78,6 +83,7 @@ namespace SoulsFormats
                 TriangleStrip = false;
                 CullBackfaces = true;
                 Indices = new List<int>();
+                EdgeMembers = null;
             }
 
             /// <summary>
@@ -90,6 +96,7 @@ namespace SoulsFormats
                 CullBackfaces = cullBackfaces;
                 Unk06 = unk06;
                 Indices = indices;
+                EdgeMembers = null;
             }
 
             internal FaceSet(BinaryReaderEx br, FLVERHeader header, int headerIndexSize, int dataOffset)
@@ -113,14 +120,15 @@ namespace SoulsFormats
                 if (indexSize == 0)
                     indexSize = headerIndexSize;
 
-                if (indexSize == 8 ^ Flags.HasFlag(FSFlags.EdgeCompressed))
-                    throw new InvalidDataException("FSFlags.EdgeCompressed probably doesn't mean edge compression after all. Please investigate this.");
-
                 if (indexSize == 8)
                 {
+                    if ((Flags & ~FSFlags.EdgeCompressed) == Flags)
+                        throw new NotSupportedException($"Index size of {indexSize} is only supported when {nameof(FSFlags.EdgeCompressed)} is set.");
+
                     br.StepIn(dataOffset + indicesOffset);
                     {
-                        Indices = EdgeIndexCompression.ReadEdgeIndexGroup(br, indexCount);
+                        Indices = new List<int>(indexCount);
+                        EdgeMembers = new EdgeMemberInfoGroup(br, indexCount, Indices);
                     }
                     br.StepOut();
                 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 
 namespace SoulsFormats
 {
@@ -20,6 +21,7 @@ namespace SoulsFormats
             internal int BufferIndex;
             internal int VertexCount;
             internal int BufferOffset;
+            internal bool EdgeCompressed;
 
             /// <summary>
             /// Creates a VertexBuffer with the specified layout.
@@ -32,8 +34,12 @@ namespace SoulsFormats
             internal VertexBuffer(BinaryReaderEx br)
             {
                 BufferIndex = br.ReadInt32();
-                if ((BufferIndex & ~0x60000000) != BufferIndex)
-                    throw new NotSupportedException("Edge compressed vertex buffers are not supported.");
+                int final = BufferIndex & ~0x60000000;
+                if (final != BufferIndex)
+                {
+                    BufferIndex = final;
+                    EdgeCompressed = true;
+                }
 
                 LayoutIndex = br.ReadInt32();
                 VertexSize = br.ReadInt32();
@@ -56,11 +62,19 @@ namespace SoulsFormats
                     if (header.Version >= 0x2000F)
                         uvFactor = 2048;
 
-                    for (int i = 0; i < vertices.Count; i++)
-                        vertices[i].Read(br, layout, uvFactor);
+                    if (EdgeCompressed)
+                    {
+                        // TODO: Read edge information passed from facesets to mesh to buffer reading.
+                    }
+                    else
+                    {
+                        for (int i = 0; i < vertices.Count; i++)
+                            vertices[i].Read(br, layout, uvFactor);
+                    }
                 }
                 br.StepOut();
 
+                // Removed for shared meshes support
                 //VertexSize = -1;
                 //BufferIndex = -1;
                 //VertexCount = -1;
@@ -89,6 +103,8 @@ namespace SoulsFormats
                 float uvFactor = 1024;
                 if (header.Version >= 0x2000F)
                     uvFactor = 2048;
+
+                // TODO: Edge vertex Compression
 
                 foreach (FLVER.Vertex vertex in Vertices)
                     vertex.Write(bw, layout, uvFactor);

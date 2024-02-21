@@ -175,6 +175,8 @@ namespace SoulsFormats
                 for (int i = 0; i < vertexCount; i++)
                     Vertices.Add(new FLVER.Vertex(uvCap, tanCap, colorCap));
 
+                // TODO: Collect Edge Members from facesets here and pass them to be read from buffers.
+
                 foreach (VertexBuffer buffer in VertexBuffers)
                     buffer.ReadBuffer(br, layouts, Vertices, dataOffset, header);
             }

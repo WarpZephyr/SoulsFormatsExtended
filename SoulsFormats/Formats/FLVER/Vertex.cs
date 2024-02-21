@@ -126,7 +126,7 @@ namespace SoulsFormats
                         }
                         else if (member.Type == LayoutType.EdgeCompressed)
                         {
-                            // Sit in a corner and cry
+                            throw new NotSupportedException("Edge vertex buffer decompression is not fully supported.");
                         }
                         else
                             throw new NotImplementedException($"Read not implemented for {member.Type} {member.Semantic}.");
@@ -410,6 +410,10 @@ namespace SoulsFormats
                         {
                             bw.WriteVector3(Position);
                             bw.WriteSingle(0);
+                        }
+                        else if (member.Type == LayoutType.EdgeCompressed)
+                        {
+                            throw new NotSupportedException("Edge vertex compression is not supported.");
                         }
                         else
                             throw new NotImplementedException($"Write not implemented for {member.Type} {member.Semantic}.");
