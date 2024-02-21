@@ -243,6 +243,10 @@ namespace SoulsFormats
             internal List<FLVER.Vertex> GetVertexes(BinaryReaderEx br, long vertexBuffersStartOffset)
             {
                 br.Position = vertexBuffersStartOffset + EdgeVertexBufferOffset;
+
+                // I don't know what that extra buffer is when type is not 0, but it's important.
+                // Positions are wrong usually when extracting types other than 0,
+                // Armored Core Verdict Day also crashes immediately upon loading a model if the extra buffer is modified improperly.
                 var edgeVertexBufferInfo = new EdgeVertexBufferInfo(br);
 
                 var vertexes = new List<FLVER.Vertex>(SpuConfigInfo.NumVertexes);

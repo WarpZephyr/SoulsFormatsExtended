@@ -51,6 +51,11 @@ namespace SoulsFormats
                     throw new InvalidDataException($"{nameof(EdgeVertexBufferPlusExtraBufferLength)} must have at least the length of {nameof(EdgeVertexBufferLength)}");
                 }
 
+                if (Type == 0 && EdgeVertexBufferLength != EdgeVertexBufferPlusExtraBufferLength)
+                {
+                    throw new InvalidDataException($"{nameof(EdgeVertexBufferPlusExtraBufferLength)} must be the same length as {nameof(EdgeVertexBufferLength)} when {nameof(Type)} is {Type}.");
+                }
+
                 Type = br.AssertByte(0, 1, 2, 3, 4, 5);
                 br.AssertByte(1);
                 br.AssertUInt16(0);
