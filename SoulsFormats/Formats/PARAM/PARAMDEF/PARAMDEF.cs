@@ -334,12 +334,13 @@ namespace SoulsFormats
         /// <param name="versionAware">If versionAware is enabled and the PARAMDEFs support it, additional data will be
         /// read such that the PARAMDEFs can be used on older regulations if the regulation version is known. Otherwise,
         /// the PARAMDEFs will be read to support the latest supported regulation version only.</param>
+        /// <param name="validateFields">Whether or not strict field validation occurs.</param>
         /// <returns></returns>
-        public static PARAMDEF XmlDeserialize(string path, bool versionAware = false)
+        public static PARAMDEF XmlDeserialize(string path, bool versionAware = false, bool validateFields = true)
         {
             var xml = new XmlDocument();
             xml.Load(path);
-            return XmlSerializer.Deserialize(xml, versionAware);
+            return XmlSerializer.Deserialize(xml, versionAware, validateFields);
         }
 
         /// <summary>
