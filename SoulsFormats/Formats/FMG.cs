@@ -25,9 +25,9 @@ namespace SoulsFormats
         public bool BigEndian { get; set; }
 
         /// <summary>
-        /// Whether or not the FMG uses long fields and UTF16 encoding.
+        /// Whether or not the FMG uses UTF16 encoding.
         /// </summary>
-        public bool Wide { get; set; }
+        public bool Unicode { get; set; }
 
         /// <summary>
         /// Creates an empty FMG configured for DS1/DS2.
@@ -59,15 +59,17 @@ namespace SoulsFormats
             Version = br.ReadEnum8<FMGVersion>();
             br.AssertByte(0);
 
+            bool wide = br.VarintLong = Version == FMGVersion.DarkSouls3;
+
             int fileSize = br.ReadInt32();
-            br.VarintLong = Wide = br.ReadBoolean();
+            Unicode = br.ReadBoolean();
             br.AssertByte((byte)(Version == FMGVersion.DemonsSouls ? 0xFF : 0x00));
             br.AssertByte(0);
             br.AssertByte(0);
             int groupCount = br.ReadInt32();
             int stringCount = br.ReadInt32();
 
-            if (Wide)
+            if (wide)
             {
                 br.AssertInt32(0xFF);
             }
@@ -82,12 +84,12 @@ namespace SoulsFormats
                 int firstID = br.ReadInt32();
                 int lastID = br.ReadInt32();
 
-                if (Wide)
+                if (wide)
                 {
                     br.AssertInt32(0);
                 }
 
-                br.StepIn(stringOffsetsOffset + offsetIndex * (Wide ? 8 : 4));
+                br.StepIn(stringOffsetsOffset + offsetIndex * (wide ? 8 : 4));
                 {
                     for (int j = 0; j < lastID - firstID + 1; j++)
                     {
@@ -97,7 +99,7 @@ namespace SoulsFormats
                         string text = null;
                         if (stringOffset > 0)
                         {
-                            if (Wide)
+                            if (Unicode)
                             {
                                 text = br.GetUTF16(stringOffset);
                             }
@@ -120,20 +122,22 @@ namespace SoulsFormats
         {
             bw.BigEndian = BigEndian;
 
+            bool wide = bw.VarintLong = Version == FMGVersion.DarkSouls3;
+
             bw.WriteByte(0);
             bw.WriteBoolean(bw.BigEndian);
             bw.WriteByte((byte)Version);
             bw.WriteByte(0);
 
             bw.ReserveInt32("FileSize");
-            bw.WriteBoolean(Wide);
+            bw.WriteBoolean(Unicode);
             bw.WriteByte((byte)(Version == FMGVersion.DemonsSouls ? 0xFF : 0x00));
             bw.WriteByte(0);
             bw.WriteByte(0);
             bw.ReserveInt32("GroupCount");
             bw.WriteInt32(Entries.Count);
 
-            if (Wide)
+            if (wide)
             {
                 bw.WriteInt32(0xFF);
             }
@@ -153,7 +157,7 @@ namespace SoulsFormats
                 }
                 bw.WriteInt32(Entries[i].ID);
 
-                if (Wide)
+                if (wide)
                 {
                     bw.WriteInt32(0);
                 }
@@ -178,7 +182,7 @@ namespace SoulsFormats
                 else
                 {
                     bw.FillVarint($"StringOffset{i}",bw.Position);
-                    if (Wide)
+                    if (Unicode)
                     {
                         bw.WriteUTF16(Entries[i].Text, true);
                     }
