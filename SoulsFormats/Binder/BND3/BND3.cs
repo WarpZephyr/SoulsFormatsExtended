@@ -125,7 +125,6 @@ namespace SoulsFormats
 
             bw.WriteInt32(fileHeaders.Count);
             bw.ReserveInt32("FileHeadersEnd");
-            bw.WriteInt32(0);
             bw.WriteInt32(bnd.Unk18);
             bw.WriteInt32(0);
 
