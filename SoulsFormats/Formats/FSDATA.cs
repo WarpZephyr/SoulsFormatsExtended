@@ -58,8 +58,8 @@ namespace SoulsFormats
         public FSDATA()
         {
             _entryCount = 8192;
-            Files = new List<File>();
             Compressed = false;
+            Files = new List<File>();
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace SoulsFormats
         public FSDATA(bool compressed)
         {
             _entryCount = 8192;
-            Files = new List<File>();
             Compressed = compressed;
+            Files = new List<File>();
         }
 
         /// <summary>
@@ -81,8 +81,8 @@ namespace SoulsFormats
         public FSDATA(int entryCount, bool compressed)
         {
             EntryCount = entryCount;
-            Files = new List<File>(entryCount);
             Compressed = compressed;
+            Files = new List<File>(entryCount);
         }
 
         /// <summary>
@@ -95,6 +95,7 @@ namespace SoulsFormats
         {
             EntryCount = entryCount;
             Compressed = compressed;
+            Files = new List<File>(entryCount);
             int dataOffset = (entryCount * 4) * (Compressed ? 3 : 2);
             for (int i = 0; i < entryCount; i++)
             {
@@ -331,6 +332,10 @@ namespace SoulsFormats
                         Bytes = SFUtil.ReadZlib(br, sectorLength * SECTOR_SIZE);
                         br.StepOut();
                     }
+                    else
+                    {
+                        Bytes = Array.Empty<byte>();
+                    }
                 }
                 else
                 {
@@ -341,9 +346,11 @@ namespace SoulsFormats
                         Bytes = br.ReadBytes(sectorLength * SECTOR_SIZE);
                         br.StepOut();
                     }
+                    else
+                    {
+                        Bytes = Array.Empty<byte>();
+                    }
                 }
-
-                Bytes = Array.Empty<byte>();
             }
 
             /// <summary>
