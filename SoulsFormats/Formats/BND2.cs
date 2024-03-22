@@ -17,24 +17,24 @@ namespace SoulsFormats
         public enum FilePathModeEnum : byte
         {
             /// <summary>
-            /// Files in this BND have no name, only an ID.
+            /// Files in this BND have no name.
             /// </summary>
             Nameless = 0,
 
             /// <summary>
-            /// Files in this BND have names immediately after the file entries with no offset to the names array.
+            /// Files in this BND only have file names.
             /// </summary>
-            NamesNoOffset = 1,
+            FileName = 1,
 
             /// <summary>
-            /// Files in this BND have paths immediately after the file entries with no offset to the paths array. 
+            /// All files use a full file path.
             /// </summary>
-            Paths = 2,
+            FullPath = 2,
 
             /// <summary>
-            /// Files in this BND have names with an offset to the names array, the first being a base directory.
+            /// Add a base directory all paths start from, then write the rest of the path as each file name.
             /// </summary>
-            NamesOffset = 3
+            BaseDirectory = 3
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace SoulsFormats
 
         /// <summary>
         /// The base directory of all files.
-        /// <para>Only used when <see cref="FilePathModeEnum.NamesOffset"/> is set on <see cref="FilePathMode"/>.</para>
+        /// <para>Only used when <see cref="FilePathModeEnum.BaseDirectory"/> is set on <see cref="FilePathMode"/>.</para>
         /// </summary>
         public string BaseDirectory { get; set; }
 
@@ -78,7 +78,7 @@ namespace SoulsFormats
         {
             FileVersion = 211;
             AlignmentSize = 2048;
-            FilePathMode = FilePathModeEnum.NamesNoOffset;
+            FilePathMode = FilePathModeEnum.FileName;
             Unk1B = 0;
             BaseDirectory = string.Empty;
             Files = new List<File>();
@@ -91,7 +91,7 @@ namespace SoulsFormats
         {
             FileVersion = version;
             AlignmentSize = 2048;
-            FilePathMode = FilePathModeEnum.NamesNoOffset;
+            FilePathMode = FilePathModeEnum.FileName;
             Unk1B = 0;
             BaseDirectory = string.Empty;
             Files = new List<File>();
@@ -135,7 +135,7 @@ namespace SoulsFormats
             uint unk04 = br.ReadUInt32();
             int fileVersion = br.ReadInt32();
             br.Position += 8; // File Size, File Num
-            int namesOffset = br.ReadInt32();
+            int baseDirOffset = br.ReadInt32();
             br.Position += 2; // Alignment Size
             byte filePathMode = br.ReadByte();
             byte unk1B = br.ReadByte();
@@ -148,10 +148,10 @@ namespace SoulsFormats
                 case 0:
                 case 1:
                 case 2:
-                    validNamesOffset = namesOffset <= br.Length && namesOffset == 0;
+                    validNamesOffset = baseDirOffset <= br.Length && baseDirOffset == 0;
                     break;
                 case 3:
-                    validNamesOffset = namesOffset <= br.Length;
+                    validNamesOffset = baseDirOffset <= br.Length;
                     break;
                 default:
                     // File path mode was invalid
@@ -178,15 +178,15 @@ namespace SoulsFormats
             FileVersion = br.ReadInt32(); // Versions between 202 and 211 not seen.
             br.Position += 4; // File Size
             int fileCount = br.ReadInt32();
-            int namesOffset = br.ReadInt32();
+            int baseDirOffset = br.ReadInt32();
             AlignmentSize = br.ReadUInt16();
             FilePathMode = br.ReadEnum8<FilePathModeEnum>();
             Unk1B = br.AssertByte(0,1);
             br.AssertUInt32(0);
 
-            if (FilePathMode == FilePathModeEnum.NamesOffset)
+            if (FilePathMode == FilePathModeEnum.BaseDirectory)
             {
-                BaseDirectory = br.GetShiftJIS(namesOffset);
+                BaseDirectory = br.GetShiftJIS(baseDirOffset);
             }
             else
             {
@@ -212,7 +212,7 @@ namespace SoulsFormats
             bw.WriteInt32(FileVersion);
             bw.ReserveInt32("fileSize");
             bw.WriteInt32(Files.Count);
-            bw.ReserveInt32("namesOffset");
+            bw.ReserveInt32("baseDirOffset");
             bw.WriteUInt16(AlignmentSize);
             bw.WriteByte((byte)FilePathMode);
             bw.WriteByte(Unk1B);
@@ -226,18 +226,18 @@ namespace SoulsFormats
             switch (FilePathMode)
             {
                 case FilePathModeEnum.Nameless:
-                    bw.FillInt32("namesOffset", 0);
+                    bw.FillInt32("baseDirOffset", 0);
                     break;
-                case FilePathModeEnum.NamesNoOffset:
-                    bw.FillInt32("namesOffset", 0);
+                case FilePathModeEnum.FileName:
+                    bw.FillInt32("baseDirOffset", 0);
                     for (int i = 0; i < Files.Count; i++)
                     {
                         bw.FillInt32($"nameOffset_{i}", (int)bw.Position);
                         bw.WriteShiftJIS(Files[i].Name, true);
                     }
                     break;
-                case FilePathModeEnum.Paths:
-                    bw.FillInt32("namesOffset", 0);
+                case FilePathModeEnum.FullPath:
+                    bw.FillInt32("baseDirOffset", 0);
                     for (int i = 0; i < Files.Count; i++)
                     {
                         bw.FillInt32($"nameOffset_{i}", (int)bw.Position);
@@ -250,8 +250,8 @@ namespace SoulsFormats
                         bw.WriteShiftJIS(name, true);
                     }
                     break;
-                case FilePathModeEnum.NamesOffset:
-                    bw.FillInt32("namesOffset", (int)bw.Position);
+                case FilePathModeEnum.BaseDirectory:
+                    bw.FillInt32("baseDirOffset", (int)bw.Position);
                     bw.WriteShiftJIS(BaseDirectory, true);
                     for (int i = 0; i < Files.Count; i++)
                     {
@@ -286,8 +286,8 @@ namespace SoulsFormats
             /// <summary>
             /// The name of this <see cref="File"/>.
             /// <para>Will be set to ID if name does not exist.</para>
-            /// <para>Will be a path with a drive letter if <see cref="FilePathModeEnum.Paths"/> is set.</para>
-            /// <para>Will need <see cref="BaseDirectory"/> added as the base directory if <see cref="FilePathModeEnum.NamesOffset"/> is set.</para>
+            /// <para>Will be a path with a drive letter if <see cref="FilePathModeEnum.FullPath"/> is set.</para>
+            /// <para>Will need <see cref="BaseDirectory"/> added as the base directory if <see cref="FilePathModeEnum.BaseDirectory"/> is set.</para>
             /// </summary>
             public string Name { get; set; }
 
@@ -390,9 +390,9 @@ namespace SoulsFormats
                     case FilePathModeEnum.Nameless:
                         Name = ID.ToString();
                         break;
-                    case FilePathModeEnum.NamesNoOffset:
-                    case FilePathModeEnum.Paths:
-                    case FilePathModeEnum.NamesOffset:
+                    case FilePathModeEnum.FileName:
+                    case FilePathModeEnum.FullPath:
+                    case FilePathModeEnum.BaseDirectory:
                         Name = br.GetShiftJIS(nameOffset);
                         break;
                     default:

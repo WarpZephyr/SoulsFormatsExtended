@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SoulsFormats
@@ -505,12 +505,17 @@ namespace SoulsFormats
             bw.WriteByte(0x78);
             bw.WriteByte(formatByte);
 
-            using (var deflateStream = new DeflateStream(bw.Stream, CompressionMode.Compress, true))
+            var deflateStream = new DeflateStream(bw.Stream, CompressionMode.Compress, true);
+            deflateStream.Write(input, 0, input.Length);
+            deflateStream.Dispose();
+
+            uint adler = Adler32(input);
+            if (!bw.BigEndian)
             {
-                deflateStream.Write(input, 0, input.Length);
+                adler = ReverseEndianness(adler);
             }
 
-            bw.WriteUInt32(Adler32(input));
+            bw.WriteUInt32(adler);
             return (int)(bw.Position - start);
         }
 
@@ -521,17 +526,58 @@ namespace SoulsFormats
         {
             br.AssertByte(0x78);
             br.AssertByte(0x01, 0x5E, 0x9C, 0xDA);
-            byte[] compressed = br.ReadBytes(compressedSize - 2);
+            return DecompressZlibBytes(br.ReadBytes(compressedSize - 2));
+        }
 
-            using (var decompressedStream = new MemoryStream())
+        /// <summary>
+        /// Decompresses zlib starting at the current position in a <see cref="Stream"/>.
+        /// </summary>
+        /// <param name="stream">A <see cref="Stream"/>.</param>
+        /// <param name="compressedSize">The size of the compressed data including the 2 byte zlib header.</param>
+        /// <returns>Decompressed zlib data.</returns>
+        /// <exception cref="EndOfStreamException">Cannot read beyond the end of the stream.</exception>
+        /// <exception cref="InvalidDataException">A valid zlib header could not be detected.</exception>
+        /// <exception cref="Exception">Did not read the expected number of compressed bytes from the <see cref="Stream"/>.</exception>
+        public static byte[] DecompressZlib(Stream stream, int compressedSize)
+        {
+            var cmf = stream.ReadByte();
+            var flg = stream.ReadByte();
+
+            if (cmf == -1 || flg == -1)
             {
-                using (var compressedStream = new MemoryStream(compressed))
-                using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress, true))
-                {
-                    deflateStream.CopyTo(decompressedStream);
-                }
-                return decompressedStream.ToArray();
+                throw new EndOfStreamException("Cannot read beyond the end of the stream.");
             }
+
+            if (cmf != 0x78)
+            {
+                throw new InvalidDataException("Zlib header could not be detected.");
+            }
+
+            if (flg != 0x01 && flg != 0x5E && flg != 0x9C && flg != 0xDA)
+            {
+                throw new InvalidDataException("Valid zlib compression level could not be detected.");
+            }
+
+            byte[] bytes = new byte[compressedSize - 2];
+            if (stream.Read(bytes, 0, bytes.Length) < bytes.Length)
+            {
+                throw new Exception("Could not read the expected number of bytes.");
+            }
+            return DecompressZlibBytes(bytes);
+        }
+
+        /// <summary>
+        /// Decompresses zlib bytes coming after a zlib header.
+        /// </summary>
+        /// <param name="compressedBytes">Compressed bytes not including the zlib header.</param>
+        /// <returns>Decompressed data.</returns>
+        public static byte[] DecompressZlibBytes(byte[] compressedBytes)
+        {
+            using var decompressedStream = new MemoryStream();
+            using var compressedStream = new MemoryStream(compressedBytes);
+            using var deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress, true);
+            deflateStream.CopyTo(decompressedStream);
+            return decompressedStream.ToArray();
         }
 
         /// <summary>
@@ -539,16 +585,16 @@ namespace SoulsFormats
         /// </summary>
         public static uint Adler32(byte[] data)
         {
-            uint adlerA = 1;
-            uint adlerB = 0;
+            uint s1 = 1;
+            uint s2 = 0;
 
             foreach (byte b in data)
             {
-                adlerA = (adlerA + b) % 65521;
-                adlerB = (adlerB + adlerA) % 65521;
+                s1 = (s1 + b) % 65521;
+                s2 = (s2 + s1) % 65521;
             }
 
-            return (adlerB << 16) | adlerA;
+            return (s2 << 16) | s1;
         }
 
         /// <summary>
@@ -756,6 +802,77 @@ namespace SoulsFormats
             values[0] = (byte)((byte)(value & 0b1111_0000) >> 4);
             values[1] = (byte)(value & 0b0000_1111);
             return values;
+        }
+
+        internal static int Align(int value, int alignment)
+        {
+            var remainder = value % alignment;
+            if (remainder > 0)
+            {
+                return value + (alignment - remainder);
+            }
+            return value;
+        }
+
+        internal static long Align(long value, long alignment)
+        {
+            var remainder = value % alignment;
+            if (remainder > 0)
+            {
+                return value + (alignment - remainder);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Rotates the specified value left by the specified number of bits.
+        /// Similar in behavior to the x86 instruction ROL.
+        /// </summary>
+        /// <param name="value">The value to rotate.</param>
+        /// <param name="offset">The number of bits to rotate by.
+        /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
+        /// <returns>The rotated value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static uint RotateLeft(uint value, int offset)
+            => (value << offset) | (value >> (32 - offset));
+
+        /// <summary>
+        /// Rotates the specified value right by the specified number of bits.
+        /// Similar in behavior to the x86 instruction ROR.
+        /// </summary>
+        /// <param name="value">The value to rotate.</param>
+        /// <param name="offset">The number of bits to rotate by.
+        /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
+        /// <returns>The rotated value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static uint RotateRight(uint value, int offset)
+            => (value >> offset) | (value << (32 - offset));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static uint ReverseEndianness(uint value)
+        {
+            // This takes advantage of the fact that the JIT can detect
+            // ROL32 / ROR32 patterns and output the correct intrinsic.
+            //
+            // Input: value = [ ww xx yy zz ]
+            //
+            // First line generates : [ ww xx yy zz ]
+            //                      & [ 00 FF 00 FF ]
+            //                      = [ 00 xx 00 zz ]
+            //             ROR32(8) = [ zz 00 xx 00 ]
+            //
+            // Second line generates: [ ww xx yy zz ]
+            //                      & [ FF 00 FF 00 ]
+            //                      = [ ww 00 yy 00 ]
+            //             ROL32(8) = [ 00 yy 00 ww ]
+            //
+            //                (sum) = [ zz yy xx ww ]
+            //
+            // Testing shows that throughput increases if the AND
+            // is performed before the ROL / ROR.
+
+            return RotateRight(value & 0x00FF00FFu, 8) // xx zz
+                + RotateLeft(value & 0xFF00FF00u, 8); // ww yy
         }
     }
 }
