@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace SoulsFormats
@@ -99,8 +100,8 @@ namespace SoulsFormats
             int dataOffset = (entryCount * 4) * (Compressed ? 3 : 2);
             for (int i = 0; i < entryCount; i++)
             {
-                var file = new File(br, i, dataOffset, Compressed);
-                if (file.Bytes.Length > 0)
+                var file = new File(br, i, dataOffset, Compressed, out bool emptyEntry);
+                if (!emptyEntry)
                 {
                     Files.Add(file);
                 }
@@ -199,8 +200,10 @@ namespace SoulsFormats
             var usedIDs = new List<int>(_entryCount);
 
             int previousIndex = 0;
-            foreach (var file in sortedFiles)
+            int count = sortedFiles.Count;
+            for (int i = 0; i < count; i++)
             {
+                var file = sortedFiles[i];
                 if (usedIDs.Contains(file.ID))
                 {
                     throw new InvalidOperationException($"ID already taken: {file.ID}");
@@ -220,28 +223,39 @@ namespace SoulsFormats
                 {
                     bw.WriteInt32(0);
                     bw.WriteInt32(0);
-                    bw.WriteInt32(0);
+                    if (Compressed)
+                    {
+                        bw.WriteInt32(0);
+                    }
+
                     previousIndex++;
                 }
 
-                file.Write(bw, Compressed);
+                file.Write(bw, Compressed, i);
                 usedIDs.Add(file.ID);
+                previousIndex++;
             }
 
             while (_entryCount > previousIndex)
             {
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
-                bw.WriteInt32(0);
+                if (Compressed)
+                {
+                    bw.WriteInt32(0);
+                }
+
                 previousIndex++;
             }
 
-            foreach (var file in sortedFiles)
+            for (int i = 0; i < count; i++)
             {
-                bw.FillInt32("SectorOffset", (int)((bw.Position - entriesSize) / SECTOR_SIZE));
+                var file = sortedFiles[i];
+                bw.FillInt32($"SectorOffset_{i}", (int)((bw.Position - entriesSize) / SECTOR_SIZE));
                 if (Compressed)
                 {
-                    bw.FillInt32("SectorLength", SFUtil.WriteZlib(bw, 0x9C, file.Bytes));
+                    int bytesWritten = SFUtil.WriteZlib(bw, 0x9C, file.Bytes);
+                    bw.FillInt32($"SectorLength_{i}", SFUtil.Align(bytesWritten, SECTOR_SIZE) / SECTOR_SIZE);
                 }
                 else
                 {
@@ -317,14 +331,25 @@ namespace SoulsFormats
             /// <param name="index">The index of the file.</param>
             /// <param name="dataOffset">The offset data begins at.</param>
             /// <param name="compressed">Whether or not the data is compressed.</param>
-            internal File(BinaryReaderEx br, int index, int dataOffset, bool compressed)
+            /// <param name="emptyEntry">Whether or not the entry was entirely empty.</param>
+            internal File(BinaryReaderEx br, int index, int dataOffset, bool compressed, out bool emptyEntry)
             {
                 ID = index;
                 int sectorOffset = br.ReadInt32();
+
                 if (compressed)
                 {
                     br.ReadInt32(); // Decompressed Sector Length
                     int sectorLength = br.ReadInt32();
+
+                    if (sectorOffset == 0 && sectorLength == 0)
+                    {
+                        emptyEntry = true;
+                    }
+                    else
+                    {
+                        emptyEntry = false;
+                    }
 
                     if (sectorLength > 0)
                     {
@@ -340,6 +365,16 @@ namespace SoulsFormats
                 else
                 {
                     int sectorLength = br.ReadInt32();
+
+                    if (sectorOffset == 0 && sectorLength == 0)
+                    {
+                        emptyEntry = true;
+                    }
+                    else
+                    {
+                        emptyEntry = false;
+                    }
+
                     if (sectorLength > 0)
                     {
                         br.StepIn(dataOffset + (sectorOffset * SECTOR_SIZE));
@@ -358,13 +393,14 @@ namespace SoulsFormats
             /// </summary>
             /// <param name="bw">A <see cref="BinaryWriterEx"/> for writing.</param>
             /// <param name="compressed">Whether or not data is to be compressed.</param>
-            internal void Write(BinaryWriterEx bw, bool compressed)
+            /// <param name="index">The current index of the file so entry fields can be reserved.</param>
+            internal void Write(BinaryWriterEx bw, bool compressed, int index)
             {
-                bw.ReserveInt32("SectorOffset");
-                bw.WriteInt32(SFUtil.Align(Bytes.Length, ALIGNMENT_SIZE) / SECTOR_SIZE);
+                bw.ReserveInt32($"SectorOffset_{index}");
+                bw.WriteInt32(SFUtil.Align(Bytes.Length, SECTOR_SIZE) / SECTOR_SIZE);
                 if (compressed)
                 {
-                    bw.ReserveInt32("SectorLength");
+                    bw.ReserveInt32($"SectorLength_{index}");
                 }
             }
         }
