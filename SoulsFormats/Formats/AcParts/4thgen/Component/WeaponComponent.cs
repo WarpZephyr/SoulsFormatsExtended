@@ -12,34 +12,40 @@
                 /// <summary>
                 /// The firing mode of the weapon determining how it behaves when it is fired.
                 /// </summary>
+                // Originally called "prog" for "program" I believe
                 public enum FiringMode : byte
                 {
                     /// <summary>
                     /// The weapon can be fired by holding the trigger without needing to let go.
                     /// </summary>
+                    // Originally called "GUN" for "gun"
                     Automatic = 0,
 
                     /// <summary>
                     /// The weapon requires the trigger to be pressed each time it is fired.
                     /// </summary>
+                    // Originally called "MIS" for "missile"
                     Single = 1,
 
                     /// <summary>
-                    /// The weapon fires like Automatic does,
-                    /// but goes into brace mode after pressing the firing button while standing still on ground.
-                    /// The weapon also fires faster in brace mode and allows for wider attack angles.
+                    /// The weapon can be fired by holding the trigger without needing to let go.<br/>
+                    /// The weapon goes into the ready position after pressing the firing button while standing still on ground.<br/>
+                    /// The ready position lets the weapon fire faster and allows for wider attack angles.
                     /// </summary>
+                    // Originally called "CAN" for "cannon"
                     Cannon = 2,
 
                     /// <summary>
-                    /// The weapon is melee and lunges towards its enemies.
+                    /// The weapon is melee and lunges towards targets.
                     /// </summary>
-                    LaserBlade = 4,
+                    // Originally called "BLD" for "blade"
+                    Blade = 4,
 
                     /// <summary>
                     /// The weapon is melee and does not lunge.
                     /// </summary>
-                    ParryBlade = 5,
+                    // Originally called "PILE" for "pilebunker"
+                    Pile = 5
                 }
 
                 /// <summary>
