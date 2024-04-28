@@ -95,15 +95,19 @@ namespace SoulsFormats
             for (int i = 0; i < Textures.Count; i++)
                 Textures[i].WriteName(bw, i, Encoding);
 
+            // Padding for ACVD
+
+            // Do not include header padding in data size
+            bw.Pad(128);
+
             long dataStart = bw.Position;
             for (int i = 0; i < Textures.Count; i++)
             {
-                // Padding for texture data varies wildly across games,
-                // so don't worry about this too much
-                if (Textures[i].Bytes.Length > 0)
-                    bw.Pad(4);
-
                 Textures[i].WriteData(bw, i);
+
+                // Pad after each texture
+                if (Textures[i].Bytes.Length > 0)
+                    bw.Pad(128);
             }
             bw.FillInt32("DataSize", (int)(bw.Position - dataStart));
         }
@@ -295,8 +299,7 @@ namespace SoulsFormats
                 if (platform == TPFPlatform.PS4 || platform == TPFPlatform.Xbone)
                     bw.WriteInt32(Header.DXGIFormat);
 
-                if (FloatStruct != null)
-                    FloatStruct.Write(bw);
+                FloatStruct?.Write(bw);
             }
 
             internal void WriteName(BinaryWriterEx bw, int index, byte encoding)
