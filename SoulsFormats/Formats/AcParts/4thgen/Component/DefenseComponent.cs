@@ -2,42 +2,39 @@
 {
     public partial class AcParts4
     {
-        public partial class Component
+        /// <summary>
+        /// A Component which contains Defense stats.
+        /// </summary>
+        public class DefenseComponent
         {
             /// <summary>
-            /// A Component which contains Defense stats.
+            /// Ability to withstand damage from projectiles and shells.
             /// </summary>
-            public class DefenseComponent
+            public ushort BallisticDefense { get; set; }
+
+            /// <summary>
+            /// Ability to withstand damage from energy weapons.
+            /// </summary>
+            public ushort EnergyDefense { get; set; }
+
+            /// <summary>
+            /// Reads a Defense component from a stream.
+            /// </summary>
+            /// <param name="br">A binary reader.</param>
+            internal DefenseComponent(BinaryReaderEx br)
             {
-                /// <summary>
-                /// Ability to withstand damage from projectiles and shells.
-                /// </summary>
-                public ushort BallisticDefense { get; set; }
+                BallisticDefense = br.ReadUInt16();
+                EnergyDefense = br.ReadUInt16();
+            }
 
-                /// <summary>
-                /// Ability to withstand damage from energy weapons.
-                /// </summary>
-                public ushort EnergyDefense { get; set; }
-
-                /// <summary>
-                /// Reads a Defense component from a stream.
-                /// </summary>
-                /// <param name="br">A binary reader.</param>
-                internal DefenseComponent(BinaryReaderEx br)
-                {
-                    BallisticDefense = br.ReadUInt16();
-                    EnergyDefense = br.ReadUInt16();
-                }
-
-                /// <summary>
-                /// Writes a Defense component to a stream.
-                /// </summary>
-                /// <param name="bw">A binary writer.</param>
-                public void Write(BinaryWriterEx bw)
-                {
-                    bw.WriteUInt16(BallisticDefense);
-                    bw.WriteUInt16(EnergyDefense);
-                }
+            /// <summary>
+            /// Writes a Defense component to a stream.
+            /// </summary>
+            /// <param name="bw">A binary writer.</param>
+            public void Write(BinaryWriterEx bw)
+            {
+                bw.WriteUInt16(BallisticDefense);
+                bw.WriteUInt16(EnergyDefense);
             }
         }
     }

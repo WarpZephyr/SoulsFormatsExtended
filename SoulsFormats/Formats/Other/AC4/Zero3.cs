@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 namespace SoulsFormats.AC4
 {
@@ -19,11 +19,9 @@ namespace SoulsFormats.AC4
         /// </summary>
         public static bool Is(string path)
         {
-            using (FileStream fs = System.IO.File.OpenRead(path))
-            {
-                var br = new BinaryReaderEx(true, fs);
-                return Is(br);
-            }
+            using FileStream fs = System.IO.File.OpenRead(path);
+            using var br = new BinaryReaderEx(true, fs);
+            return Is(br);
         }
 
         /// <summary>
@@ -31,7 +29,7 @@ namespace SoulsFormats.AC4
         /// </summary>
         public static bool Is(byte[] bytes)
         {
-            var br = new BinaryReaderEx(true, bytes);
+            using var br = new BinaryReaderEx(true, bytes);
             return Is(br);
         }
 
@@ -40,17 +38,33 @@ namespace SoulsFormats.AC4
         /// </summary>
         public static bool Is(BinaryReaderEx br)
         {
-            if (BND3.IsRead(br.GetBytes(0, (int)br.Length), out BND3 bnd3))
+            if (br.Length > 0x800000)
             {
+                return false;
+            }
+
+            long pos = br.Position;
+            if (BND3.IsRead(br, out BND3 bnd3))
+            {
+                br.Position = pos;
                 foreach (var file in bnd3.Files)
                 {
                     if (file.Name.EndsWith(".000"))
                     {
-                        return Is(file.Bytes);
+                        using var zbr = new BinaryReaderEx(br.BigEndian, file.Bytes);
+                        return IsRawZero3(zbr);
                     }
                 }
             }
 
+            return IsRawZero3(br);
+        }
+
+        /// <summary>
+        /// Checks whether or not the provided data is a Zero3 directly.
+        /// </summary>
+        private static bool IsRawZero3(BinaryReaderEx br)
+        {
             if (br.Length < 0x50 || br.GetInt32(4) != 0x10 || br.GetInt32(8) != 0x10 || br.GetInt32(0xC) != 0x800000)
                 return false;
 

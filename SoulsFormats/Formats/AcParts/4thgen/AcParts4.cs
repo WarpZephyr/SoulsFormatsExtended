@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using static SoulsFormats.AcParts4.Part;
 
 namespace SoulsFormats
 {
@@ -205,13 +204,11 @@ namespace SoulsFormats
         /// </summary>
         public static AcParts4 Read(string path, AcParts4Version version)
         {
-            using (FileStream stream = File.OpenRead(path))
-            {
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
-                AcParts4 acparts = new AcParts4();
-                acparts.Read(br, version);
-                return acparts;
-            }
+            using FileStream stream = File.OpenRead(path);
+            BinaryReaderEx br = new BinaryReaderEx(false, stream);
+            AcParts4 acparts = new AcParts4();
+            acparts.Read(br, version);
+            return acparts;
         }
 
         /// <summary>

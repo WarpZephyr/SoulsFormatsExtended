@@ -2,49 +2,46 @@
 {
     public partial class AcParts4
     {
-        public partial class Component
+        /// <summary>
+        /// A Component which contains Stabilizer stats.
+        /// </summary>
+        public class StabilizerComponent
         {
             /// <summary>
-            /// A Component which contains Stabilizer stats.
+            /// The stabilizer category of this stabilizer, should be the same as part category in stabilizer part component.
             /// </summary>
-            public class StabilizerComponent
+            public byte Category { get; set; }
+
+            /// <summary>
+            /// Corrects the AC's center of gravity.
+            /// The larger the value, the more the center of gravity will be corrected.
+            /// </summary>
+            public float ControlCalibration { get; set; }
+
+            /// <summary>
+            /// Reads a Stabilizer component from a stream.
+            /// </summary>
+            /// <param name="br">A binary reader.</param>
+            internal StabilizerComponent(BinaryReaderEx br)
             {
-                /// <summary>
-                /// The stabilizer category of this stabilizer, should be the same as part category in stabilizer part component.
-                /// </summary>
-                public byte Category { get; set; }
+                Category = br.ReadByte();
+                br.AssertByte(0);
+                br.AssertByte(0);
+                br.AssertByte(0);
+                ControlCalibration = br.ReadSingle();
+            }
 
-                /// <summary>
-                /// Corrects the AC's center of gravity.
-                /// The larger the value, the more the center of gravity will be corrected.
-                /// </summary>
-                public float ControlCalibration { get; set; }
-
-                /// <summary>
-                /// Reads a Stabilizer component from a stream.
-                /// </summary>
-                /// <param name="br">A binary reader.</param>
-                internal StabilizerComponent(BinaryReaderEx br)
-                {
-                    Category = br.ReadByte();
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    ControlCalibration = br.ReadSingle();
-                }
-
-                /// <summary>
-                /// Writes a Stabilizer component to a stream.
-                /// </summary>
-                /// <param name="bw">A binary writer.</param>
-                public void Write(BinaryWriterEx bw)
-                {
-                    bw.WriteByte(Category);
-                    bw.WriteByte(0);
-                    bw.WriteByte(0);
-                    bw.WriteByte(0);
-                    bw.WriteSingle(ControlCalibration);
-                }
+            /// <summary>
+            /// Writes a Stabilizer component to a stream.
+            /// </summary>
+            /// <param name="bw">A binary writer.</param>
+            public void Write(BinaryWriterEx bw)
+            {
+                bw.WriteByte(Category);
+                bw.WriteByte(0);
+                bw.WriteByte(0);
+                bw.WriteByte(0);
+                bw.WriteSingle(ControlCalibration);
             }
         }
     }

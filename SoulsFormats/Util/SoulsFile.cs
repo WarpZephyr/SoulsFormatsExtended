@@ -161,19 +161,34 @@ namespace SoulsFormats
         /// <summary>
         /// Returns whether or not the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so, automatically decompressing it if necessary.
         /// </summary>
-        private static bool IsRead(BinaryReaderEx br, out TFormat file)
+        private static bool IsReadInternal(BinaryReaderEx br, out TFormat file)
         {
             var dummy = new TFormat();
-            using (br = SFUtil.GetDecompressedBinaryReader(br, out DCX.Type compression))
+            
+            if (DCX.Is(br))
             {
-                if (dummy.Is(br))
+                byte[] bytes = DCX.Decompress(br, out DCX.Type compression);
+                using var dbr = new BinaryReaderEx(false, bytes);
+                if (dummy.Is(dbr))
                 {
-                    br.Position = 0;
+                    dbr.Position = 0;
                     dummy.Compression = compression;
-                    dummy.Read(br);
+                    dummy.Read(dbr);
                     file = dummy;
                     return true;
                 }
+
+                file = null;
+                return false;
+            }
+
+            if (dummy.Is(br))
+            {
+                br.Position = 0;
+                dummy.Compression = DCX.Type.None;
+                dummy.Read(br);
+                file = dummy;
+                return true;
             }
 
             file = null;
@@ -181,12 +196,19 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Returns whether the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so.
+        /// </summary>
+        // A more direct check without re-reading everything.
+        public static bool IsRead(BinaryReaderEx br, out TFormat file)
+            => IsReadInternal(br, out file);
+
+        /// <summary>
         /// Returns whether the stream appears to be a file of this type and reads it if so.
         /// </summary>
         public static bool IsRead(Stream stream, out TFormat file)
         {
             using BinaryReaderEx br = new BinaryReaderEx(false, stream);
-            return IsRead(br, out file);
+            return IsReadInternal(br, out file);
         }
 
         /// <summary>
@@ -195,7 +217,7 @@ namespace SoulsFormats
         public static bool IsRead(byte[] bytes, out TFormat file)
         {
             using BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            return IsRead(br, out file);
+            return IsReadInternal(br, out file);
         }
 
         /// <summary>
@@ -204,7 +226,7 @@ namespace SoulsFormats
         public static bool IsRead(string path, out TFormat file)
         {
             using BinaryReaderEx br = new BinaryReaderEx(false, path);
-            return IsRead(br, out file);
+            return IsReadInternal(br, out file);
         }
 
         /// <summary>

@@ -2,42 +2,39 @@
 {
     public partial class AcParts4
     {
-        public partial class Component
+        /// <summary>
+        /// A Component which contains Primal Armor stats.
+        /// </summary>
+        public class PAComponent
         {
             /// <summary>
-            /// A Component which contains Primal Armor stats.
+            /// The Primal Armor Rectification added for equipping this part.
             /// </summary>
-            public class PAComponent
+            public ushort PARectification { get; set; }
+
+            /// <summary>
+            /// The Primal Armor Durability added for equipping this part.
+            /// </summary>
+            public ushort PADurability { get; set; }
+
+            /// <summary>
+            /// Reads a PA component from a stream.
+            /// </summary>
+            /// <param name="br">A binary reader.</param>
+            internal PAComponent(BinaryReaderEx br)
             {
-                /// <summary>
-                /// The Primal Armor Rectification added for equipping this part.
-                /// </summary>
-                public ushort PARectification { get; set; }
+                PARectification = br.ReadUInt16();
+                PADurability = br.ReadUInt16();
+            }
 
-                /// <summary>
-                /// The Primal Armor Durability added for equipping this part.
-                /// </summary>
-                public ushort PADurability { get; set; }
-
-                /// <summary>
-                /// Reads a PA component from a stream.
-                /// </summary>
-                /// <param name="br">A binary reader.</param>
-                internal PAComponent(BinaryReaderEx br)
-                {
-                    PARectification = br.ReadUInt16();
-                    PADurability = br.ReadUInt16();
-                }
-
-                /// <summary>
-                /// Writes a PA component to a stream.
-                /// </summary>
-                /// <param name="bw">A binary writer.</param>
-                public void Write(BinaryWriterEx bw)
-                {
-                    bw.WriteUInt16(PARectification);
-                    bw.WriteUInt16(PADurability);
-                }
+            /// <summary>
+            /// Writes a PA component to a stream.
+            /// </summary>
+            /// <param name="bw">A binary writer.</param>
+            public void Write(BinaryWriterEx bw)
+            {
+                bw.WriteUInt16(PARectification);
+                bw.WriteUInt16(PADurability);
             }
         }
     }

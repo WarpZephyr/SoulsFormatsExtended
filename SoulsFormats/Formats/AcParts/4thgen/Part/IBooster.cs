@@ -1,20 +1,16 @@
-﻿using static SoulsFormats.AcParts4.Component;
-
-namespace SoulsFormats
+﻿namespace SoulsFormats
 {
-    /// <summary>
-    /// An interface for booster parts in ACPARTS.
-    /// </summary>
-    public interface IBooster
+    public partial class AcParts4
     {
         /// <summary>
-        /// A Component which contains common stats across all parts.
+        /// An interface for booster parts in ACPARTS.
         /// </summary>
-        PartComponent PartComponent { get; set; }
-
-        /// <summary>
-        /// Horizontal Booster stats.
-        /// </summary>
-        BoosterComponent HorizontalBoost { get; set; }
+        public interface IBooster : IPart
+        {
+            /// <summary>
+            /// Horizontal Booster stats.
+            /// </summary>
+            BoosterComponent HorizontalBoost { get; set; }
+        }
     }
 }

@@ -1,20 +1,16 @@
-﻿using static SoulsFormats.AcParts4.Component;
-
-namespace SoulsFormats
+﻿namespace SoulsFormats
 {
-    /// <summary>
-    /// An interface for stabilizer parts in acparts.
-    /// </summary>
-    public interface IStabilizer
+    public partial class AcParts4
     {
         /// <summary>
-        /// A Component which contains common stats across all parts.
+        /// An interface for stabilizer parts in acparts.
         /// </summary>
-        PartComponent PartComponent { get; set; }
-
-        /// <summary>
-        /// A Component which contains Stabilizer stats.
-        /// </summary>
-        StabilizerComponent StabilizerComponent { get; set; }
+        public interface IStabilizer : IPart
+        {
+            /// <summary>
+            /// A Component which contains Stabilizer stats.
+            /// </summary>
+            StabilizerComponent StabilizerComponent { get; set; }
+        }
     }
 }

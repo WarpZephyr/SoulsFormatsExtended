@@ -9,7 +9,7 @@ namespace SoulsFormats
     /// <para>Appears in Metal Wolf Chaos and the following Armored Core Games: Formula Front PSP, Nine Breaker, Last Raven.</para>
     /// <para>Build settings for a file of this format were found in Armored Core Formula Front PSP which mentioned an app named Binder2.</para>
     /// </summary>
-    public class BND2 : SoulsFile<BND2>
+    public class BND2 : SoulsFile<BND2>, IBND2
     {
         /// <summary>
         /// An enum for the different supported file path modes.
@@ -36,6 +36,122 @@ namespace SoulsFormats
             /// </summary>
             BaseDirectory = 3
         }
+
+        /// <summary>
+        /// Header Info flags describing what features are enabled.<br/>
+        /// Makes dubious assumptions on what the flags are.
+        /// </summary>
+        [Flags]
+        public enum HeaderInfoFlagsEnum : byte
+        {
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            HeaderItem = 0b00000001,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Endian = 0b00000010,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            FileVersion = 0b00000100,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            FileSize = 0b00001000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            FileNum = 0b00010000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            BaseDirOffset = 0b00100000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            AlignmentSize = 0b01000000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Option = 0b10000000
+        }
+
+        /// <summary>
+        /// File Info flags describing what features are enabled.<br/>
+        /// Makes dubious assumptions on what the flags are.
+        /// </summary>
+        [Flags]
+        public enum FileInfoFlagsEnum : byte
+        {
+            /// <summary>
+            /// Unknown, likely whether or not ID is included.
+            /// </summary>
+            ID = 0b00000001,
+
+            /// <summary>
+            /// Unknown, likely whether or not Offset is included.
+            /// </summary>
+            Offset = 0b00000010,
+
+            /// <summary>
+            /// Unknown, likely whether or not Size is included.
+            /// </summary>
+            Size = 0b00000100,
+
+            /// <summary>
+            /// Whether or not NameOffset is included.
+            /// </summary>
+            NameOffset = 0b00001000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Flag5 = 0b00010000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Flag6 = 0b00100000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Flag7 = 0b01000000,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
+            Flag8 = 0b10000000
+        }
+
+        /// <summary>
+        /// Header info flags?
+        /// </summary>
+        public HeaderInfoFlagsEnum HeaderInfoFlags { get; set; }
+
+        /// <summary>
+        /// File info flags.
+        /// </summary>
+        public FileInfoFlagsEnum FileInfoFlags { get; set; }
+
+        /// <summary>
+        /// Unknown.
+        /// </summary>
+        public byte Unk06 { get; set; }
+
+        /// <summary>
+        /// Endian?
+        /// </summary>
+        public byte Unk07 { get; set; }
 
         /// <summary>
         /// The version of this <see cref="BND2"/>.
@@ -76,6 +192,10 @@ namespace SoulsFormats
         /// </summary>
         public BND2()
         {
+            HeaderInfoFlags = (HeaderInfoFlagsEnum)0xFF;
+            FileInfoFlags = (FileInfoFlagsEnum)0xFF;
+            Unk06 = 0x00;
+            Unk07 = 0x00;
             FileVersion = 211;
             AlignmentSize = 2048;
             FilePathMode = FilePathModeEnum.FileName;
@@ -132,7 +252,7 @@ namespace SoulsFormats
                 return false;
 
             string magic = br.ReadASCII(4);
-            uint unk04 = br.ReadUInt32();
+            br.Position += 4; // Flags1, Flags2, Unk06, Unk07
             int fileVersion = br.ReadInt32();
             br.Position += 8; // File Size, File Num
             int baseDirOffset = br.ReadInt32();
@@ -159,11 +279,10 @@ namespace SoulsFormats
             }
 
             bool validMagic = magic == "BND\0";
-            bool expectedUnk04 = unk04 == 0xFFFF;
             bool expectedFileVersion = fileVersion >= 202 && fileVersion <= 211;
             bool expectedUnk1B = unk1B == 0 || unk1B == 1;
             bool expectedUnk1C = unk1C == 0;
-            return validMagic && expectedUnk04 && expectedFileVersion && validNamesOffset && expectedUnk1B && expectedUnk1C;
+            return validMagic && expectedFileVersion && validNamesOffset && expectedUnk1B && expectedUnk1C;
         }
 
         /// <summary>
@@ -171,33 +290,52 @@ namespace SoulsFormats
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
+            List<BND2FileHeader> fileHeaders = ReadHeader(this, br);
+            Files = new List<File>(fileHeaders.Count);
+            foreach (BND2FileHeader fileHeader in fileHeaders)
+                Files.Add(fileHeader.ReadFileData(br));
+        }
+
+        internal static List<BND2FileHeader> ReadHeader(IBND2 bnd, BinaryReaderEx br)
+        {
             br.BigEndian = false;
 
             br.AssertASCII("BND\0");
-            br.AssertUInt32(0xFFFF);
-            FileVersion = br.ReadInt32(); // Versions between 202 and 211 not seen.
+            bnd.HeaderInfoFlags = (HeaderInfoFlagsEnum)br.ReadByte();
+            bnd.FileInfoFlags = (FileInfoFlagsEnum)br.ReadByte();
+            bnd.Unk06 = br.ReadByte();
+            bnd.Unk07 = br.ReadByte();
+            bnd.FileVersion = br.ReadInt32(); // Versions between 202 and 211 not seen.
             br.Position += 4; // File Size
             int fileCount = br.ReadInt32();
             int baseDirOffset = br.ReadInt32();
-            AlignmentSize = br.ReadUInt16();
-            FilePathMode = br.ReadEnum8<FilePathModeEnum>();
-            Unk1B = br.AssertByte(0,1);
+            bnd.AlignmentSize = br.ReadUInt16();
+            bnd.FilePathMode = br.ReadEnum8<FilePathModeEnum>();
+            bnd.Unk1B = br.AssertByte(0, 1);
             br.AssertUInt32(0);
 
-            if (FilePathMode == FilePathModeEnum.BaseDirectory)
+            // Odd
+            if ((bnd.FileInfoFlags & FileInfoFlagsEnum.NameOffset) == 0)
             {
-                BaseDirectory = br.GetShiftJIS(baseDirOffset);
+                br.AssertUInt32(0);
+            }
+
+            if (bnd.FilePathMode == FilePathModeEnum.BaseDirectory && (bnd.FileInfoFlags & FileInfoFlagsEnum.NameOffset) != 0)
+            {
+                bnd.BaseDirectory = br.GetShiftJIS(baseDirOffset);
             }
             else
             {
-                BaseDirectory = string.Empty;
+                bnd.BaseDirectory = string.Empty;
             }
 
-            Files = new List<File>(fileCount);
+            var fileHeaders = new List<BND2FileHeader>(fileCount);
             for (int i = 0; i < fileCount; i++)
             {
-                Files.Add(new File(br, FilePathMode));
+                fileHeaders.Add(BND2FileHeader.ReadBinder2FileHeader(br, bnd.FilePathMode, bnd.FileInfoFlags));
             }
+
+            return fileHeaders;
         }
 
         /// <summary>
@@ -205,76 +343,89 @@ namespace SoulsFormats
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
+            var fileHeaders = new List<BND2FileHeader>(Files.Count);
+            foreach (File file in Files)
+                fileHeaders.Add(new BND2FileHeader(file));
+
+            WriteHeader(this, bw, fileHeaders);
+            for (int i = 0; i < Files.Count; i++)
+                fileHeaders[i].WriteBinder2FileData(bw, bw, i, Files[i].Bytes);
+
+            bw.FillInt32("fileSize", (int)bw.Position);
+        }
+
+        internal static void WriteHeader(IBND2 bnd, BinaryWriterEx bw, List<BND2FileHeader> fileHeaders)
+        {
             bw.BigEndian = false;
 
             bw.WriteASCII("BND\0");
-            bw.WriteUInt32(0xFFFF);
-            bw.WriteInt32(FileVersion);
+            bw.WriteByte((byte)bnd.HeaderInfoFlags);
+            bw.WriteByte((byte)bnd.FileInfoFlags);
+            bw.WriteByte(bnd.Unk06);
+            bw.WriteByte(bnd.Unk07);
+            bw.WriteInt32(bnd.FileVersion);
             bw.ReserveInt32("fileSize");
-            bw.WriteInt32(Files.Count);
+            bw.WriteInt32(fileHeaders.Count);
             bw.ReserveInt32("baseDirOffset");
-            bw.WriteUInt16(AlignmentSize);
-            bw.WriteByte((byte)FilePathMode);
-            bw.WriteByte(Unk1B);
+            bw.WriteUInt16(bnd.AlignmentSize);
+            bw.WriteByte((byte)bnd.FilePathMode);
+            bw.WriteByte(bnd.Unk1B);
             bw.WriteUInt32(0);
 
-            for (int i = 0; i < Files.Count; i++)
+            // Odd
+            if ((bnd.FileInfoFlags & FileInfoFlagsEnum.NameOffset) == 0)
             {
-                Files[i].Write(bw, FilePathMode, i);
+                bw.WriteUInt32(0);
             }
 
-            switch (FilePathMode)
+            for (int i = 0; i < fileHeaders.Count; i++)
             {
-                case FilePathModeEnum.Nameless:
-                    bw.FillInt32("baseDirOffset", 0);
-                    break;
-                case FilePathModeEnum.FileName:
-                    bw.FillInt32("baseDirOffset", 0);
-                    for (int i = 0; i < Files.Count; i++)
-                    {
-                        bw.FillInt32($"nameOffset_{i}", (int)bw.Position);
-                        bw.WriteShiftJIS(Files[i].Name, true);
-                    }
-                    break;
-                case FilePathModeEnum.FullPath:
-                    bw.FillInt32("baseDirOffset", 0);
-                    for (int i = 0; i < Files.Count; i++)
-                    {
-                        bw.FillInt32($"nameOffset_{i}", (int)bw.Position);
+                fileHeaders[i].WriteBinder2FileHeader(bw, bnd.FilePathMode, bnd.FileInfoFlags, i);
+            }
 
-                        string name = Files[i].Name;
+            if ((bnd.FileInfoFlags & FileInfoFlagsEnum.NameOffset) != 0)
+            {
+                WriteFileNames(bw, bnd.BaseDirectory, bnd.FilePathMode, fileHeaders);
+            }
+            else
+            {
+                bw.FillInt32("baseDirOffset", 0);
+            }
+        }
+
+        private static void WriteFileNames(BinaryWriterEx bw, string baseDirectory, FilePathModeEnum filePathMode, List<BND2FileHeader> fileHeaders)
+        {
+            if (filePathMode == FilePathModeEnum.BaseDirectory)
+            {
+                bw.FillInt32("baseDirOffset", (int)bw.Position);
+                bw.WriteShiftJIS(baseDirectory, true);
+            }
+            else
+            {
+                bw.FillInt32("baseDirOffset", 0);
+            }
+
+            if (filePathMode != FilePathModeEnum.Nameless)
+            {
+                for (int i = 0; i < fileHeaders.Count; i++)
+                {
+                    bw.FillInt32($"nameOffset_{i}", (int)bw.Position);
+                    string name = fileHeaders[i].Name;
+                    if (filePathMode == FilePathModeEnum.FullPath)
+                    {
                         if (!Path.IsPathRooted(name))
                         {
                             name = Path.Combine("K:\\", name);
                         }
-                        bw.WriteShiftJIS(name, true);
                     }
-                    break;
-                case FilePathModeEnum.BaseDirectory:
-                    bw.FillInt32("baseDirOffset", (int)bw.Position);
-                    bw.WriteShiftJIS(BaseDirectory, true);
-                    for (int i = 0; i < Files.Count; i++)
-                    {
-                        bw.FillInt32($"nameOffset_{i}", (int)bw.Position);
-                        bw.WriteShiftJIS(Files[i].Name, true);
-                    }
-                    break;
-                default:
-                    throw new NotSupportedException($"{nameof(FilePathMode)} {FilePathMode} is not supported.");
-            }
 
-            for (int i = 0; i < Files.Count; i++)
-            {
-                bw.Pad(AlignmentSize);
-                bw.FillInt32($"fileOffset_{i}", (int)bw.Position);
-                bw.WriteBytes(Files[i].Bytes);
+                    bw.WriteShiftJIS(name, true);
+                }
             }
-
-            bw.FillInt32($"fileSize", (int)bw.Length);
         }
 
         /// <summary>
-        /// A <see cref="File"/> in a <see cref="BND2"/>.
+        /// A file in a <see cref="BND2"/>.
         /// </summary>
         public class File
         {
@@ -378,25 +529,33 @@ namespace SoulsFormats
             /// <summary>
             /// Reads a <see cref="File"/> from a stream.
             /// </summary>
-            internal File(BinaryReaderEx br, FilePathModeEnum filePathMode)
+            internal File(BinaryReaderEx br, FilePathModeEnum filePathMode, FileInfoFlagsEnum fileInfoFlags)
             {
                 ID = br.ReadInt32();
                 int offset = br.ReadInt32();
                 int size = br.ReadInt32();
-                int nameOffset = br.ReadInt32();
 
-                switch (filePathMode)
+                if ((fileInfoFlags & FileInfoFlagsEnum.NameOffset) != 0)
                 {
-                    case FilePathModeEnum.Nameless:
-                        Name = ID.ToString();
-                        break;
-                    case FilePathModeEnum.FileName:
-                    case FilePathModeEnum.FullPath:
-                    case FilePathModeEnum.BaseDirectory:
-                        Name = br.GetShiftJIS(nameOffset);
-                        break;
-                    default:
-                        throw new NotSupportedException($"{nameof(filePathMode)} {filePathMode} is not supported.");
+                    int nameOffset = br.ReadInt32();
+
+                    switch (filePathMode)
+                    {
+                        case FilePathModeEnum.Nameless:
+                            Name = ID.ToString();
+                            break;
+                        case FilePathModeEnum.FileName:
+                        case FilePathModeEnum.FullPath:
+                        case FilePathModeEnum.BaseDirectory:
+                            Name = br.GetShiftJIS(nameOffset);
+                            break;
+                        default:
+                            throw new NotSupportedException($"{nameof(filePathMode)} {filePathMode} is not supported.");
+                    }
+                }
+                else
+                {
+                    Name = string.Empty;
                 }
 
                 Bytes = br.GetBytes(offset, size);
@@ -405,19 +564,22 @@ namespace SoulsFormats
             /// <summary>
             /// Writes this <see cref="File"/> entry to a stream.
             /// </summary>
-            internal void Write(BinaryWriterEx bw, FilePathModeEnum filePathMode, int index)
+            internal void Write(BinaryWriterEx bw, FilePathModeEnum filePathMode, FileInfoFlagsEnum fileInfoFlags, int index)
             {
                 bw.WriteInt32(ID);
                 bw.ReserveInt32($"fileOffset_{index}");
                 bw.WriteInt32(Bytes.Length);
 
-                if (filePathMode == FilePathModeEnum.Nameless)
+                if ((fileInfoFlags & FileInfoFlagsEnum.NameOffset) != 0)
                 {
-                    bw.WriteInt32(0);
-                }
-                else
-                {
-                    bw.ReserveInt32($"nameOffset_{index}");
+                    if (filePathMode == FilePathModeEnum.Nameless)
+                    {
+                        bw.WriteInt32(0);
+                    }
+                    else
+                    {
+                        bw.ReserveInt32($"nameOffset_{index}");
+                    }
                 }
             }
         }

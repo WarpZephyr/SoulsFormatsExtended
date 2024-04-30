@@ -1,15 +1,16 @@
-﻿using static SoulsFormats.AcParts4.Component;
-
-namespace SoulsFormats
+﻿namespace SoulsFormats
 {
-    /// <summary>
-    /// An interface for parts in acparts.
-    /// </summary>
-    public interface IPart
+    public partial class AcParts4
     {
         /// <summary>
-        /// A Component which contains common stats across all parts.
+        /// An interface for parts in acparts.
         /// </summary>
-        PartComponent PartComponent { get; set; }
+        public interface IPart
+        {
+            /// <summary>
+            /// A Component which contains common stats across all parts.
+            /// </summary>
+            PartComponent PartComponent { get; set; }
+        }
     }
 }
