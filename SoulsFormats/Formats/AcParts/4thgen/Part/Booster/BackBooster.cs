@@ -20,7 +20,7 @@
             /// <summary>
             /// Quick Booster Stats.
             /// </summary>
-            public BoosterComponent QuickBooster { get; set; }
+            public BoosterComponent QuickBoost { get; set; }
 
             /// <summary>
             /// ACFA only. After using quick boost, indicates the amount of time before it becomes available again.
@@ -46,7 +46,7 @@
             {
                 PartComponent = new PartComponent(br, version);
                 HorizontalBoost = new BoosterComponent(br);
-                QuickBooster = new BoosterComponent(br);
+                QuickBoost = new BoosterComponent(br);
 
                 if (version == AcParts4Version.ACFA)
                 {
@@ -65,7 +65,7 @@
             {
                 PartComponent.Write(bw, version);
                 HorizontalBoost.Write(bw);
-                QuickBooster.Write(bw);
+                QuickBoost.Write(bw);
 
                 if (version == AcParts4Version.ACFA)
                 {

@@ -226,7 +226,7 @@ namespace SoulsFormats
             bw.WriteASCII("BHF3");
             bw.WriteFixStr(bxf.Version, 8);
 
-            Binder.WriteFormat(bw, bxf.BitBigEndian, bxf.Format);
+            Binder.WriteFormat(bw, bxf.BigEndian, bxf.BitBigEndian, bxf.Format);
             bw.WriteByte(0);
             bw.WriteByte(0);
             bw.WriteByte(0);

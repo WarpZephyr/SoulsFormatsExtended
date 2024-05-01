@@ -176,7 +176,7 @@ namespace SoulsFormats
             bw.ReserveInt64("HeadersEnd");
 
             bw.WriteBoolean(bnd.Unicode);
-            Binder.WriteFormat(bw, bnd.BitBigEndian, bnd.Format);
+            Binder.WriteFormat(bw, bnd.BigEndian, bnd.BitBigEndian, bnd.Format);
             bw.WriteByte(bnd.Extended);
             bw.WriteByte(0);
 
