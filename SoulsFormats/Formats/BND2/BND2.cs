@@ -5,8 +5,13 @@ using System.IO;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A Binder2 archive.
-    /// <para>Appears in Metal Wolf Chaos and the following Armored Core Games: Formula Front PSP, Nine Breaker, Last Raven.</para>
+    /// A Binder2 archive.<para/>
+    /// Has been seen in the following games:<br/>
+    /// Metal Wolf Chaos<br/>
+    /// Another Century's Episode 2<br/>
+    /// Armored Core: Formula Front (PSP and PS2)<br/>
+    /// Armored Core: Nine Breaker<br/>
+    /// Armored Core: Last Raven (PS2 and PSP)
     /// <para>Build settings for a file of this format were found in Armored Core Formula Front PSP which mentioned an app named Binder2.</para>
     /// </summary>
     public class BND2 : SoulsFile<BND2>, IBND2
@@ -555,7 +560,7 @@ namespace SoulsFormats
                 }
                 else
                 {
-                    Name = string.Empty;
+                    Name = ID.ToString();
                 }
 
                 Bytes = br.GetBytes(offset, size);

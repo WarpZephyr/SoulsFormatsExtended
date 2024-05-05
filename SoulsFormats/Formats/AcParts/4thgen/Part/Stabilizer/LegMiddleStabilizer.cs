@@ -18,6 +18,17 @@
             public StabilizerComponent StabilizerComponent { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="LegMiddleStabilizer"/>.
+            /// </summary>
+            public LegMiddleStabilizer()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.LegMiddleStabilizer;
+                StabilizerComponent = new StabilizerComponent();
+                StabilizerComponent.Category = (byte)PartComponent.Category;
+            }
+
+            /// <summary>
             /// Creates a new Leg Middle Stabilizer part.
             /// </summary>
             /// <param name="br">A binary reader.</param>

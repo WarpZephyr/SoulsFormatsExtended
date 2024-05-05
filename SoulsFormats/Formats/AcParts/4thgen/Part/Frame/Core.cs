@@ -30,48 +30,48 @@
             /// <summary>
             /// Unknown; AC4 only so far; Found using AC4 core.txt in the only spot it could be in assuming core.txt is correct.
             /// </summary>
-            public uint HungerUnit { get; set; } = 1;
+            public uint HungerUnit { get; set; }
 
             /// <summary>
             /// Unknown; AC4 only so far; Is always 0.
             /// </summary>
             // Motion?
-            public uint Unk20 { get; set; } = 0;
+            public uint Unk20 { get; set; }
 
             /// <summary>
             /// Unknown; ACFA only.
             /// </summary>
-            public ushort Unk1C { get; set; } = 306;
+            public ushort Unk1C { get; set; }
 
             /// <summary>
             /// Unknown; ACFA only; Assumed to be Unk1C's TuneMax from positioning and value.
             /// The value the tune slider will set the mentioned stat to at the end of the slider, 50 FRS points in.
             /// </summary>
-            public ushort TuneMaxUnk1C { get; set; } = 307;
+            public ushort TuneMaxUnk1C { get; set; }
 
             /// <summary>
             /// Unknown; ACFA only; Assumed to be Unk1C's TuneEfficiency from positioning and value.
             /// Whether or not putting FRS points into tuning the stat will change it or not.
             /// </summary>
-            public ushort TuneEfficiencyUnk1C { get; set; } = 1;
+            public ushort TuneEfficiencyUnk1C { get; set; }
 
             /// <summary>
             /// ACFA only. Indicates the stability of the AC.
             /// The larger the value, the more stable the AC.
             /// </summary>
-            public ushort Stability { get; set; } = 513;
+            public ushort Stability { get; set; }
 
             /// <summary>
             /// ACFA only.
             /// The value the tune slider will set the mentioned stat to at the end of the slider, 50 FRS points in.
             /// </summary>
-            public ushort TuneMaxStability { get; set; } = 564;
+            public ushort TuneMaxStability { get; set; }
 
             /// <summary>
             /// ACFA only.
             /// Whether or not putting FRS points into tuning the stat will change it or not.
             /// </summary>
-            public ushort TuneEfficiencyStability { get; set; } = 1;
+            public ushort TuneEfficiencyStability { get; set; }
 
             /// <summary>
             /// Unknown; Something to do with stabilizers on the upper x axis.
@@ -92,6 +92,18 @@
             /// Unknown; Something to do with stabilizers on the lower y axis.
             /// </summary>
             public short StabilizerLowY { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="Core"/>.
+            /// </summary>
+            public Core()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.Core;
+                DefenseComponent = new DefenseComponent();
+                PAComponent = new PAComponent();
+                FrameComponent = new FrameComponent();
+            }
 
             /// <summary>
             /// Reads a Core part from a stream.

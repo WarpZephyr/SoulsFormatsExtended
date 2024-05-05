@@ -184,18 +184,29 @@
             /// <summary>
             /// Some kind of subcategory ID; Purpose Unknown; ACFA only.
             /// </summary>
-            public ushort SubCategoryID { get; set; } = 0;
+            public ushort SubCategoryID { get; set; }
 
             /// <summary>
             /// Some kind of ID identifying sets of parts; Purpose Unknown; ACFA only.
             /// </summary>
-            public ushort SetID { get; set; } = 0;
+            public ushort SetID { get; set; }
 
             /// <summary>
             /// An internal description describing this part, might be for development tools or might be a scraped idea that was supposed to load in descriptions.
             /// 252 bytes long in ACFA, 256 bytes long in AC4.
             /// </summary>
             public string Explain { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="PartComponent"/>.
+            /// </summary>
+            public PartComponent()
+            {
+                Name = string.Empty;
+                MakerName = string.Empty;
+                SubCategory = string.Empty;
+                Explain = string.Empty;
+            }
 
             /// <summary>
             /// Reads a Part component from a stream.
@@ -243,19 +254,19 @@
                 bw.WriteByte((byte)Category);
                 bw.WriteByte(InitStatus);
                 bw.WriteUInt16(CapID);
-                bw.WriteFixStr(Name, 0x20);
-                bw.WriteFixStr(MakerName, 0x20);
-                bw.WriteFixStr(SubCategory, 0x20);
+                bw.WriteFixStr(Name, 0x20, 0x20);
+                bw.WriteFixStr(MakerName, 0x20, 0x20);
+                bw.WriteFixStr(SubCategory, 0x20, 0x20);
 
                 if (version == AcParts4Version.AC4)
                 {
-                    bw.WriteFixStr(Explain, 0x100);
+                    bw.WriteFixStr(Explain, 0x100, 0x20);
                 }
                 else if (version == AcParts4Version.ACFA)
                 {
                     bw.WriteUInt16(SubCategoryID);
                     bw.WriteUInt16(SetID);
-                    bw.WriteFixStr(Explain, 0xFC);
+                    bw.WriteFixStr(Explain, 0xFC, 0x20);
                 }
             }
         }

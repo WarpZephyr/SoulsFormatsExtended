@@ -18,6 +18,17 @@
             public StabilizerComponent StabilizerComponent { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="LegUpperStabilizer"/>.
+            /// </summary>
+            public LegUpperStabilizer()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.LegUpperStabilizer;
+                StabilizerComponent = new StabilizerComponent();
+                StabilizerComponent.Category = (byte)PartComponent.Category;
+            }
+
+            /// <summary>
             /// Reads a Leg Upper Stabilizer part from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

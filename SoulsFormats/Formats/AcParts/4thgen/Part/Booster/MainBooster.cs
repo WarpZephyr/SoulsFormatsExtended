@@ -30,17 +30,29 @@
             /// <summary>
             /// ACFA only. After using quick boost, indicates the amount of time before it becomes available again.
             /// </summary>
-            public byte QuickReloadTime { get; set; } = 35;
+            public byte QuickReloadTime { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0; ACFA only.
             /// </summary>
-            public byte Unk31 { get; set; } = 0;
+            public byte Unk31 { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0; ACFA only.
             /// </summary>
-            public ushort Unk32 { get; set; } = 0;
+            public ushort Unk32 { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="MainBooster"/>.
+            /// </summary>
+            public MainBooster()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.MainBooster;
+                HorizontalBoost = new BoosterComponent();
+                VerticalBoost = new BoosterComponent();
+                QuickBoost = new BoosterComponent();
+            }
 
             /// <summary>
             /// Reads a Main Booster part from a stream.

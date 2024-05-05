@@ -143,6 +143,68 @@ namespace SoulsFormats
         public List<LegLowerStabilizer> LegLowerStabilizers { get; set; }
 
         /// <summary>
+        /// Makes a new <see cref="AcParts4"/>.
+        /// </summary>
+        public AcParts4()
+        {
+            Heads = new List<Head>();
+            Cores = new List<Core>();
+            Arms = new List<Arm>();
+            Legs = new List<Leg>();
+            FCSs = new List<FCS>();
+            Generators = new List<Generator>();
+            MainBoosters = new List<MainBooster>();
+            BackBoosters = new List<BackBooster>();
+            SideBoosters = new List<SideBooster>();
+            OveredBoosters = new List<OveredBooster>();
+            ArmUnits = new List<ArmUnit>();
+            BackUnits = new List<BackUnit>();
+            ShoulderUnits = new List<ShoulderUnit>();
+            HeadTopStabilizers = new List<HeadTopStabilizer>();
+            HeadSideStabilizers = new List<HeadSideStabilizer>();
+            CoreUpperSideStabilizers = new List<CoreUpperSideStabilizer>();
+            CoreLowerSideStabilizers = new List<CoreLowerSideStabilizer>();
+            ArmStabilizers = new List<ArmStabilizer>();
+            LegBackStabilizers = new List<LegBackStabilizer>();
+            LegUpperStabilizers = new List<LegUpperStabilizer>();
+            LegMiddleStabilizers = new List<LegMiddleStabilizer>();
+            LegLowerStabilizers = new List<LegLowerStabilizer>();
+        }
+
+        /// <summary>
+        /// Makes a new <see cref="AcParts4"/> with the given initialization options.
+        /// </summary>
+        /// <param name="initLists">Whether or not to initialize the part lists or leave them null when constructing.</param>
+        public AcParts4(bool initLists)
+        {
+            if (initLists)
+            {
+                Heads = new List<Head>();
+                Cores = new List<Core>();
+                Arms = new List<Arm>();
+                Legs = new List<Leg>();
+                FCSs = new List<FCS>();
+                Generators = new List<Generator>();
+                MainBoosters = new List<MainBooster>();
+                BackBoosters = new List<BackBooster>();
+                SideBoosters = new List<SideBooster>();
+                OveredBoosters = new List<OveredBooster>();
+                ArmUnits = new List<ArmUnit>();
+                BackUnits = new List<BackUnit>();
+                ShoulderUnits = new List<ShoulderUnit>();
+                HeadTopStabilizers = new List<HeadTopStabilizer>();
+                HeadSideStabilizers = new List<HeadSideStabilizer>();
+                CoreUpperSideStabilizers = new List<CoreUpperSideStabilizer>();
+                CoreLowerSideStabilizers = new List<CoreLowerSideStabilizer>();
+                ArmStabilizers = new List<ArmStabilizer>();
+                LegBackStabilizers = new List<LegBackStabilizer>();
+                LegUpperStabilizers = new List<LegUpperStabilizer>();
+                LegMiddleStabilizers = new List<LegMiddleStabilizer>();
+                LegLowerStabilizers = new List<LegLowerStabilizer>();
+            }
+        }
+
+        /// <summary>
         /// Returns true if the data appears to be an ACFA AcParts file.
         /// Not entirely foolproof, probably slow, probably eats more memory, only checks size in a range.
         /// Only valid for ACFA at the moment.
@@ -194,7 +256,7 @@ namespace SoulsFormats
         public static AcParts4 Read(byte[] bytes, AcParts4Version version)
         {
             BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            AcParts4 acparts = new AcParts4();
+            AcParts4 acparts = new AcParts4(false);
             acparts.Read(br, version);
             return acparts;
         }
@@ -206,7 +268,7 @@ namespace SoulsFormats
         {
             using FileStream stream = File.OpenRead(path);
             BinaryReaderEx br = new BinaryReaderEx(false, stream);
-            AcParts4 acparts = new AcParts4();
+            AcParts4 acparts = new AcParts4(false);
             acparts.Read(br, version);
             return acparts;
         }

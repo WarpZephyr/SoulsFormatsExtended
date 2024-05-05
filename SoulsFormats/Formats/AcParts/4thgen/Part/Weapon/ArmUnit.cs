@@ -25,7 +25,7 @@
                 /// <summary>
                 /// The Arm Unit can be placed in any hanger size.
                 /// </summary>
-                AnyHanger = 2,
+                Enable = 2,
             }
 
             /// <summary>
@@ -54,6 +54,16 @@
             /// Unknown; Is always 0.
             /// </summary>
             public ushort Unk56 { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="ArmUnit"/>.
+            /// </summary>
+            public ArmUnit()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.ArmUnit;
+                WeaponComponent = new WeaponComponent();
+            }
 
             /// <summary>
             /// Reads an Arm Unit part from a stream.

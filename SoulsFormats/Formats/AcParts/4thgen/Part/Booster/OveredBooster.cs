@@ -65,43 +65,53 @@
             /// <summary>
             /// Unknown; might be an SFX ID for overboost charging in AC4.
             /// </summary>
-            public ushort SFXOverboostCharge { get; set; } = 0;
+            public ushort SFXOverboostCharge { get; set; }
 
             /// <summary>
             /// Unknown; might be an SFX ID for overboost launching in AC4.
             /// </summary>
-            public ushort SFXOverboostLaunch { get; set; } = 0;
+            public ushort SFXOverboostLaunch { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0.
             /// </summary>
-            public uint Unk2C { get; set; } = 0;
+            public uint Unk2C { get; set; }
 
             /// <summary>
             /// Attack power of Assault Armor.
             /// Considered energy weaponry.
             /// </summary>
-            public ushort AssaultArmorAttackPower { get; set; } = 0;
+            public ushort AssaultArmorAttackPower { get; set; }
 
             /// <summary>
             /// Effective range of Assault Armor.
             /// </summary>
-            public ushort AssaultArmorRange { get; set; } = 0;
+            public ushort AssaultArmorRange { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0.
             /// </summary>
-            public uint Unk34 { get; set; } = 0;
+            public uint Unk34 { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0.
             /// </summary>
-            public uint Unk38 { get; set; } = 0;
+            public uint Unk38 { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0.
             /// </summary>
-            public uint Unk3C { get; set; } = 0;
+            public uint Unk3C { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="OveredBooster"/>.
+            /// </summary>
+            public OveredBooster()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.OveredBooster;
+                HorizontalBoost = new BoosterComponent();
+            }
 
             /// <summary>
             /// Reads an Overed Booster part from a stream.

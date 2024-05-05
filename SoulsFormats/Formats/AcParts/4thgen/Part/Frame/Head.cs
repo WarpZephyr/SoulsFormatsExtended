@@ -53,44 +53,56 @@
             /// Functional effectiveness of the head-mounted camera eye. 
             /// Improves base FCS lock-on capability.
             /// </summary>
-            public ushort CameraFunctionality { get; set; } = 505;
+            public ushort CameraFunctionality { get; set; }
 
             /// <summary>
             /// ACFA only.
             /// Ability to recover from flash related interference.
             /// The larger this value, the faster the recovery.
             /// </summary>
-            public ushort SystemRecovery { get; set; } = 500;
+            public ushort SystemRecovery { get; set; }
 
             /// <summary>
             /// Unknown; ACFA Only; Is always 0.
             /// </summary>
-            public ushort Unk28 { get; set; } = 0;
+            public ushort Unk28 { get; set; }
 
             /// <summary>
             /// Unknown; ACFA Only; Is always 0.
             /// </summary>
-            public ushort Unk2A { get; set; } = 0;
+            public ushort Unk2A { get; set; }
 
             /// <summary>
             /// Unknown; Something to do with stabilizers on the top x axis.
             /// </summary>
-            public ushort StabilizerTopX { get; set; }
+            public short StabilizerTopX { get; set; }
 
             /// <summary>
             /// Unknown; Something to do with stabilizers on the top y axis.
             /// </summary>
-            public ushort StabilizerTopY { get; set; }
+            public short StabilizerTopY { get; set; }
 
             /// <summary>
             /// Unknown; Something to do with stabilizers on the side x axis.
             /// </summary>
-            public ushort StabilizerSideX { get; set; }
+            public short StabilizerSideX { get; set; }
 
             /// <summary>
             /// Unknown; Something to do with stabilizers on the side y axis.
             /// </summary>
-            public ushort StabilizerSideY { get; set; }
+            public short StabilizerSideY { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="Head"/>.
+            /// </summary>
+            public Head()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.Head;
+                DefenseComponent = new DefenseComponent();
+                PAComponent = new PAComponent();
+                FrameComponent = new FrameComponent();
+            }
 
             /// <summary>
             /// Reads a Head part from a stream.
@@ -116,10 +128,10 @@
                     Unk2A = br.ReadUInt16();
                 }
 
-                StabilizerTopX = br.ReadUInt16();
-                StabilizerTopY = br.ReadUInt16();
-                StabilizerSideX = br.ReadUInt16();
-                StabilizerSideY = br.ReadUInt16();
+                StabilizerTopX = br.ReadInt16();
+                StabilizerTopY = br.ReadInt16();
+                StabilizerSideX = br.ReadInt16();
+                StabilizerSideY = br.ReadInt16();
             }
 
             /// <summary>
@@ -146,10 +158,10 @@
                     bw.WriteUInt16(Unk2A);
                 }
 
-                bw.WriteUInt16(StabilizerTopX);
-                bw.WriteUInt16(StabilizerTopY);
-                bw.WriteUInt16(StabilizerSideX);
-                bw.WriteUInt16(StabilizerSideY);
+                bw.WriteInt16(StabilizerTopX);
+                bw.WriteInt16(StabilizerTopY);
+                bw.WriteInt16(StabilizerSideX);
+                bw.WriteInt16(StabilizerSideY);
             }
         }
     }

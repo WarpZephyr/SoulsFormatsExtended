@@ -159,12 +159,26 @@
             /// <summary>
             /// Unknown; Something to do with stabilizers on the x axis.
             /// </summary>
-            public ushort StabilizerX { get; set; }
+            public short StabilizerX { get; set; }
 
             /// <summary>
             /// Unknown; Something to do with stabilizers on the y axis.
             /// </summary>
-            public ushort StabilizerY { get; set; }
+            public short StabilizerY { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="Arm"/>.
+            /// </summary>
+            public Arm()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.Arms;
+                DefenseComponent = new DefenseComponent();
+                PAComponent = new PAComponent();
+                FrameComponent = new FrameComponent();
+                AimType = string.Empty;
+                WeaponComponent = new WeaponComponent();
+            }
 
             /// <summary>
             /// Reads an Arm part from a stream.
@@ -201,8 +215,8 @@
                 Unk3F = br.ReadByte();
                 AimType = br.ReadFixStr(0x10);
                 WeaponComponent = new WeaponComponent(br);
-                StabilizerX = br.ReadUInt16();
-                StabilizerY = br.ReadUInt16();
+                StabilizerX = br.ReadInt16();
+                StabilizerY = br.ReadInt16();
             }
 
             /// <summary>
@@ -238,10 +252,10 @@
                 bw.WriteByte(Unk3D);
                 bw.WriteByte(Unk3E);
                 bw.WriteByte(Unk3F);
-                bw.WriteFixStr(AimType, 0x10);
+                bw.WriteFixStr(AimType, 0x10, 0x20);
                 WeaponComponent.Write(bw);
-                bw.WriteUInt16(StabilizerX);
-                bw.WriteUInt16(StabilizerY);
+                bw.WriteInt16(StabilizerX);
+                bw.WriteInt16(StabilizerY);
             }
         }
     }

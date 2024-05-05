@@ -18,6 +18,17 @@
             public StabilizerComponent StabilizerComponent { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="HeadTopStabilizer"/>.
+            /// </summary>
+            public HeadTopStabilizer()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.HeadTopStabilizer;
+                StabilizerComponent = new StabilizerComponent();
+                StabilizerComponent.Category = (byte)PartComponent.Category;
+            }
+
+            /// <summary>
             /// Reads a Head Top Stabilizer part from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

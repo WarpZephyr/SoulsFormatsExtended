@@ -53,6 +53,14 @@
             public ushort WeightBalanceLeft { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="FrameComponent"/>.
+            /// </summary>
+            public FrameComponent()
+            {
+
+            }
+
+            /// <summary>
             /// Reads a Frame component from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

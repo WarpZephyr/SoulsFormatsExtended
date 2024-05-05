@@ -18,6 +18,14 @@
             public ushort EnergyDefense { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="DefenseComponent"/>.
+            /// </summary>
+            public DefenseComponent()
+            {
+
+            }
+
+            /// <summary>
             /// Reads a Defense component from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

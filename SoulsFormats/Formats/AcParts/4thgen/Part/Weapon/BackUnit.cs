@@ -8,6 +8,37 @@
         public class BackUnit : IPart, IWeapon
         {
             /// <summary>
+            /// The different back unit types determining what kind of equipment it is.
+            /// </summary>
+            public enum BackUnitType : byte
+            {
+                /// <summary>
+                /// The back unit is a weapon.
+                /// </summary>
+                Weapon = 0,
+
+                /// <summary>
+                /// The back unit is a Radar.
+                /// </summary>
+                Radar = 1,
+
+                /// <summary>
+                /// The back unit is a Primal Armor Molder.
+                /// </summary>
+                PaMolder = 2,
+
+                /// <summary>
+                /// The back unit is an add-on booster.
+                /// </summary>
+                AddBooster = 3,
+
+                /// <summary>
+                /// The back unit is an assault cannon.
+                /// </summary>
+                AssaultCannon = 4
+            }
+
+            /// <summary>
             /// A Component which contains common stats across all parts.
             /// </summary>
             public PartComponent PartComponent { get; set; }
@@ -45,7 +76,7 @@
             /// <summary>
             /// A Component which contains Booster stats for Weapons; ACFA only.
             /// </summary>
-            public WeaponBoosterComponent WeaponBoosterComponent { get; set; } = new WeaponBoosterComponent();
+            public WeaponBoosterComponent WeaponBoosterComponent { get; set; }
 
             /// <summary>
             /// Attack power delivered when Assault Cannon hits the target.
@@ -53,40 +84,40 @@
             /// Considered energy weaponry.
             /// ACFA only.
             /// </summary>
-            public ushort AssaultCannonAttackPower { get; set; } = 0;
+            public ushort AssaultCannonAttackPower { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0; ACFA only.
             /// </summary>
-            public ushort Unk8A { get; set; } = 0;
+            public ushort Unk8A { get; set; }
 
             /// <summary>
             /// Impact delivered by the AC when it strikes the target.
             /// The larger the value, the greater the impact; ACFA only.
             /// </summary>
-            public ushort AssaultCannonImpact { get; set; } = 0;
+            public ushort AssaultCannonImpact { get; set; }
 
             /// <summary>
             /// Level of damage to Primal Armor when attacking with an Assault Cannon.
             /// The larger the value, the greater the damage; ACFA only.
             /// </summary>
-            public ushort AssaultCannonAttentuation { get; set; } = 0;
+            public ushort AssaultCannonAttentuation { get; set; }
 
             /// <summary>
             /// Level of Primal Armor penetration when hit with an Assault Cannon.
             /// The larger the value, the less effective the Primal Armor will be; ACFA only.
             /// </summary>
-            public ushort AssaultCannonPenetration { get; set; } = 0;
+            public ushort AssaultCannonPenetration { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0; ACFA only.
             /// </summary>
-            public ushort Unk92 { get; set; } = 0;
+            public ushort Unk92 { get; set; }
 
             /// <summary>
             /// Changes how the Back Unit is used.
             /// </summary>
-            public byte BackUnitType { get; set; }
+            public BackUnitType Type { get; set; }
 
             /// <summary>
             /// Changes what stat descriptions are used.<br/>
@@ -98,28 +129,41 @@
             /// <summary>
             /// Unknown; Is always 0; AC4 only.
             /// </summary>
-            public byte Unk6A { get; set; } = 0;
+            public byte Unk6A { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0; AC4 only.
             /// </summary>
-            public byte Unk6B { get; set; } = 0;
+            public byte Unk6B { get; set; }
 
             /// <summary>
             /// Whether or not this Back Unit takes both Back Unit slots.
             /// ACFA only, Unk6A for AC4 did not make a weapon take both slots.
             /// </summary>
-            public bool TakesBothSlots { get; set; } = false;
+            public bool TakesBothSlots { get; set; }
 
             /// <summary>
             /// Unknown; Is always 0, 1, 2, or 3; Is very likely a type of some kind; ACFA only.
             /// </summary>
-            public byte Unk97 { get; set; } = 0;
+            public byte Unk97 { get; set; }
 
             /// <summary>
             /// A Component which contains Primal Armor stats.
             /// </summary>
             public PAComponent PAComponent { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="BackUnit"/>.
+            /// </summary>
+            public BackUnit()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.BackUnit;
+                WeaponComponent = new WeaponComponent();
+                RadarComponent = new RadarComponent();
+                WeaponBoosterComponent = new WeaponBoosterComponent();
+                PAComponent = new PAComponent();
+            }
 
             /// <summary>
             /// Reads a Back Unit part from a stream.
@@ -147,7 +191,7 @@
                     Unk92 = br.ReadUInt16();
                 }
 
-                BackUnitType = br.ReadByte();
+                Type = br.ReadEnum8<BackUnitType>();
                 DisplayType = br.ReadByte();
 
                 if (version == AcParts4Version.AC4)
@@ -190,7 +234,7 @@
                     bw.WriteUInt16(Unk92);
                 }
 
-                bw.WriteByte(BackUnitType);
+                bw.WriteByte((byte)Type);
                 bw.WriteByte(DisplayType);
 
                 if (version == AcParts4Version.AC4)

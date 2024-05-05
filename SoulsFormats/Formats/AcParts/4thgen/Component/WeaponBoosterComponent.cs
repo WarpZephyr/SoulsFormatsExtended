@@ -28,7 +28,7 @@
             /// <summary>
             /// Unknown; Likely is another type of Boost.
             /// </summary>
-            public uint Unk0C { get; set; }
+            public uint Unk0CThrust { get; set; }
 
             /// <summary>
             /// Energy consumed when engaging horizontal thrust.
@@ -51,21 +51,14 @@
             /// <summary>
             /// Unknown; Likely is another type of Boost's EN cost.
             /// </summary>
-            public uint Unk1C { get; set; }
+            public uint Unk0CENCost { get; set; }
 
             /// <summary>
-            /// Initializes a new WeaponBoosterComponent with default values.
+            /// Makes a new <see cref="WeaponBoosterComponent"/>.
             /// </summary>
-            internal WeaponBoosterComponent()
+            public WeaponBoosterComponent()
             {
-                HorizontalThrust = 0;
-                VerticalThrust = 0;
-                QuickBoost = 0;
-                Unk0C = 0;
-                HorizontalENCost = 0;
-                VerticalENCost = 0;
-                QuickBoostENCost = 0;
-                Unk1C = 0;
+
             }
 
             /// <summary>
@@ -77,11 +70,11 @@
                 HorizontalThrust = br.ReadUInt32();
                 VerticalThrust = br.ReadUInt32();
                 QuickBoost = br.ReadUInt32();
-                Unk0C = br.ReadUInt32();
+                Unk0CThrust = br.ReadUInt32();
                 HorizontalENCost = br.ReadUInt32();
                 VerticalENCost = br.ReadUInt32();
                 QuickBoostENCost = br.ReadUInt32();
-                Unk1C = br.ReadUInt32();
+                Unk0CENCost = br.ReadUInt32();
             }
 
             /// <summary>
@@ -93,11 +86,11 @@
                 bw.WriteUInt32(HorizontalThrust);
                 bw.WriteUInt32(VerticalThrust);
                 bw.WriteUInt32(QuickBoost);
-                bw.WriteUInt32(Unk0C);
+                bw.WriteUInt32(Unk0CThrust);
                 bw.WriteUInt32(HorizontalENCost);
                 bw.WriteUInt32(VerticalENCost);
                 bw.WriteUInt32(QuickBoostENCost);
-                bw.WriteUInt32(Unk1C);
+                bw.WriteUInt32(Unk0CENCost);
             }
         }
     }

@@ -46,6 +46,14 @@
             public ushort TuneEfficiencyRadarRefreshRate { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="RadarComponent"/>.
+            /// </summary>
+            public RadarComponent()
+            {
+
+            }
+
+            /// <summary>
             /// Reads a Radar component from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

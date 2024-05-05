@@ -138,6 +138,16 @@
             public ushort TuneEfficiencyMissileLockSpeed { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="FCS"/>.
+            /// </summary>
+            public FCS()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.FCS;
+                RadarComponent = new RadarComponent();
+            }
+
+            /// <summary>
             /// Reads an FCS part from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

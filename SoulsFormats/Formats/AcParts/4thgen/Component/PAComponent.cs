@@ -18,6 +18,14 @@
             public ushort PADurability { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="PAComponent"/>.
+            /// </summary>
+            public PAComponent()
+            {
+
+            }
+
+            /// <summary>
             /// Reads a PA component from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

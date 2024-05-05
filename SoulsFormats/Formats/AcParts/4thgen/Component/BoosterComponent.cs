@@ -38,6 +38,14 @@
             public uint ThrustENCost { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="BoosterComponent"/>.
+            /// </summary>
+            public BoosterComponent()
+            {
+                
+            }
+
+            /// <summary>
             /// Reads a Quick Booster component from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

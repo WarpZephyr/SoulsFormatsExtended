@@ -86,6 +86,15 @@
             public ushort Unk22 { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="Generator"/>.
+            /// </summary>
+            public Generator()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.Generator;
+            }
+
+            /// <summary>
             /// Reads a Generator part from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

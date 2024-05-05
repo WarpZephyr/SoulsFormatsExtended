@@ -19,6 +19,14 @@
             public float ControlCalibration { get; set; }
 
             /// <summary>
+            /// Makes a new <see cref="StabilizerComponent"/>.
+            /// </summary>
+            public StabilizerComponent()
+            {
+
+            }
+
+            /// <summary>
             /// Reads a Stabilizer component from a stream.
             /// </summary>
             /// <param name="br">A binary reader.</param>

@@ -230,7 +230,7 @@
             public ushort MagazineReloadTime { get; set; }
 
             /// <summary>
-            /// Unknown; Is set on the described weapons in ACFA; Everything else appears to be set to <see cref="AcParts4.WeaponComponent.WeaponType.Weapon"/>.
+            /// Unknown; Is set on the described weapons in ACFA; Everything else appears to be set to <see cref="WeaponType.Weapon"/>.
             /// </summary>
             public WeaponType Weapon_Type { get; set; }
 
@@ -303,6 +303,14 @@
             /// The larger the value, the less protection PA affords.
             /// </summary>
             public float PAPenetration { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="WeaponComponent"/>.
+            /// </summary>
+            public WeaponComponent()
+            {
+
+            }
 
             /// <summary>
             /// Reads a Projectile component from a stream.

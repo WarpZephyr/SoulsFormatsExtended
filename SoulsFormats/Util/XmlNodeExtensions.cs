@@ -8,19 +8,13 @@ namespace SoulsFormats.XmlExtensions
     {
         private static T ReadT<T>(XmlNode node, string xpath, Func<string, T> parse)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
-            if (child == null)
-                throw new InvalidDataException($"Missing element: {xpath}");
-
+            XmlNode child = node.SelectSingleNode(xpath) ?? throw new InvalidDataException($"Missing element: {xpath}");
             return parse(child.InnerText);
         }
 
         private static T ReadT<T>(XmlNode node, string xpath, IFormatProvider provider, Func<string, IFormatProvider, T> parse)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
-            if (child == null)
-                throw new InvalidDataException($"Missing element: {xpath}");
-
+            XmlNode child = node.SelectSingleNode(xpath) ?? throw new InvalidDataException($"Missing element: {xpath}");
             return parse(child.InnerText, provider);
         }
 
@@ -179,10 +173,7 @@ namespace SoulsFormats.XmlExtensions
 
         public static string ReadString(this XmlNode node, string xpath)
         {
-            XmlNode child = node.SelectSingleNode(xpath);
-            if (child == null)
-                throw new InvalidDataException($"Missing element: {xpath}");
-
+            XmlNode child = node.SelectSingleNode(xpath) ?? throw new InvalidDataException($"Missing element: {xpath}");
             return child.InnerText;
         }
 

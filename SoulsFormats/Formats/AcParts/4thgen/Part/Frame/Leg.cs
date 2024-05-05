@@ -236,17 +236,17 @@
             /// <summary>
             /// Unknown; ACFA only; May be a short instead; Is always 0 on normal legs, 36 on energy tank legs, and 40 on tank legs.
             /// </summary>
-            public byte UnkA4 { get; set; } = 0;
+            public byte UnkA4 { get; set; }
 
             /// <summary>
             /// Unknown; ACFA only; May be a short instead; Is always 0.
             /// </summary>
-            public byte UnkA5 { get; set; } = 0;
+            public byte UnkA5 { get; set; }
 
             /// <summary>
             /// Unknown; ACFA only; Is always 0.
             /// </summary>
-            public short UnkA6 { get; set; } = 0;
+            public short UnkA6 { get; set; }
 
             /// <summary>
             /// Unknown.
@@ -317,6 +317,21 @@
             /// Unknown.
             /// </summary>
             public short StabilizerLowRightY { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="Leg"/>.
+            /// </summary>
+            public Leg()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.Legs;
+                DefenseComponent = new DefenseComponent();
+                PAComponent = new PAComponent();
+                FrameComponent = new FrameComponent();
+                HorizontalBoost = new BoosterComponent();
+                VerticalBoost = new BoosterComponent();
+                QuickBoost = new BoosterComponent();
+            }
 
             /// <summary>
             /// Reads a Leg part from a stream.

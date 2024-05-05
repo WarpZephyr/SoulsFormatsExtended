@@ -46,7 +46,7 @@
             /// <summary>
             /// The shoulder type determining how the shoulder unit is fired in various ways.
             /// </summary>
-            public ShoulderType ShoulderUnitType { get; set; }
+            public ShoulderType Type { get; set; }
 
             /// <summary>
             /// Whether or not the shoulder unit is a weapon.
@@ -99,22 +99,22 @@
             /// <summary>
             /// Unknown; In the same position as AAAttackBoost; AC4 only.
             /// </summary>
-            public float EffectParam_0 { get; set; } = 0;
+            public float EffectParam_0 { get; set; }
 
             /// <summary>
             /// Unknown; In the same position as AARangeBoost; AC4 only.
             /// </summary>
-            public float EffectParam_1 { get; set; } = 0;
+            public float EffectParam_1 { get; set; }
 
             /// <summary>
             /// How much attack power is added to Assault Armor while this Shoulder Unit is equipped; ACFA only.
             /// </summary>
-            public float AAAttackPower { get; set; } = 0;
+            public float AAAttackPower { get; set; }
 
             /// <summary>
             /// How much range is added to Assault Armor while this Shoulder Unit is equipped; ACFA only.
             /// </summary>
-            public float AARangeBoost { get; set; } = 0;
+            public float AARangeBoost { get; set; }
 
             /// <summary>
             /// A Component which contains stats for weapons.
@@ -124,7 +124,20 @@
             /// <summary>
             /// A Component which contains Booster stats for Weapons; ACFA only.
             /// </summary>
-            public WeaponBoosterComponent WeaponBoosterComponent { get; set; } = new WeaponBoosterComponent();
+            public WeaponBoosterComponent WeaponBoosterComponent { get; set; }
+
+            /// <summary>
+            /// Makes a new <see cref="ShoulderUnit"/>.
+            /// </summary>
+            public ShoulderUnit()
+            {
+                PartComponent = new PartComponent();
+                PartComponent.Category = PartComponent.PartCategory.ShoulderUnit;
+                PAComponent = new PAComponent();
+                DeviceName = string.Empty;
+                WeaponComponent = new WeaponComponent();
+                WeaponBoosterComponent = new WeaponBoosterComponent();
+            }
 
             /// <summary>
             /// Reads a Shoulder Unit part from a stream.
@@ -134,7 +147,7 @@
             internal ShoulderUnit(BinaryReaderEx br, AcParts4Version version)
             {
                 PartComponent = new PartComponent(br, version);
-                ShoulderUnitType = br.ReadEnum8<ShoulderType>();
+                Type = br.ReadEnum8<ShoulderType>();
                 IsWeapon = br.ReadBoolean();
                 DisplayType = br.ReadByte();
                 Unk03 = br.ReadByte();
@@ -172,12 +185,12 @@
             public void Write(BinaryWriterEx bw, AcParts4Version version)
             {
                 PartComponent.Write(bw, version);
-                bw.WriteByte((byte)ShoulderUnitType);
+                bw.WriteByte((byte)Type);
                 bw.WriteBoolean(IsWeapon);
                 bw.WriteByte(DisplayType);
                 bw.WriteByte(Unk03);
                 PAComponent.Write(bw);
-                bw.WriteFixStr(DeviceName, 0x10);
+                bw.WriteFixStr(DeviceName, 0x10, 0x20);
                 bw.WriteUInt16(UseCount);
                 bw.WriteUInt16(EffectDuration);
                 bw.WriteUInt16(ReloadFrame);
