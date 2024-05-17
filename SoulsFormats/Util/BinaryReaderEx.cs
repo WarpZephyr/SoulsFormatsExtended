@@ -809,6 +809,11 @@ namespace SoulsFormats
         /// </summary>
         public TEnum ReadEnum8<TEnum>() where TEnum : Enum
         {
+            if (typeof(TEnum).GetEnumUnderlyingType() == typeof(sbyte))
+            {
+                return ReadEnum<TEnum, sbyte>(ReadSByte, "0x{0:X}");
+            }
+
             return ReadEnum<TEnum, byte>(ReadByte, "0x{0:X}");
         }
 
@@ -829,6 +834,11 @@ namespace SoulsFormats
         /// </summary>
         public TEnum ReadEnum16<TEnum>() where TEnum : Enum
         {
+            if (typeof(TEnum).GetEnumUnderlyingType() == typeof(short))
+            {
+                return ReadEnum<TEnum, short>(ReadInt16, "0x{0:X}");
+            }
+
             return ReadEnum<TEnum, ushort>(ReadUInt16, "0x{0:X}");
         }
 
@@ -848,6 +858,11 @@ namespace SoulsFormats
         /// </summary>
         public TEnum ReadEnum32<TEnum>() where TEnum : Enum
         {
+            if (typeof(TEnum).GetEnumUnderlyingType() == typeof(int))
+            {
+                return ReadEnum<TEnum, int>(ReadInt32, "0x{0:X}");
+            }
+
             return ReadEnum<TEnum, uint>(ReadUInt32, "0x{0:X}");
         }
 
@@ -867,6 +882,11 @@ namespace SoulsFormats
         /// </summary>
         public TEnum ReadEnum64<TEnum>() where TEnum : Enum
         {
+            if (typeof(TEnum).GetEnumUnderlyingType() == typeof(long))
+            {
+                return ReadEnum<TEnum, long>(ReadInt64, "0x{0:X}");
+            }
+
             return ReadEnum<TEnum, ulong>(ReadUInt64, "0x{0:X}");
         }
 

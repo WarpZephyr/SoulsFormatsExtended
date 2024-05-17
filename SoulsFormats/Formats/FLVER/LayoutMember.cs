@@ -10,9 +10,10 @@ namespace SoulsFormats
         public class LayoutMember
         {
             /// <summary>
-            /// Unknown; 0, 1, or 2. May by an index that ties into edge and shared mesh optimizations.
+            /// The index of this member into the current layout.<br/>
+            /// Used to combine members into a single layout.
             /// </summary>
-            public int Unk00 { get; set; }
+            public int MemberIndex { get; set; }
 
             /// <summary>
             /// Format used to store this member.
@@ -72,9 +73,9 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a LayoutMember with the specified values.
             /// </summary>
-            public LayoutMember(LayoutType type, LayoutSemantic semantic, int index = 0, int unk00 = 0)
+            public LayoutMember(LayoutType type, LayoutSemantic semantic, int index = 0, int memberIndex = 0)
             {
-                Unk00 = unk00;
+                MemberIndex = memberIndex;
                 Type = type;
                 Semantic = semantic;
                 Index = index;
@@ -85,7 +86,7 @@ namespace SoulsFormats
             /// </summary>
             public LayoutMember(LayoutMember layoutMember)
             {
-                Unk00 = layoutMember.Unk00;
+                MemberIndex = layoutMember.MemberIndex;
                 Type = layoutMember.Type;
                 Semantic = layoutMember.Semantic;
                 Index = layoutMember.Index;
@@ -93,7 +94,7 @@ namespace SoulsFormats
 
             internal LayoutMember(BinaryReaderEx br, int structOffset)
             {
-                Unk00 = br.ReadInt32();
+                MemberIndex = br.ReadInt32();
                 br.AssertInt32(structOffset);
                 Type = br.ReadEnum32<LayoutType>();
                 Semantic = br.ReadEnum32<LayoutSemantic>();
@@ -102,7 +103,7 @@ namespace SoulsFormats
 
             internal void Write(BinaryWriterEx bw, int structOffset)
             {
-                bw.WriteInt32(Unk00);
+                bw.WriteInt32(MemberIndex);
                 bw.WriteInt32(structOffset);
                 bw.WriteUInt32((uint)Type);
                 bw.WriteUInt32((uint)Semantic);

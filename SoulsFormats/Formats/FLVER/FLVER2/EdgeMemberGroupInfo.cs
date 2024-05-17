@@ -19,10 +19,9 @@ namespace SoulsFormats
             /// Read an <see cref="EdgeMemberInfoGroup"/> from a stream.
             /// </summary>
             /// <param name="br">A <see cref="BinaryReaderEx"/>.</param>
-            /// <param name="indexCount">The total number of indexes for initializing list capacity.</param>
             /// <param name="faceIndexes">A list to add decompressed face indexes to.</param>
             /// <exception cref="InvalidDataException">The member index buffer length was invalid.</exception>
-            internal EdgeMemberInfoGroup(BinaryReaderEx br, int indexCount, List<int> faceIndexes)
+            internal EdgeMemberInfoGroup(BinaryReaderEx br, List<int> faceIndexes)
             {
                 long start = br.Position;
                 short memberCount = br.ReadInt16();

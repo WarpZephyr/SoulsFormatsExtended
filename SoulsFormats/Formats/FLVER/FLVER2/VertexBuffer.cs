@@ -13,15 +13,26 @@ namespace SoulsFormats
         public class VertexBuffer
         {
             /// <summary>
+            /// Whether or not the data is edge compressed.
+            /// </summary>
+            public bool EdgeCompressed { get; set; }
+
+            /// <summary>
+            /// The index of this buffer into the current vertex stream.<br/>
+            /// Used to combine buffers into a single vertex stream.
+            /// </summary>
+            public int BufferIndex { get; set; }
+
+            /// <summary>
             /// Index to a layout in the FLVER's layout collection.
             /// </summary>
             public int LayoutIndex { get; set; }
 
             internal int VertexSize;
-            internal int BufferIndex;
+            
             internal int VertexCount;
             internal int BufferOffset;
-            internal bool EdgeCompressed;
+            
 
             /// <summary>
             /// Creates a VertexBuffer with the specified layout.
@@ -85,7 +96,7 @@ namespace SoulsFormats
             {
                 BufferLayout layout = layouts[LayoutIndex];
 
-                bw.WriteInt32(bufferIndex);
+                bw.WriteInt32(EdgeCompressed ? bufferIndex | 0x60000000 : bufferIndex);
                 bw.WriteInt32(LayoutIndex);
                 bw.WriteInt32(layout.Size);
                 bw.WriteInt32(vertexCount);

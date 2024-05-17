@@ -150,17 +150,6 @@ namespace SoulsFormats
                         }
                     }
                 }
-
-                // Removed for shared meshes support
-                /*
-                for (int i = 0; i < VertexBuffers.Count; i++)
-                {
-                    VertexBuffer buffer = VertexBuffers[i];
-                    // This appears to be some kind of flag on edge-compressed vertex buffers
-                    if ((buffer.BufferIndex & ~0x60000000) != i)
-                        throw new FormatException("Unexpected vertex buffer index.");
-                }
-                */
             }
 
             internal void ReadVertices(BinaryReaderEx br, int dataOffset, List<BufferLayout> layouts, FLVERHeader header)

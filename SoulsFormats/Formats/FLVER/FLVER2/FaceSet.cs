@@ -127,8 +127,8 @@ namespace SoulsFormats
 
                     br.StepIn(dataOffset + indicesOffset);
                     {
-                        Indices = new List<int>(indexCount);
-                        EdgeMembers = new EdgeMemberInfoGroup(br, indexCount, Indices);
+                        Indices = new List<int>();
+                        EdgeMembers = new EdgeMemberInfoGroup(br, Indices);
                     }
                     br.StepOut();
                 }

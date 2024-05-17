@@ -34,9 +34,10 @@ namespace SoulsFormats
         IMsbParam<IMsbPart> IMsb.Parts => Parts;
 
         /// <summary>
-        /// Unknown.
+        /// A bounding volume hierarchy using Axis-Aligned Bounding Boxes for some kind of calculation.<br/>
+        /// Set to null when not in use.
         /// </summary>
-        public List<Tree> Trees { get; set; }
+        public MapStudioTree Tree { get; set; }
 
         internal struct Entries
         {
@@ -55,7 +56,7 @@ namespace SoulsFormats
             Events = new EventParam();
             Regions = new PointParam();
             Parts = new PartsParam();
-            Trees = new List<Tree>();
+            Tree = null;
         }
 
         /// <summary>
@@ -74,8 +75,8 @@ namespace SoulsFormats
             entries.Regions = Regions.Read(br);
             Parts = new PartsParam();
             entries.Parts = Parts.Read(br);
-            var tree = new MapstudioTree();
-            Trees = tree.Read(br);
+            Tree = new MapStudioTree();
+            Tree.Read(br);
 
             if (br.Position != 0)
                 throw new InvalidDataException("The next param offset of the final param should be 0, but it wasn't.");
@@ -118,7 +119,7 @@ namespace SoulsFormats
             bw.FillInt32("NextParamOffset", (int)bw.Position);
             Parts.Write(bw, entries.Parts);
             bw.FillInt32("NextParamOffset", (int)bw.Position);
-            new MapstudioTree().Write(bw, Trees);
+            Tree.Write(bw);
             bw.FillInt32("NextParamOffset", 0);
         }
 

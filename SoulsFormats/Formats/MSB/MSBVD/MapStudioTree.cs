@@ -4,17 +4,22 @@ using System.Numerics;
 
 namespace SoulsFormats
 {
-    public partial class MSBD
+    public partial class MSBVD
     {
         /// <summary>
-        /// A hierarchy of Axis-Aligned Bounding Boxes used in various calculations.
+        /// A hierarchy of Axis-Aligned Bounding Boxes used in calculations such as drawing and collision.
         /// </summary>
         public class MapStudioTree : IMapStudioTree
         {
             /// <summary>
+            /// Unknown; probably some kind of version number.
+            /// </summary>
+            public int Version { get; set; }
+
+            /// <summary>
             /// The Name or Type of the Param.
             /// </summary>
-            private protected const string Name = "MAPSTUDIO_TREE_ST";
+            private protected string Name = "MAPSTUDIO_TREE_ST";
 
             /// <summary>
             /// The root node of the Bounding Volume Hierarchy.<br/>
@@ -28,12 +33,14 @@ namespace SoulsFormats
             /// </summary>
             public MapStudioTree()
             {
+                // Set node null as we need to calculate that later
                 RootNode = null;
+                Version = 10001002;
             }
 
             internal TreeNode Read(BinaryReaderEx br)
             {
-                br.AssertInt32(0);
+                Version = br.ReadInt32();
                 int nameOffset = br.ReadInt32();
                 int offsetCount = br.ReadInt32();
                 int rootNodeOffset = br.ReadInt32();
@@ -59,7 +66,7 @@ namespace SoulsFormats
 
             internal void Write(BinaryWriterEx bw)
             {
-                bw.WriteInt32(0);
+                bw.WriteInt32(Version);
                 bw.ReserveInt32("ParamNameOffset");
                 int count = RootNode.GetNodeCount();
                 bw.WriteInt32(count + 1);
