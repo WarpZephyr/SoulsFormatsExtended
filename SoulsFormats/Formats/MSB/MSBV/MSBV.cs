@@ -5,10 +5,10 @@ using System.IO;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A map layout file used in Armored Core Verdict Day.<br/>
+    /// A map layout file used in Armored Core V.<br/>
     /// Extension: .msb
     /// </summary>
-    public partial class MSBVD : SoulsFile<MSBVD>, IMsbBound<MSBVD.MapStudioTree>
+    public partial class MSBV : SoulsFile<MSBV>, IMsbBound<MSBV.MapStudioTree>
     {
         /// <summary>
         /// Model files that are available for parts to use.
@@ -58,9 +58,9 @@ namespace SoulsFormats
         public IReadOnlyList<IMsbTreeParam<MapStudioTree>> Trees => new List<IMsbTreeParam<MapStudioTree>>(2) { DrawingTree, CollisionTree };
 
         /// <summary>
-        /// Create a new <see cref="MSBVD"/>.
+        /// Create a new <see cref="MSBV"/>.
         /// </summary>
-        public MSBVD()
+        public MSBV()
         {
             Models = new ModelParam();
             Events = new EventParam();

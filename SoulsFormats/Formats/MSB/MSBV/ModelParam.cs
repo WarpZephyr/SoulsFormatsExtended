@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace SoulsFormats
 {
-    public partial class MSBVD
+    public partial class MSBV
     {
         /// <summary>
         /// The type of the Model entry.

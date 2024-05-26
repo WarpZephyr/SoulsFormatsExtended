@@ -37,7 +37,7 @@ namespace SoulsFormats
         /// A bounding volume hierarchy using Axis-Aligned Bounding Boxes for some kind of calculation.<br/>
         /// Set to null when not in use.
         /// </summary>
-        public MapStudioTree Tree { get; set; }
+        public MapStudioTreeParam Tree { get; set; }
 
         internal struct Entries
         {
@@ -75,7 +75,7 @@ namespace SoulsFormats
             entries.Regions = Regions.Read(br);
             Parts = new PartsParam();
             entries.Parts = Parts.Read(br);
-            Tree = new MapStudioTree();
+            Tree = new MapStudioTreeParam();
             Tree.Read(br);
 
             if (br.Position != 0)

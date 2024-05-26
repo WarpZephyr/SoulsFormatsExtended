@@ -47,7 +47,7 @@
             }
 
             /// <summary>
-            /// Unknown; Is set on the described weapons in ACFA; Everything else appears to be set to NotSet.
+            /// Unknown; Is set on the described weapons in ACFA; Everything else appears to be set to Weapon or 0.
             /// </summary>
             public enum WeaponType : ushort
             {

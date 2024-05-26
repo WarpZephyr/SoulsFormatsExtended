@@ -228,7 +228,11 @@ namespace SoulsFormats
 
             private static void SerializeField(PARAMDEF def, Field field, XmlWriter xw)
             {
-                string fieldDef = $"{field.DisplayType} {field.InternalName}";
+                string internalName = field.InternalName;
+                if (string.IsNullOrWhiteSpace(internalName))
+                    internalName = field.DisplayName;
+
+                string fieldDef = $"{field.DisplayType} {internalName}";
                 if (ParamUtil.IsBitType(field.DisplayType) && field.BitSize != -1)
                     fieldDef += $":{field.BitSize}";
                 else if (ParamUtil.IsArrayType(field.DisplayType))

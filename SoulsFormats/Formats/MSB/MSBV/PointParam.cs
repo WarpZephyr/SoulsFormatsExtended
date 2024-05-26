@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace SoulsFormats
 {
-    public partial class MSBVD
+    public partial class MSBV
     {
         /// <summary>
         /// The different types of regions.
@@ -84,11 +84,6 @@ namespace SoulsFormats
             Gen = 650,
 
             /// <summary>
-            /// Unknown; Called AC sumbmersion return start and end points; Might reference drowning somehow.
-            /// </summary>
-            Submersion = 850,
-
-            /// <summary>
             /// A sound trigger region of some kind.
             /// </summary>
             Sound = 1000,
@@ -97,16 +92,6 @@ namespace SoulsFormats
             /// A sound reverb region of some kind.
             /// </summary>
             Reverb = 1100,
-
-            /// <summary>
-            /// A light point of some kind.
-            /// </summary>
-            Light = 1300,
-
-            /// <summary>
-            /// Unknown; Usually named spot.
-            /// </summary>
-            Spot = 1310,
 
             /// <summary>
             /// Unknown; Related to a landing of some kind.
@@ -206,12 +191,6 @@ namespace SoulsFormats
             public List<Region.GenRegion> Generators { get; set; }
 
             /// <summary>
-            /// Unknown; Called AC sumbmersion return start and end points; Might reference drowning somehow.
-            /// <para>Has been referenced by routes instead of route points.</para>
-            /// </summary>
-            public List<Region.SubmersionRegion> SubmersionRegions { get; set; }
-
-            /// <summary>
             /// Sound triggers of some kind.
             /// </summary>
             public List<Region.SoundRegion> Sounds { get; set; }
@@ -220,16 +199,6 @@ namespace SoulsFormats
             /// Sound reverb areas of some kind.
             /// </summary>
             public List<Region.ReverbRegion> ReverbRegions { get; set; }
-
-            /// <summary>
-            /// Light points of some kind.
-            /// </summary>
-            public List<Region.LightRegion> LightRegions { get; set; }
-
-            /// <summary>
-            /// Unknown; Usually named spot.
-            /// </summary>
-            public List<Region.SpotRegion> SpotRegions { get; set; }
 
             /// <summary>
             /// Unknown; Related to landing somehow.
@@ -270,11 +239,8 @@ namespace SoulsFormats
                 WaterSurfaces = new List<Region.WaterSurfaceRegion>();
                 SFXRegions = new List<Region.SFXRegion>();
                 Generators = new List<Region.GenRegion>();
-                SubmersionRegions = new List<Region.SubmersionRegion>();
                 Sounds = new List<Region.SoundRegion>();
                 ReverbRegions = new List<Region.ReverbRegion>();
-                LightRegions = new List<Region.LightRegion>();
-                SpotRegions = new List<Region.SpotRegion>();
                 LandingRegions = new List<Region.LandingRegion>();
                 DebugNavigationRegions = new List<Region.DebugNavigationRegion>();
                 LoadMeasurementRegions = new List<Region.LoadMeasurementRegion>();
@@ -302,11 +268,8 @@ namespace SoulsFormats
                     case Region.WaterSurfaceRegion r: WaterSurfaces.Add(r); break;
                     case Region.SFXRegion r: SFXRegions.Add(r); break;
                     case Region.GenRegion r: Generators.Add(r); break;
-                    case Region.SubmersionRegion r: SubmersionRegions.Add(r); break;
                     case Region.SoundRegion r: Sounds.Add(r); break;
                     case Region.ReverbRegion r: ReverbRegions.Add(r); break;
-                    case Region.LightRegion r: LightRegions.Add(r); break;
-                    case Region.SpotRegion r: SpotRegions.Add(r); break;
                     case Region.LandingRegion r: LandingRegions.Add(r); break;
                     case Region.DebugNavigationRegion r: DebugNavigationRegions.Add(r); break;
                     case Region.LoadMeasurementRegion r: LoadMeasurementRegions.Add(r); break;
@@ -322,8 +285,8 @@ namespace SoulsFormats
             /// </summary>
             public override List<Region> GetEntries() => SFUtil.ConcatAll<Region>(DefaultRegions, RoutePoints, Actions, OperationalAreas, WarningAreas, AttentionAreas,
                                                                                   SpawnPoints, ScrapCollectionPoints, SaveRegions, CollisionAvoidanceRegions, CommunicationAreas,
-                                                                                  SFXRegions, Generators, SubmersionRegions, Sounds, ReverbRegions, LightRegions, SpotRegions,
-                                                                                  LandingRegions, DebugNavigationRegions, LoadMeasurementRegions, UnusedRegions);
+                                                                                  SFXRegions, Generators, Sounds, ReverbRegions, LandingRegions, DebugNavigationRegions,
+                                                                                  LoadMeasurementRegions, UnusedRegions);
             IReadOnlyList<IMsbRegion> IMsbParam<IMsbRegion>.GetEntries() => GetEntries();
 
             internal override Region ReadEntry(BinaryReaderEx br)
@@ -359,16 +322,10 @@ namespace SoulsFormats
                         return SFXRegions.EchoAdd(new Region.SFXRegion(br));
                     case RegionType.Gen:
                         return Generators.EchoAdd(new Region.GenRegion(br));
-                    case RegionType.Submersion:
-                        return SubmersionRegions.EchoAdd(new Region.SubmersionRegion(br));
                     case RegionType.Sound:
                         return Sounds.EchoAdd(new Region.SoundRegion(br));
                     case RegionType.Reverb:
                         return ReverbRegions.EchoAdd(new Region.ReverbRegion(br));
-                    case RegionType.Light:
-                        return LightRegions.EchoAdd(new Region.LightRegion(br));
-                    case RegionType.Spot:
-                        return SpotRegions.EchoAdd(new Region.SpotRegion(br));
                     case RegionType.Landing:
                         return LandingRegions.EchoAdd(new Region.LandingRegion(br));
                     case RegionType.DebugNavigation:
@@ -392,11 +349,6 @@ namespace SoulsFormats
             /// The type of the region.
             /// </summary>
             private protected abstract RegionType Type { get; }
-
-            /// <summary>
-            /// Whether or not a region has type data.
-            /// </summary>
-            private protected abstract bool HasTypeData { get; }
 
             /// <summary>
             /// Describes the space encompassed by the region.
@@ -500,23 +452,23 @@ namespace SoulsFormats
                 int offsetUnkConfig2 = br.ReadInt32();
                 PointID = br.ReadInt32();
                 int shapeDataOffset = br.ReadInt32();
+                int offsetArea = br.ReadInt32();
+                int offsetSpawn = br.ReadInt32();
+                br.AssertInt32(0); // Probably unknown and unused type offset
+                int offsetWaterSurface = br.ReadInt32();
+                int offsetSFX = br.ReadInt32();
+                br.AssertInt32(0); // Probably unknown and unused type offset
+                br.AssertInt32(0); // Probably unknown and unused type offset
+                br.AssertInt32(0); // Probably unknown and unused type offset
                 int offsetUnkConfig3 = br.ReadInt32();
+                int offsetGen = br.ReadInt32();
+                int offsetReverb = br.ReadInt32();
                 int offsetUnkConfig4 = br.ReadInt32();
-                int typeDataOffset = br.ReadInt32();
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
-                br.AssertInt32(0);
+                br.AssertInt32(0); // Probably unknown and unused type offset
+                br.AssertInt32(0); // Probably unknown and unused type offset
+                int offsetScrapCollection = br.ReadInt32();
+                int offsetSound = br.ReadInt32();
+                int offsetLanding = br.ReadInt32();
 
                 Shape = MSB.Shape.Create(shapeType);
 
@@ -532,8 +484,6 @@ namespace SoulsFormats
                     throw new InvalidDataException($"{nameof(offsetUnkConfig3)} must not be 0 in type {GetType()}.");
                 if (offsetUnkConfig4 == 0)
                     throw new InvalidDataException($"{nameof(offsetUnkConfig4)} must not be 0 in type {GetType()}.");
-                if (HasTypeData ^ typeDataOffset != 0)
-                    throw new InvalidDataException($"Unexpected {nameof(typeDataOffset)} 0x{typeDataOffset:X} in type {GetType()}.");
                 
                 br.Position = start + nameOffset;
                 Name = br.ReadShiftJIS();
@@ -550,15 +500,90 @@ namespace SoulsFormats
                     Shape.ReadShapeData(br);
                 }
 
+                if (offsetArea > 0)
+                {
+                    if (Type != RegionType.OperationalArea && Type != RegionType.WarningArea && Type != RegionType.AttentionArea)
+                        throw new InvalidDataException($"{nameof(offsetArea)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetArea;
+                    ReadTypeData(br);
+                }
+
+                if (offsetSpawn > 0)
+                {
+                    if (Type != RegionType.Spawn)
+                        throw new InvalidDataException($"{nameof(offsetSpawn)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetSpawn;
+                    ReadTypeData(br);
+                }
+
+                if (offsetWaterSurface > 0)
+                {
+                    if (Type != RegionType.WaterSurface)
+                        throw new InvalidDataException($"{nameof(offsetWaterSurface)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetWaterSurface;
+                    ReadTypeData(br);
+                }
+
+                if (offsetSFX > 0)
+                {
+                    if (Type != RegionType.SFX)
+                        throw new InvalidDataException($"{nameof(offsetSFX)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetSFX;
+                    ReadTypeData(br);
+                }
+
                 br.Position = start + offsetUnkConfig3;
                 Config3 = new UnkConfig3(br);
+
+                if (offsetGen > 0)
+                {
+                    if (Type != RegionType.Gen)
+                        throw new InvalidDataException($"{nameof(offsetGen)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetGen;
+                    ReadTypeData(br);
+                }
+
+                if (offsetReverb > 0)
+                {
+                    if (Type != RegionType.Reverb)
+                        throw new InvalidDataException($"{nameof(offsetReverb)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetReverb;
+                    ReadTypeData(br);
+                }
 
                 br.Position = start + offsetUnkConfig4;
                 Config4 = new UnkConfig4(br);
 
-                if (HasTypeData)
+                if (offsetScrapCollection > 0)
                 {
-                    br.Position = start + typeDataOffset;
+                    if (Type != RegionType.ScrapCollection)
+                        throw new InvalidDataException($"{nameof(offsetScrapCollection)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetScrapCollection;
+                    ReadTypeData(br);
+                }
+
+                if (offsetSound > 0)
+                {
+                    if (Type != RegionType.Sound)
+                        throw new InvalidDataException($"{nameof(offsetSound)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetSound;
+                    ReadTypeData(br);
+                }
+
+                if (offsetLanding > 0)
+                {
+                    if (Type != RegionType.Landing)
+                        throw new InvalidDataException($"{nameof(offsetLanding)} must be 0 for type {GetType()}");
+
+                    br.Position = start + offsetLanding;
                     ReadTypeData(br);
                 }
             }
@@ -581,23 +606,23 @@ namespace SoulsFormats
                 bw.ReserveInt32("OffsetUnkConfig2");
                 bw.WriteInt32(PointID);
                 bw.ReserveInt32("ShapeDataOffset");
+                bw.ReserveInt32("OffsetArea");
+                bw.ReserveInt32("OffsetSpawn");
+                bw.WriteInt32(0); // Probably unknown and unused type offset
+                bw.ReserveInt32("OffsetWaterSurface");
+                bw.ReserveInt32("OffsetSFX");
+                bw.WriteInt32(0); // Probably unknown and unused type offset
+                bw.WriteInt32(0); // Probably unknown and unused type offset
+                bw.WriteInt32(0); // Probably unknown and unused type offset
                 bw.ReserveInt32("OffsetUnkConfig3");
+                bw.ReserveInt32("OffsetGen");
+                bw.ReserveInt32("OffsetReverb");
                 bw.ReserveInt32("OffsetUnkConfig4");
-                bw.ReserveInt32("TypeDataOffset");
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
-                bw.WriteInt32(0);
+                bw.WriteInt32(0); // Probably unknown and unused type offset
+                bw.WriteInt32(0); // Probably unknown and unused type offset
+                bw.ReserveInt32("OffsetScrapCollection");
+                bw.ReserveInt32("OffsetSound");
+                bw.ReserveInt32("OffsetLanding");
 
                 bw.FillInt32("NameOffset", (int)(bw.Position - start));
                 bw.WriteShiftJIS(MSB.ReambiguateName(Name), true);
@@ -619,20 +644,40 @@ namespace SoulsFormats
                     bw.FillInt32("ShapeDataOffset", 0);
                 }
 
+                FillTypeDataOffset(bw, start, "OffsetArea", Type == RegionType.OperationalArea || Type == RegionType.WarningArea || Type == RegionType.AttentionArea);
+                FillTypeDataOffset(bw, start, "OffsetSpawn", Type == RegionType.Spawn);
+                // Probably unknown type
+                FillTypeDataOffset(bw, start, "OffsetWaterSurface", Type == RegionType.WaterSurface);
+                FillTypeDataOffset(bw, start, "OffsetSFX", Type == RegionType.SFX);
+                // Probably unknown type
+                // Probably unknown type
+                // Probably unknown type
                 bw.FillInt32("OffsetUnkConfig3", (int)(bw.Position - start));
                 Config3.Write(bw);
+
+                FillTypeDataOffset(bw, start, "OffsetGen", Type == RegionType.Gen);
+                FillTypeDataOffset(bw, start, "OffsetReverb", Type == RegionType.Reverb);
 
                 bw.FillInt32("OffsetUnkConfig4", (int)(bw.Position - start));
                 Config4.Write(bw);
 
-                if (HasTypeData)
+                // Probably unknown type
+                // Probably unknown type
+                FillTypeDataOffset(bw, start, "OffsetScrapCollection", Type == RegionType.ScrapCollection);
+                FillTypeDataOffset(bw, start, "OffsetSound", Type == RegionType.Sound);
+                FillTypeDataOffset(bw, start, "OffsetLanding", Type == RegionType.Landing);
+            }
+
+            private void FillTypeDataOffset(BinaryWriterEx bw, long start, string name, bool hasType)
+            {
+                if (hasType)
                 {
-                    bw.FillInt32("TypeDataOffset", (int)(bw.Position - start));
+                    bw.FillInt32(name, (int)(bw.Position - start));
                     WriteTypeData(bw);
                 }
                 else
                 {
-                    bw.FillInt32("TypeDataOffset", 0);
+                    bw.FillInt32(name, 0);
                 }
             }
 
@@ -1162,278 +1207,6 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Type data for light points.
-            /// </summary>
-            public class LightConfig
-            {
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public bool Unk00 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk04 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk08 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk0C { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk10 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk14 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk18 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk1C { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk20 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk24 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk28 { get; set; }
-
-                public LightConfig()
-                {
-                    Unk00 = true;
-                    Unk04 = 1f;
-                    Unk08 = 1.5f;
-                    Unk0C = 1.4f;
-                    Unk10 = 1f;
-                    Unk14 = 4f;
-                    Unk18 = 1f;
-                    Unk1C = 1f;
-                    Unk20 = 1f;
-                    Unk24 = 1f;
-                    Unk28 = 1f;
-                }
-
-                /// <summary>
-                /// Creates a deep copy of the struct.
-                /// </summary>
-                public LightConfig DeepCopy()
-                {
-                    return (LightConfig)MemberwiseClone();
-                }
-
-                internal LightConfig(BinaryReaderEx br)
-                {
-                    Unk00 = br.ReadBoolean();
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    Unk04 = br.ReadSingle();
-                    Unk08 = br.ReadSingle();
-                    Unk0C = br.ReadSingle();
-                    Unk10 = br.ReadSingle();
-                    Unk14 = br.ReadSingle();
-                    Unk18 = br.ReadSingle();
-                    Unk1C = br.ReadSingle();
-                    Unk20 = br.ReadSingle();
-                    Unk24 = br.ReadSingle();
-                    Unk28 = br.ReadSingle();
-                }
-
-                internal void Write(BinaryWriterEx bw)
-                {
-                    bw.WriteBoolean(Unk00);
-                    bw.WriteByte(0);
-                    bw.WriteByte(0);
-                    bw.WriteByte(0);
-                    bw.WriteSingle(Unk04);
-                    bw.WriteSingle(Unk08);
-                    bw.WriteSingle(Unk0C);
-                    bw.WriteSingle(Unk10);
-                    bw.WriteSingle(Unk14);
-                    bw.WriteSingle(Unk18);
-                    bw.WriteSingle(Unk1C);
-                    bw.WriteSingle(Unk20);
-                    bw.WriteSingle(Unk24);
-                    bw.WriteSingle(Unk28);
-                }
-            }
-
-            /// <summary>
-            /// Type data for spot points.
-            /// </summary>
-            public class SpotConfig
-            {
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public bool Unk00 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk04 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk08 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk0C { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk10 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk14 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk18 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk1C { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk20 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk24 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk28 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk2C { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk30 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk34 { get; set; }
-
-                /// <summary>
-                /// Unknown.
-                /// </summary>
-                public float Unk38 { get; set; }
-
-                public SpotConfig()
-                {
-                    Unk00 = true;
-                    Unk04 = 1f;
-                    Unk08 = 5f;
-                    Unk0C = 5f;
-                    Unk10 = 5f;
-                    Unk14 = 1f;
-                    Unk18 = 1f;
-                    Unk1C = 1f;
-                    Unk20 = 1f;
-                    Unk24 = 1f;
-                    Unk28 = 1f;
-                    Unk2C = 0.01f;
-                    Unk30 = 30f;
-                    Unk34 = 70f;
-                    Unk38 = 90f;
-                }
-
-                /// <summary>
-                /// Creates a deep copy of the struct.
-                /// </summary>
-                public SpotConfig DeepCopy()
-                {
-                    return (SpotConfig)MemberwiseClone();
-                }
-
-                internal SpotConfig(BinaryReaderEx br)
-                {
-                    Unk00 = br.ReadBoolean();
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    br.AssertByte(0);
-                    Unk04 = br.ReadSingle();
-                    Unk08 = br.ReadSingle();
-                    Unk0C = br.ReadSingle();
-                    Unk10 = br.ReadSingle();
-                    Unk14 = br.ReadSingle();
-                    Unk18 = br.ReadSingle();
-                    Unk1C = br.ReadSingle();
-                    Unk20 = br.ReadSingle();
-                    Unk24 = br.ReadSingle();
-                    Unk28 = br.ReadSingle();
-                    Unk2C = br.ReadSingle();
-                    Unk30 = br.ReadSingle();
-                    Unk34 = br.ReadSingle();
-                    Unk38 = br.ReadSingle();
-                }
-
-                internal void Write(BinaryWriterEx bw)
-                {
-                    bw.WriteBoolean(Unk00);
-                    bw.WriteByte(0);
-                    bw.WriteByte(0);
-                    bw.WriteByte(0);
-                    bw.WriteSingle(Unk04);
-                    bw.WriteSingle(Unk08);
-                    bw.WriteSingle(Unk0C);
-                    bw.WriteSingle(Unk10);
-                    bw.WriteSingle(Unk14);
-                    bw.WriteSingle(Unk18);
-                    bw.WriteSingle(Unk1C);
-                    bw.WriteSingle(Unk20);
-                    bw.WriteSingle(Unk24);
-                    bw.WriteSingle(Unk28);
-                    bw.WriteSingle(Unk2C);
-                    bw.WriteSingle(Unk30);
-                    bw.WriteSingle(Unk34);
-                    bw.WriteSingle(Unk38);
-                }
-            }
-
-            /// <summary>
             /// Type data for landing points.
             /// </summary>
             public class LandingConfig
@@ -1483,7 +1256,6 @@ namespace SoulsFormats
             public class DefaultRegion : Region
             {
                 private protected override RegionType Type => RegionType.Default;
-                private protected override bool HasTypeData => false;
 
                 public DefaultRegion() : base("default"){}
 
@@ -1498,7 +1270,6 @@ namespace SoulsFormats
             public class RoutePoint : Region
             {
                 private protected override RegionType Type => RegionType.RoutePoint;
-                private protected override bool HasTypeData => false;
 
                 public RoutePoint() : base("route") { }
 
@@ -1513,7 +1284,6 @@ namespace SoulsFormats
             public class Action : Region
             {
                 private protected override RegionType Type => RegionType.Action;
-                private protected override bool HasTypeData => false;
 
                 public Action() : base("action") { }
 
@@ -1528,7 +1298,6 @@ namespace SoulsFormats
             public class OperationalArea : Region
             {
                 private protected override RegionType Type => RegionType.OperationalArea;
-                private protected override bool HasTypeData => true;
 
                 public AreaConfig Area { get; set; }
 
@@ -1555,7 +1324,6 @@ namespace SoulsFormats
             public class WarningArea : Region
             {
                 private protected override RegionType Type => RegionType.WarningArea;
-                private protected override bool HasTypeData => true;
 
                 public AreaConfig Area { get; set; }
 
@@ -1582,7 +1350,6 @@ namespace SoulsFormats
             public class AttentionArea : Region
             {
                 private protected override RegionType Type => RegionType.AttentionArea;
-                private protected override bool HasTypeData => true;
 
                 public AreaConfig Area { get; set; }
 
@@ -1609,7 +1376,6 @@ namespace SoulsFormats
             public class SpawnPoint : Region
             {
                 private protected override RegionType Type => RegionType.Spawn;
-                private protected override bool HasTypeData => true;
 
                 public SpawnConfig Spawn { get; set; }
 
@@ -1637,7 +1403,6 @@ namespace SoulsFormats
             public class ScrapCollectionPoint : Region
             {
                 private protected override RegionType Type => RegionType.ScrapCollection;
-                private protected override bool HasTypeData => true;
 
                 public ScrapCollectionConfig ScrapCollection { get; set; }
 
@@ -1664,7 +1429,7 @@ namespace SoulsFormats
             public class SaveRegion : Region
             {
                 private protected override RegionType Type => RegionType.Save;
-                private protected override bool HasTypeData => false;
+
 
                 public SaveRegion() : base("save") { }
 
@@ -1679,7 +1444,7 @@ namespace SoulsFormats
             public class CollisionAvoidanceRegion : Region
             {
                 private protected override RegionType Type => RegionType.CollisionAvoidance;
-                private protected override bool HasTypeData => false;
+
 
                 public CollisionAvoidanceRegion() : base("collision avoidance") { }
 
@@ -1694,7 +1459,7 @@ namespace SoulsFormats
             public class CommunicationArea : Region
             {
                 private protected override RegionType Type => RegionType.CommunicationArea;
-                private protected override bool HasTypeData => false;
+
 
                 public CommunicationArea() : base("communication area") { }
 
@@ -1709,7 +1474,6 @@ namespace SoulsFormats
             public class WaterSurfaceRegion : Region
             {
                 private protected override RegionType Type => RegionType.WaterSurface;
-                private protected override bool HasTypeData => true;
 
                 public WaterSurfaceConfig WaterSurface { get; set; }
 
@@ -1736,7 +1500,6 @@ namespace SoulsFormats
             public class SFXRegion : Region
             {
                 private protected override RegionType Type => RegionType.SFX;
-                private protected override bool HasTypeData => true;
 
                 public SFXConfig SFX { get; set; }
 
@@ -1763,7 +1526,6 @@ namespace SoulsFormats
             public class GenRegion : Region
             {
                 private protected override RegionType Type => RegionType.Gen;
-                private protected override bool HasTypeData => true;
 
                 public GenConfig Gen { get; set; }
 
@@ -1785,27 +1547,11 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Unknown; Called AC sumbmersion return start and end points; Might reference drowning somehow.
-            /// </summary>
-            public class SubmersionRegion : Region
-            {
-                private protected override RegionType Type => RegionType.Submersion;
-                private protected override bool HasTypeData => false;
-
-                public SubmersionRegion() : base("submersion") { }
-
-                private protected override void DeepCopyTo(Region region) { }
-
-                internal SubmersionRegion(BinaryReaderEx br) : base(br) { }
-            }
-
-            /// <summary>
             /// A sound trigger region of some kind.
             /// </summary>
             public class SoundRegion : Region
             {
                 private protected override RegionType Type => RegionType.Sound;
-                private protected override bool HasTypeData => true;
 
                 public SoundConfig Sound { get; set; }
 
@@ -1832,7 +1578,6 @@ namespace SoulsFormats
             public class ReverbRegion : Region
             {
                 private protected override RegionType Type => RegionType.Reverb;
-                private protected override bool HasTypeData => true;
 
                 public ReverbConfig Reverb { get; set; }
 
@@ -1854,66 +1599,11 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// A light point of some kind.
-            /// </summary>
-            public class LightRegion : Region
-            {
-                private protected override RegionType Type => RegionType.Light;
-                private protected override bool HasTypeData => true;
-
-                public LightConfig Light { get; set; }
-
-                public LightRegion() : base("light")
-                {
-                    Light = new LightConfig();
-                }
-
-                private protected override void DeepCopyTo(Region region)
-                {
-                    var light = (LightRegion)region;
-                    light.Light = Light.DeepCopy();
-                }
-
-                internal LightRegion(BinaryReaderEx br) : base(br) { }
-
-                private protected override void ReadTypeData(BinaryReaderEx br) => Light = new LightConfig(br);
-                private protected override void WriteTypeData(BinaryWriterEx bw) => Light.Write(bw);
-            }
-
-            /// <summary>
-            /// Unknown; Usually named spot.
-            /// </summary>
-            public class SpotRegion : Region
-            {
-                private protected override RegionType Type => RegionType.Spot;
-                private protected override bool HasTypeData => true;
-
-                public SpotConfig Spot { get; set; }
-
-                public SpotRegion() : base("spot")
-                {
-                    Spot = new SpotConfig();
-                }
-
-                private protected override void DeepCopyTo(Region region)
-                {
-                    var spot = (SpotRegion)region;
-                    spot.Spot = Spot.DeepCopy();
-                }
-
-                internal SpotRegion(BinaryReaderEx br) : base(br) { }
-
-                private protected override void ReadTypeData(BinaryReaderEx br) => Spot = new SpotConfig(br);
-                private protected override void WriteTypeData(BinaryWriterEx bw) => Spot.Write(bw);
-            }
-
-            /// <summary>
             /// Unknown; Related to a landing of some kind.
             /// </summary>
             public class LandingRegion : Region
             {
                 private protected override RegionType Type => RegionType.Landing;
-                private protected override bool HasTypeData => true;
 
                 public LandingConfig Landing { get; set; }
 
@@ -1940,7 +1630,6 @@ namespace SoulsFormats
             public class DebugNavigationRegion : Region
             {
                 private protected override RegionType Type => RegionType.DebugNavigation;
-                private protected override bool HasTypeData => false;
 
                 public DebugNavigationRegion() : base("debug navigation") { }
 
@@ -1955,7 +1644,7 @@ namespace SoulsFormats
             public class LoadMeasurementRegion : Region
             {
                 private protected override RegionType Type => RegionType.LoadMeasurement;
-                private protected override bool HasTypeData => false;
+
 
                 public LoadMeasurementRegion() : base("load measurement") { }
 
@@ -1970,7 +1659,6 @@ namespace SoulsFormats
             public class UnusedRegion : Region
             {
                 private protected override RegionType Type => RegionType.Unused;
-                private protected override bool HasTypeData => false;
 
                 public UnusedRegion() : base("") { }
 
