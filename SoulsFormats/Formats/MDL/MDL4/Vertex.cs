@@ -82,7 +82,7 @@ namespace SoulsFormats
                 Normal = vertex.Normal;
                 Tangent = vertex.Tangent;
                 Bitangent = vertex.Bitangent;
-                UVs = new List<Vector2>();
+                UVs = new List<Vector2>(4);
                 foreach (Vector2 uv in vertex.UVs)
                     UVs.Add(uv);
                 BoneIndices = new VertexBoneIndices();

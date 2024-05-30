@@ -210,7 +210,7 @@ namespace SoulsFormats
 
                     float uvFactor = 1024;
                     // NB hack
-                    if (!br.BigEndian)
+                    if (flv.Header.Version == 0x12|| !br.BigEndian)
                         uvFactor = 2048;
 
                     Vertices = new List<FLVER.Vertex>(vertexCount);
