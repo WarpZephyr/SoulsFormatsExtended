@@ -6,24 +6,40 @@ namespace SoulsFormats
 {
     public partial class FFXDLSE
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// An effect.
+        /// </summary>
         public class FXEffect : FXSerializable
         {
-            internal override string ClassName => "FXSerializableEffect";
-
-            internal override int Version => 5;
-
+            /// <summary>
+            /// The ID assigned to this effect.
+            /// </summary>
             [XmlAttribute]
             public int ID { get; set; }
 
+            /// <summary>
+            /// A list of parameters.
+            /// </summary>
             public ParamList ParamList1 { get; set; }
 
+            /// <summary>
+            /// A list of parameters.
+            /// </summary>
             public ParamList ParamList2 { get; set; }
 
+            /// <summary>
+            /// A state map containing states that can trigger one another based on evaluated triggers.
+            /// </summary>
             public StateMap StateMap { get; set; }
 
+            /// <summary>
+            /// Unknown.
+            /// </summary>
             public ResourceSet ResourceSet { get; set; }
 
+            /// <summary>
+            /// Create a new <see cref="FXEffect"/>.
+            /// </summary>
             public FXEffect()
             {
                 ParamList1 = new ParamList();
@@ -32,8 +48,26 @@ namespace SoulsFormats
                 ResourceSet = new ResourceSet();
             }
 
+            #region FXSerializable
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal override string ClassName => "FXSerializableEffect";
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal override int Version => 5;
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             internal FXEffect(BinaryReaderEx br, List<string> classNames) : base(br, classNames) { }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             protected internal override void Deserialize(BinaryReaderEx br, List<string> classNames)
             {
                 br.AssertInt32(0);
@@ -53,6 +87,9 @@ namespace SoulsFormats
                 br.AssertByte(0);
             }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             internal override void AddClassNames(List<string> classNames)
             {
                 base.AddClassNames(classNames);
@@ -65,6 +102,9 @@ namespace SoulsFormats
                 ResourceSet.AddClassNames(classNames);
             }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             protected internal override void Serialize(BinaryWriterEx bw, List<string> classNames)
             {
                 bw.WriteInt32(0);
@@ -83,7 +123,8 @@ namespace SoulsFormats
                 ResourceSet.Write(bw, classNames);
                 bw.WriteByte(0);
             }
+
+            #endregion
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

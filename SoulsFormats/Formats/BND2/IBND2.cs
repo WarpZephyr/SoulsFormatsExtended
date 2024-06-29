@@ -29,7 +29,7 @@
         int FileVersion { get; set; }
 
         /// <summary>
-        /// The alignment of each <see cref="File"/>.
+        /// The alignment of each <see cref="BND2.File"/>.
         /// <para>The bigger the aligment, the more empty bytes are added as padding. This increases the size of the archive.</para>
         /// </summary>
         ushort AlignmentSize { get; set; }
@@ -47,7 +47,7 @@
 
         /// <summary>
         /// The base directory of all files.
-        /// <para>Only used when <see cref="FilePathModeEnum.BaseDirectory"/> is set on <see cref="FilePathMode"/>.</para>
+        /// <para>Only used when <see cref="BND2.FilePathModeEnum.BaseDirectory"/> is set on <see cref="FilePathMode"/>.</para>
         /// </summary>
         string BaseDirectory { get; set; }
     }

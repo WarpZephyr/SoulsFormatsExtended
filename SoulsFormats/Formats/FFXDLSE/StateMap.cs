@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -7,22 +8,44 @@ namespace SoulsFormats
 {
     public partial class FFXDLSE
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// A state map containing states that can trigger one another based on evaluated triggers.
+        /// </summary>
         public class StateMap : FXSerializable, IXmlSerializable
         {
-            internal override string ClassName => "FXSerializableStateMap";
-
-            internal override int Version => 1;
-
+            /// <summary>
+            /// A list of states in the <see cref="StateMap"/>.
+            /// </summary>
             public List<State> States { get; set; }
 
+            /// <summary>
+            /// Create a new <see cref="StateMap"/>.
+            /// </summary>
             public StateMap()
             {
                 States = new List<State>();
             }
 
+            #region FXSerializable
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal override string ClassName => "FXSerializableStateMap";
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal override int Version => 1;
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             internal StateMap(BinaryReaderEx br, List<string> classNames) : base(br, classNames) { }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             protected internal override void Deserialize(BinaryReaderEx br, List<string> classNames)
             {
                 int stateCount = br.ReadInt32();
@@ -31,6 +54,9 @@ namespace SoulsFormats
                     States.Add(new State(br, classNames));
             }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             internal override void AddClassNames(List<string> classNames)
             {
                 base.AddClassNames(classNames);
@@ -38,6 +64,9 @@ namespace SoulsFormats
                     state.AddClassNames(classNames);
             }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
             protected internal override void Serialize(BinaryWriterEx bw, List<string> classNames)
             {
                 bw.WriteInt32(States.Count);
@@ -45,7 +74,10 @@ namespace SoulsFormats
                     state.Write(bw, classNames);
             }
 
+            #endregion
+
             #region IXmlSerializable
+
             XmlSchema IXmlSerializable.GetSchema() => null;
 
             void IXmlSerializable.ReadXml(XmlReader reader)
@@ -70,8 +102,8 @@ namespace SoulsFormats
                     StateSerializer.Serialize(writer, States[i]);
                 }
             }
+
             #endregion
         }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

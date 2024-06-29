@@ -148,8 +148,6 @@ namespace SoulsFormats
             int dbpParamSize = dbp.CalculateParamSize();
             if (CellReader.Length < dbpParamSize)
                 return false;
-            if (CellReader.Length > dbpParamSize)
-                return false;
             CellReader.Position = 0;
 
             var cells = new Cell[dbp.Fields.Count];

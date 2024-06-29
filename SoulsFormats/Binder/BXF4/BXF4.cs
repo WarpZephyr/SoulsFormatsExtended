@@ -320,7 +320,7 @@ namespace SoulsFormats
             bw.WriteInt64(0);
 
             bw.WriteBoolean(bxf.Unicode);
-            Binder.WriteFormat(bw, bxf.BigEndian, bxf.BitBigEndian, bxf.Format);
+            Binder.WriteFormat(bw, bxf.BitBigEndian, bxf.Format);
             bw.WriteByte(bxf.Extended);
             bw.WriteByte(0);
 

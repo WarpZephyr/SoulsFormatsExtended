@@ -37,9 +37,9 @@ namespace SoulsFormats
                 Short = 4,
 
                 // I would assume at this point?
-                /// <summary>
-                /// An unsigned 16-bit integer.
-                /// </summary>
+                // /// <summary>
+                // /// An unsigned 16-bit integer.
+                // /// </summary>
                 // UShort = 5,
 
                 /// <summary>

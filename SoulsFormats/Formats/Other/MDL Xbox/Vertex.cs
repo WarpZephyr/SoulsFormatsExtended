@@ -260,71 +260,43 @@ namespace SoulsFormats.Other
         }
 
         /// <summary>
-        /// Unknown.
+        /// Assumed to be a dummy.
         /// </summary>
-        public class Struct7
+        public class Dummy
         {
             /// <summary>
-            /// Unknown.
+            /// The position.
             /// </summary>
-            public float Unk00;
+            public Vector3 Position;
 
             /// <summary>
-            /// Unknown.
+            /// Assumed to be the forward vector.
             /// </summary>
-            public float Unk04;
+            public Vector3 Forward;
 
             /// <summary>
-            /// Unknown.
+            /// Assumed to be the parent bone index.
             /// </summary>
-            public float Unk08;
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public float Unk0C;
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public float Unk10;
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public float Unk14;
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            public int Unk18;
+            public int ParentBoneIndex;
 
             /// <summary>
             /// Unknown.
             /// </summary>
             public int Unk1C;
 
-            internal Struct7(BinaryReaderEx br)
+            internal Dummy(BinaryReaderEx br)
             {
-                Unk00 = br.ReadSingle();
-                Unk04 = br.ReadSingle();
-                Unk08 = br.ReadSingle();
-                Unk0C = br.ReadSingle();
-                Unk10 = br.ReadSingle();
-                Unk14 = br.ReadSingle();
-                Unk18 = br.ReadInt32();
+                Position = br.ReadVector3();
+                Forward = br.ReadVector3();
+                ParentBoneIndex = br.ReadInt32();
                 Unk1C = br.ReadInt32();
             }
 
             internal void Write(BinaryWriterEx bw)
             {
-                bw.WriteSingle(Unk00);
-                bw.WriteSingle(Unk04);
-                bw.WriteSingle(Unk08);
-                bw.WriteSingle(Unk0C);
-                bw.WriteSingle(Unk10);
-                bw.WriteSingle(Unk14);
-                bw.WriteInt32(Unk18);
+                bw.WriteVector3(Position);
+                bw.WriteVector3(Forward);
+                bw.WriteInt32(ParentBoneIndex);
                 bw.WriteInt32(Unk1C);
             }
         }

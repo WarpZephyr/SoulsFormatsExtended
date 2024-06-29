@@ -6,7 +6,10 @@ using System.IO;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A split header and data archive of some kind found in Another Century's Episode Portable.<br/>
+    /// A split header and data archive of some kind found in:<br/>
+    /// Monster Hunter Diary: Poka Poka Airou Village<br/>
+    /// Another Century's Episode Portable.<br/>
+    /// <br/>
     /// Extensions:<br/>
     /// Header: .bhd<br/>
     /// Data: .bnd
@@ -245,7 +248,7 @@ namespace SoulsFormats
         /// <param name="br">A <see cref="BinaryReaderEx"/> for reading.</param>
         /// <returns>Whether or not the data is an <see cref="LDMU"/>.</returns>
         private static bool Is(BinaryReaderEx br)
-            => br.GetASCII(br.Position, 4) == "LDMU";
+            => br.Length > 4 && br.GetASCII(br.Position, 4) == "LDMU";
 
         #endregion
 

@@ -42,13 +42,13 @@ namespace SoulsFormats
                         case LayoutType.EdgeCompressed:
                             return 1;
 
-                        case LayoutType.Byte4A:
-                        case LayoutType.Byte4B:
-                        case LayoutType.Short2toFloat2:
-                        case LayoutType.Byte4C:
-                        case LayoutType.Byte4D:
+                        case LayoutType.Byte4_10:
+                        case LayoutType.Byte4_11:
+                        case LayoutType.Byte4_12:
+                        case LayoutType.Byte4_13:
+                        case LayoutType.Byte4_14:
                         case LayoutType.UV:
-                        case LayoutType.Byte4E:
+                        case LayoutType.Byte4_2F:
                             return 4;
 
                         case LayoutType.Float2:
@@ -140,29 +140,29 @@ namespace SoulsFormats
             Float4 = 0x03,
 
             /// <summary>
-            /// Unknown.
+            /// Four bytes or two shorts?
             /// </summary>
-            Byte4A = 0x10,
+            Byte4_10 = 0x10,
+
+            /// <summary>
+            /// Four bytes or two shorts?
+            /// </summary>
+            Byte4_11 = 0x11,
+
+            /// <summary>
+            /// Four bytes or two shorts?
+            /// </summary>
+            Byte4_12 = 0x12,
 
             /// <summary>
             /// Four bytes.
             /// </summary>
-            Byte4B = 0x11,
-
-            /// <summary>
-            /// Two shorts?
-            /// </summary>
-            Short2toFloat2 = 0x12,
+            Byte4_13 = 0x13,
 
             /// <summary>
             /// Four bytes.
             /// </summary>
-            Byte4C = 0x13,
-
-            /// <summary>
-            /// Four bytes.
-            /// </summary>
-            Byte4D = 0x14,
+            Byte4_14 = 0x14,
 
             /// <summary>
             /// Two shorts.
@@ -187,12 +187,17 @@ namespace SoulsFormats
             /// <summary>
             /// Unknown.
             /// </summary>
+            Unk2D = 0x2D,
+
+            /// <summary>
+            /// Unknown.
+            /// </summary>
             Short4toFloat4B = 0x2E,
 
             /// <summary>
             /// Unknown.
             /// </summary>
-            Byte4E = 0x2F,
+            Byte4_2F = 0x2F,
 
             /// <summary>
             /// Edge compression specified by edge members in face sets.

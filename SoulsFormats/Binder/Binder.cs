@@ -72,18 +72,9 @@ namespace SoulsFormats
         /// <summary>
         /// Writes a binder format byte, reversed according to the big-endian setting.
         /// </summary>
-        public static void WriteFormat(BinaryWriterEx bw, bool bigEndian, bool bitBigEndian, Format format)
+        public static void WriteFormat(BinaryWriterEx bw, bool bitBigEndian, Format format)
         {
-            // In BND3s with bigEndian false, bitBigEndian false, and flag BigEndian on, force big endian should not be used.
-            bool forceBigEndian = ForceBigEndian(format);
-            bool allowForce = bigEndian || bitBigEndian && forceBigEndian;
-
-            bool reverse = bitBigEndian;
-            if (!reverse && allowForce)
-            {
-                reverse = forceBigEndian;
-            }
-
+            bool reverse = bitBigEndian || (ForceBigEndian(format) && (format & Format.Flag6) != 0);
             byte rawFormat = reverse ? (byte)format : SFUtil.ReverseBits((byte)format);
             bw.WriteByte(rawFormat);
         }

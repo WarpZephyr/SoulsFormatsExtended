@@ -23,9 +23,9 @@ namespace SoulsFormats.Other
         public int Unk14;
 
         /// <summary>
-        /// Individual chunks of the model.
+        /// Bones of the model.
         /// </summary>
-        public List<Mesh> Meshes;
+        public List<Bone> Bones;
 
         /// <summary>
         /// The vertex indices within the model.
@@ -53,9 +53,9 @@ namespace SoulsFormats.Other
         public List<VertexD> VerticesD;
 
         /// <summary>
-        /// Unknown.
+        /// Assumed to be dummies.
         /// </summary>
-        public List<Struct7> Struct7s;
+        public List<Dummy> Dummies;
 
         /// <summary>
         /// The materials in this model.
@@ -94,30 +94,30 @@ namespace SoulsFormats.Other
             Unk10 = br.ReadInt32();
             Unk14 = br.ReadInt32();
 
-            int meshCount = br.ReadInt32();
+            int boneCount = br.ReadInt32();
             int indexCount = br.ReadInt32();
             int vertexCountA = br.ReadInt32();
             int vertexCountB = br.ReadInt32();
             int vertexCountC = br.ReadInt32();
             int vertexCountD = br.ReadInt32();
-            int count7 = br.ReadInt32();
+            int dummyCount = br.ReadInt32();
             int materialCount = br.ReadInt32();
             int textureCount = br.ReadInt32();
 
-            int meshesOffset = br.ReadInt32();
+            int bonesOffset = br.ReadInt32();
             int indicesOffset = br.ReadInt32();
             int verticesOffsetA = br.ReadInt32();
             int verticesOffsetB = br.ReadInt32();
             int verticesOffsetC = br.ReadInt32();
             int verticesOffsetD = br.ReadInt32();
-            int offset7 = br.ReadInt32();
+            int dummiesOffset = br.ReadInt32();
             int materialsOffset = br.ReadInt32();
             int texturesOffset = br.ReadInt32();
 
-            br.Position = meshesOffset;
-            Meshes = new List<Mesh>();
-            for (int i = 0; i < meshCount; i++)
-                Meshes.Add(new Mesh(br));
+            br.Position = bonesOffset;
+            Bones = new List<Bone>();
+            for (int i = 0; i < boneCount; i++)
+                Bones.Add(new Bone(br));
 
             Indices = br.GetUInt16s(indicesOffset, indexCount);
 
@@ -141,10 +141,10 @@ namespace SoulsFormats.Other
             for (int i = 0; i < vertexCountD; i++)
                 VerticesD.Add(new VertexD(br));
 
-            br.Position = offset7;
-            Struct7s = new List<Struct7>(count7);
-            for (int i = 0; i < count7; i++)
-                Struct7s.Add(new Struct7(br));
+            br.Position = dummiesOffset;
+            Dummies = new List<Dummy>(dummyCount);
+            for (int i = 0; i < dummyCount; i++)
+                Dummies.Add(new Dummy(br));
 
             br.Position = materialsOffset;
             Materials = new List<Material>(materialCount);

@@ -64,7 +64,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Loads file data from a BinaryReaderEx.
+        /// Loads a file from a stream, automatically decompressing it if necessary.
         /// </summary>
         protected virtual void Read(BinaryReaderEx br) => throw new NotImplementedException($"{nameof(Read)} is not implemented for this format.");
 
@@ -136,7 +136,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Returns whether or not the <see cref="BinaryReaderEx"/> read as this format correctly.
+        /// Returns whether or not the data read as this format correctly.
         /// </summary>
         private static bool TryRead(BinaryReaderEx br, out TFormat file)
         {
@@ -159,7 +159,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Returns whether or not the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so, automatically decompressing it if necessary.
+        /// Returns whether or not the data appears to be a file of this type and reads it if so, automatically decompressing it if necessary.
         /// </summary>
         private static bool IsReadInternal(BinaryReaderEx br, out TFormat file)
         {
@@ -196,7 +196,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Returns whether the <see cref="BinaryReaderEx"/> appears to be a file of this type and reads it if so.
+        /// Returns whether the data appears to be a file of this type and reads it if so.
         /// </summary>
         // A more direct check without re-reading everything.
         public static bool IsRead(BinaryReaderEx br, out TFormat file)
@@ -230,12 +230,12 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Writes file data to a <see cref="BinaryWriterEx"/>.
+        /// Writes file data to a stream.
         /// </summary>
         protected virtual void Write(BinaryWriterEx bw) => throw new NotImplementedException($"{nameof(Write)} is not implemented for this format.");
 
         /// <summary>
-        /// Writes file data to a <see cref="BinaryWriterEx"/>, compressing it afterwards if specified.
+        /// Writes file data to a stream, compressing it afterwards if specified.
         /// </summary>
         private void Write(BinaryWriterEx bw, DCX.Type compression)
         {

@@ -119,9 +119,27 @@ namespace SoulsFormats
                 br.AssertInt64(0);
             }
 
+            long rowsStart = br.Position;
+            long dataOffsetTest;
+            if (Format2D.HasFlag(FormatFlags1.LongDataOffset))
+            {
+                dataOffsetTest = br.GetInt64(br.Position + 8);
+            }
+            else
+            {
+                dataOffsetTest = br.GetUInt32(br.Position + 4);
+            }
+
+            bool unnamedRows = false;
+            long rowsSize = dataOffsetTest - rowsStart;
+            if (rowsSize < (rowCount * 12))
+            {
+                unnamedRows = true;
+            }
+
             Rows = new List<Row>(rowCount);
             for (int i = 0; i < rowCount; i++)
-                Rows.Add(new Row(br, this, ref actualStringsOffset));
+                Rows.Add(new Row(br, this, ref actualStringsOffset, unnamedRows));
 
             if (Rows.Count > 1)
                 DetectedRowSize = Rows[1].DataOffset - Rows[0].DataOffset;

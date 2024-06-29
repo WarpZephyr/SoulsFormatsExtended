@@ -41,7 +41,7 @@ namespace SoulsFormats
             public short AttachBoneIndex { get; set; }
 
             /// <summary>
-            /// Unknown.
+            /// Unknown; Has been used to hold IDs referencing things such as SFX somehow in the color components.
             /// </summary>
             public Color Color { get; set; }
 

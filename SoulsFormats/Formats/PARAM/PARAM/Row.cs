@@ -71,7 +71,7 @@ namespace SoulsFormats
                 Cells = cells;
 }
 
-            internal Row(BinaryReaderEx br, PARAM parent, ref long actualStringsOffset)
+            internal Row(BinaryReaderEx br, PARAM parent, ref long actualStringsOffset, bool unnamedRows)
             {
                 long nameOffset;
                 if (parent.Format2D.HasFlag(FormatFlags1.LongDataOffset))
@@ -79,16 +79,25 @@ namespace SoulsFormats
                     ID = br.ReadInt32();
                     br.ReadInt32(); // I would like to assert 0, but some of the generatordbglocation params in DS2S have garbage here
                     DataOffset = br.ReadInt64();
-                    nameOffset = br.ReadInt64();
+
+                    if (!unnamedRows)
+                        nameOffset = br.ReadInt64();
+                    else
+                        nameOffset = -1;
                 }
                 else
                 {
                     ID = br.ReadInt32();
                     DataOffset = br.ReadUInt32();
-                    nameOffset = br.ReadUInt32();
+
+                    if (!unnamedRows)
+                        nameOffset = br.ReadUInt32();
+                    else
+                        nameOffset = -1;
                 }
 
-                if (nameOffset != 0 && nameOffset != br.Length)
+
+                if (!unnamedRows && nameOffset != 0 && nameOffset != br.Length)
                 {
                     if (actualStringsOffset == 0 || nameOffset < actualStringsOffset)
                         actualStringsOffset = nameOffset;
