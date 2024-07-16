@@ -49,7 +49,7 @@ namespace SoulsFormats.Kuon
                 Files.Add(new File(bnd.Files[i].ID, bnd.Files[i].Name, bnd.Files[i].Bytes));
             }
 
-            FileVersion = 200;
+            FileVersion = bnd.FileVersion;
         }
 
         /// <summary>
@@ -110,6 +110,9 @@ namespace SoulsFormats.Kuon
                 bw.FillInt32($"NameOffset_{i}", (int)bw.Position);
                 bw.WriteShiftJIS(Files[i].Name, true);
             }
+
+            // Yoshitsune Eiyuuden Shura AllMsg.bnd
+            bw.Pad(0x10);
 
             for (int i = 0; i < Files.Count; i++)
             {
