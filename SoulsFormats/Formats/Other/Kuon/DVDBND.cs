@@ -49,7 +49,7 @@ namespace SoulsFormats.Kuon
                 Files.Add(new File(bnd.Files[i].ID, bnd.Files[i].Name, bnd.Files[i].Bytes));
             }
 
-            FileVersion = 202;
+            FileVersion = bnd.FileVersion;
         }
 
         /// <summary>
