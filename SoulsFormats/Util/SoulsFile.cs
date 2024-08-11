@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace SoulsFormats
@@ -67,6 +66,16 @@ namespace SoulsFormats
         /// Loads a file from a stream, automatically decompressing it if necessary.
         /// </summary>
         protected virtual void Read(BinaryReaderEx br) => throw new NotImplementedException($"{nameof(Read)} is not implemented for this format.");
+
+        /// <summary>
+        /// Loads a file from a stream, automatically decompressing it if necessary.
+        /// </summary>
+        internal static TFormat ReadInternal(BinaryReaderEx br)
+        {
+            TFormat file = new TFormat();
+            file.Read(br);
+            return file;
+        }
 
         /// <summary>
         /// Loads a file from a stream, automatically decompressing it if necessary.
