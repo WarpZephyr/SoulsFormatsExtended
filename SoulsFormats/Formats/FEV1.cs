@@ -13,8 +13,7 @@
             if (br.Length < 4)
                 return false;
 
-            string magic = br.GetASCII(br.Position, 4);
-            return magic == "FEV1";
+            return br.GetASCII(br.Position, 4) == "FEV1";
         }
     }
 }

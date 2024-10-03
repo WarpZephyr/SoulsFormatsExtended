@@ -79,6 +79,7 @@ namespace SoulsFormats
                 {
                     case 1: return new Param1(br, classNames);
                     case 2: return new Param2(br, classNames);
+                    case 3: return new Param3(br, classNames);
                     case 5: return new Param5(br, classNames);
                     case 6: return new Param6(br, classNames);
                     case 7: return new Param7(br, classNames);
@@ -293,6 +294,79 @@ namespace SoulsFormats
             /// </summary>
             public override string ToString()
                 => $"{nameof(Param2)}({{{string.Join(",", Ints)}}})";
+        }
+
+        /// <summary>
+        /// A parameter that holds an array of <see cref="TickInt"/> values.<br/>
+        /// Purpose unknown.
+        /// </summary>
+        public class Param3 : Param
+        {
+            /// <summary>
+            /// A list of <see cref="TickInt"/> values.
+            /// </summary>
+            public List<TickInt> TickInts { get; set; }
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            public Param3()
+            {
+                TickInts = new List<TickInt>();
+            }
+
+            #region Param
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal override int Type => 3;
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal Param3(BinaryReaderEx br, List<string> classNames) : base(br, classNames) { }
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            protected internal override void Deserialize(BinaryReaderEx br, List<string> classNames)
+            {
+                base.Deserialize(br, classNames);
+                int count = br.ReadInt32();
+                TickInts = new List<TickInt>(count);
+                for (int i = 0; i < count; i++)
+                    TickInts.Add(new TickInt(br, classNames));
+            }
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            internal override void AddClassNames(List<string> classNames)
+            {
+                base.AddClassNames(classNames);
+                foreach (TickInt tickInt in TickInts)
+                    tickInt.AddClassNames(classNames);
+            }
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            protected internal override void Serialize(BinaryWriterEx bw, List<string> classNames)
+            {
+                base.Serialize(bw, classNames);
+                bw.WriteInt32(TickInts.Count);
+                foreach (TickInt tickInt in TickInts)
+                    tickInt.Write(bw, classNames);
+            }
+
+            #endregion
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            public override string ToString()
+                => $"{nameof(Param3)}({{{string.Join(",", TickInts)}}})";
         }
 
         /// <summary>

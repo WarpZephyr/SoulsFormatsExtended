@@ -13,8 +13,7 @@
             if (br.Length < 4)
                 return false;
 
-            string magic = br.GetASCII(br.Position, 4);
-            return magic == "FSB4";
+            return br.GetASCII(br.Position, 4) == "FSB4";
         }
     }
 }
