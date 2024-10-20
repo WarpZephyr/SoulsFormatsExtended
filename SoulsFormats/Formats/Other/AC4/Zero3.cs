@@ -32,6 +32,11 @@ namespace SoulsFormats.AC4
         public FormatVersion Version { get; set; }
 
         /// <summary>
+        /// Whether or not the <see cref="Zero3"/> parts are packed in archives.
+        /// </summary>
+        public bool IsPacked { get; set; }
+
+        /// <summary>
         /// Files in this container.
         /// </summary>
         public List<File> Files { get; }
@@ -84,7 +89,7 @@ namespace SoulsFormats.AC4
             FormatVersion version;
 
             // Unwrap first container if in binder
-            BinaryReaderEx br = UnwrapContainer(FormatVersion.ArmoredCore4, new BinaryReaderEx(bigEndian, System.IO.File.OpenRead(containerPath)));
+            BinaryReaderEx br = UnwrapContainer(FormatVersion.ArmoredCore4, new BinaryReaderEx(bigEndian, System.IO.File.OpenRead(containerPath)), out bool isPacked);
             containers.Add(br);
 
             // Check version
@@ -104,13 +109,14 @@ namespace SoulsFormats.AC4
             containerPath = Path.ChangeExtension(path, (++index).ToString("D3"));
             while (System.IO.File.Exists(containerPath))
             {
-                br = UnwrapContainer(version, new BinaryReaderEx(bigEndian, System.IO.File.OpenRead(containerPath)));
+                br = UnwrapContainer(version, new BinaryReaderEx(bigEndian, System.IO.File.OpenRead(containerPath)), out _);
                 containers.Add(br);
                 containerPath = Path.ChangeExtension(path, (++index).ToString("D3"));
             }
 
             // Read containers then dispose
             var result = new Zero3(containers[0], containers, version);
+            result.IsPacked = isPacked;
             foreach (BinaryReaderEx container in containers)
                 container.Dispose();
 
@@ -118,7 +124,7 @@ namespace SoulsFormats.AC4
         }
 
         /// <summary>
-        /// Read file data from the given list of byte arrays..
+        /// Read file data from the given list of byte arrays.
         /// </summary>
         /// <param name="bytesList">A list of byte arrays containing <see cref="Zero3"/> containers.</param>
         /// <returns>A new <see cref="Zero3"/>.</returns>
@@ -138,7 +144,7 @@ namespace SoulsFormats.AC4
             FormatVersion version;
 
             // Unwrap first container if in binder
-            BinaryReaderEx br = UnwrapContainer(FormatVersion.ArmoredCore4, new BinaryReaderEx(bigEndian, bytesList[0]));
+            BinaryReaderEx br = UnwrapContainer(FormatVersion.ArmoredCore4, new BinaryReaderEx(bigEndian, bytesList[0]), out bool isPacked);
             containers.Add(br);
 
             // Check version
@@ -157,12 +163,13 @@ namespace SoulsFormats.AC4
             // Grab remaining containers
             foreach (var bytes in bytesList)
             {
-                br = UnwrapContainer(version, new BinaryReaderEx(bigEndian, bytes));
+                br = UnwrapContainer(version, new BinaryReaderEx(bigEndian, bytes), out _);
                 containers.Add(br);
             }
 
             // Read containers then dispose
             var result = new Zero3(containers[0], containers, version);
+            result.IsPacked = isPacked;
             foreach (BinaryReaderEx container in containers)
                 container.Dispose();
 
@@ -255,7 +262,7 @@ namespace SoulsFormats.AC4
             return bytesList;
         }
 
-        private static BinaryReaderEx UnwrapContainer(FormatVersion version, BinaryReaderEx br)
+        private static BinaryReaderEx UnwrapContainer(FormatVersion version, BinaryReaderEx br, out bool isPacked)
         {
             // If wrapped in a BND3
             if (version == FormatVersion.ArmoredCore4 && br.GetASCII(0, 4) == "BND3")
@@ -265,9 +272,12 @@ namespace SoulsFormats.AC4
 
                 // Dispose of the BND3 reader
                 br.Dispose();
+
+                isPacked = true;
                 return cbr;
             }
 
+            isPacked = false;
             return br;
         }
 

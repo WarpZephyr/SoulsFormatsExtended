@@ -176,7 +176,7 @@ namespace SoulsFormats
                         else if (member.Type == LayoutType.Byte4_12)
                         {
                             for (int i = 0; i < 4; i++)
-                                BoneIndices[i] = br.ReadByte(); // Short2toFloat2 Byte Type Read Guess
+                                BoneIndices[i] = br.ReadByte();
                         }
                         else
                             throw new NotImplementedException($"Read not implemented for {member.Type} {member.Semantic}.");
@@ -456,6 +456,11 @@ namespace SoulsFormats
                                 bw.WriteUInt16((ushort)BoneIndices[i]);
                         }
                         else if (member.Type == LayoutType.Byte4_2F)
+                        {
+                            for (int i = 0; i < 4; i++)
+                                bw.WriteByte((byte)BoneIndices[i]);
+                        }
+                        else if (member.Type == LayoutType.Byte4_12)
                         {
                             for (int i = 0; i < 4; i++)
                                 bw.WriteByte((byte)BoneIndices[i]);
