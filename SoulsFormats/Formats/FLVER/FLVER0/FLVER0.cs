@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -168,7 +167,7 @@ namespace SoulsFormats
             int indicesCount = 0;
             for (int i = 0; i < Meshes.Count; i++)
             {
-                triCount += Meshes[i].GetFaces(Header.Version).Count;
+                triCount += Meshes[i].GetFaceIndices(Header.Version).Count;
                 indicesCount += Meshes[i].VertexIndices.Count;
             }
             bw.WriteInt32(triCount);
