@@ -67,19 +67,22 @@ namespace SoulsFormats
 
                 br.StepIn(dataOffset + BufferOffset);
                 {
-                    // Only decompress the edge vertexes if we need a fallback
-                    // It seems edge compressed FLVER models may always have an uncompressed copy of positions
-                    // But this is here just in case
-                    if (EdgeCompressed && !posfilled)
+                    if (EdgeCompressed)
                     {
-                        int vertexIndex = 0;
-                        var edgeVertexBuffers = edgeIndexBuffers.ReadEdgeVertexBuffers(br);
-                        foreach (EdgeVertexBuffer vertexBuffer in edgeVertexBuffers)
+                        // Only decompress the edge vertexes if we need a fallback
+                        // It seems edge compressed FLVER models may always have an uncompressed copy of positions
+                        // But this is here just in case
+                        if (!posfilled)
                         {
-                            foreach (var position in vertexBuffer.Vertices)
+                            int vertexIndex = 0;
+                            var edgeVertexBuffers = edgeIndexBuffers.ReadEdgeVertexBuffers(br);
+                            foreach (EdgeVertexBuffer vertexBuffer in edgeVertexBuffers)
                             {
-                                vertices[vertexIndex].Position = position.Decompress(vertexBuffer.Multiplier, vertexBuffer.Offset);
-                                vertexIndex++;
+                                foreach (var position in vertexBuffer.Vertices)
+                                {
+                                    vertices[vertexIndex].Position = position.Decompress(vertexBuffer.Multiplier, vertexBuffer.Offset);
+                                    vertexIndex++;
+                                }
                             }
                         }
                     }
