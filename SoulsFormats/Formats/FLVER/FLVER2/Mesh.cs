@@ -53,6 +53,11 @@ namespace SoulsFormats
             /// </summary>
             public BoundingBoxes BoundingBox { get; set; }
 
+            /// <summary>
+            /// Whether or not an edge compressed vertex buffer is present.
+            /// </summary>
+            public bool EdgeCompressed { get; set; }
+
             private int[] faceSetIndices;
             private int[] vertexBufferIndices;
 
@@ -164,10 +169,14 @@ namespace SoulsFormats
                 for (int i = 0; i < vertexCount; i++)
                     Vertices.Add(new FLVER.Vertex(uvCap, tanCap, colorCap));
 
-                // TODO: Collect Edge Members from facesets here and pass them to be read from buffers.
-
+                bool posfilled = layoutMembers.Any(m => m.Semantic == FLVER.LayoutSemantic.Position && m.Type != FLVER.LayoutType.EdgeCompressed);
                 foreach (VertexBuffer buffer in VertexBuffers)
-                    buffer.ReadBuffer(br, layouts, Vertices, dataOffset, header);
+                {
+                    EdgeCompressed |= buffer.EdgeCompressed;
+
+                    // The other facesets repeat the same edge vertex information so the first one is all that is needed
+                    buffer.ReadBuffer(br, layouts, Vertices, FaceSets[0].EdgeIndexBuffers, dataOffset, header.Version, posfilled);
+                }
             }
 
             internal void Write(BinaryWriterEx bw, int index)

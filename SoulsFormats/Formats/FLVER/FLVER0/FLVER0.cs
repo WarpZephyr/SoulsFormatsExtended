@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 namespace SoulsFormats
 {
@@ -73,7 +72,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Returns true if the data appears to be a FLVER0 model.
+        /// Returns true if the data appears to be a <see cref="FLVER0"/> model.
         /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
@@ -88,7 +87,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Read a FLVER0 from a stream.
+        /// Read a <see cref="FLVER0"/> from a stream.
         /// </summary>
         protected override void Read(BinaryReaderEx br)
         {
@@ -144,7 +143,7 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Write this FLVER0 to a stream.
+        /// Write this <see cref="FLVER0"/> to a stream.
         /// </summary>
         protected override void Write(BinaryWriterEx bw)
         {
@@ -165,9 +164,10 @@ namespace SoulsFormats
 
             int triCount = 0;
             int indicesCount = 0;
+            bool includeDegenerateFaces = Header.Version >= 0x12 && Header.Version <= 0x14;
             for (int i = 0; i < Meshes.Count; i++)
             {
-                triCount += Meshes[i].GetFaceIndices(Header.Version).Count;
+                triCount += Meshes[i].GetTriangleCount(Header.Version, includeDegenerateFaces);
                 indicesCount += Meshes[i].VertexIndices.Count;
             }
             bw.WriteInt32(triCount);
@@ -233,9 +233,9 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Compute the full transform for a bone.
+        /// Compute the world transform for a bone.
         /// </summary>
-        /// <param name="index">The index of the bone to compute the full transform of.</param>
+        /// <param name="index">The index of the bone to compute the world transform of.</param>
         /// <returns>A matrix representing the world transform of the bone.</returns>
         public Matrix4x4 ComputeBoneWorldMatrix(int index)
         {
@@ -250,154 +250,38 @@ namespace SoulsFormats
             return matrix;
         }
 
-        #region Version 17 Endianness Hack Helpers
-
         /// <summary>
-        /// Rotates the specified value left by the specified number of bits.
-        /// Similar in behavior to the x86 instruction ROL.
+        /// Compute the world transform for a bone.
         /// </summary>
-        /// <param name="value">The value to rotate.</param>
-        /// <param name="offset">The number of bits to rotate by.
-        /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
-        /// <returns>The rotated value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint RotateLeft(uint value, int offset)
-            => (value << offset) | (value >> (32 - offset));
-
-        /// <summary>
-        /// Rotates the specified value right by the specified number of bits.
-        /// Similar in behavior to the x86 instruction ROR.
-        /// </summary>
-        /// <param name="value">The value to rotate.</param>
-        /// <param name="offset">The number of bits to rotate by.
-        /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
-        /// <returns>The rotated value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint RotateRight(uint value, int offset)
-            => (value >> offset) | (value << (32 - offset));
-
-        /// <summary>
-        /// Reverses a primitive value - performs an endianness swap
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int ReverseEndianness(int value) => (int)ReverseEndianness((uint)value);
-
-        /// <summary>
-        /// Reverses a primitive value - performs an endianness swap
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ReverseEndianness(uint value)
+        /// <param name="bone">The bone to compute the world transform of.</param>
+        /// <returns>A matrix representing the world transform of the bone.</returns>
+        public Matrix4x4 ComputeBoneWorldMatrix(FLVER.Bone bone)
         {
-            // This takes advantage of the fact that the JIT can detect
-            // ROL32 / ROR32 patterns and output the correct intrinsic.
-            //
-            // Input: value = [ ww xx yy zz ]
-            //
-            // First line generates : [ ww xx yy zz ]
-            //                      & [ 00 FF 00 FF ]
-            //                      = [ 00 xx 00 zz ]
-            //             ROR32(8) = [ zz 00 xx 00 ]
-            //
-            // Second line generates: [ ww xx yy zz ]
-            //                      & [ FF 00 FF 00 ]
-            //                      = [ ww 00 yy 00 ]
-            //             ROL32(8) = [ 00 yy 00 ww ]
-            //
-            //                (sum) = [ zz yy xx ww ]
-            //
-            // Testing shows that throughput increases if the AND
-            // is performed before the ROL / ROR.
+            Matrix4x4 matrix = bone.ComputeLocalTransform();
+            while (bone.ParentIndex != -1)
+            {
+                bone = Bones[bone.ParentIndex];
+                matrix *= bone.ComputeLocalTransform();
+            }
 
-            return RotateRight(value & 0x00FF00FFu, 8) // xx zz
-                + RotateLeft(value & 0xFF00FF00u, 8); // ww yy
+            return matrix;
         }
 
+        /// <summary>
+        /// A hack to try to fix the messed up endianness for some ACFA test FLVER0 values on version 0x11.
+        /// </summary>
+        /// <param name="br">The stream reader.</param>
+        /// <param name="version">The FLVER version.</param>
+        /// <returns>The read value.</returns>
         internal static int ReadVarEndianInt32(BinaryReaderEx br, int version)
         {
-            long start = br.Position;
             int value = br.ReadInt32();
             if (version != 0x11 || !br.BigEndian)
-            {
                 return value;
-            }
 
-            int leValue = ReverseEndianness(value);
-
-            if (leValue < 0)
-            {
-                return value;
-            }
-            else if (value < 0)
-            {
-                return leValue;
-            }
-            else
-            {
-                if (leValue < value)
-                {
-                    return leValue;
-                }
-                else if (leValue > value)
-                {
-                    return value;
-                }
-                else
-                {
-                    return value;
-                }
-            }
+            int leValue = SFUtil.ReverseEndianness(value);
+            return (int)Math.Min((uint)value, (uint)leValue);
         }
-
-        internal static int AssertVarEndianInt32(BinaryReaderEx br, int version, params int[] asserts)
-        {
-            if (br.BigEndian)
-            {
-                if (version == 0x11)
-                {
-                    int value;
-                    br.BigEndian = false;
-                    value = br.AssertInt32(asserts);
-                    br.BigEndian = true;
-                    return value;
-                }
-            }
-
-            return br.AssertInt32(asserts);
-        }
-
-        internal static void WriteVarEndian32(BinaryWriterEx bw, int version, int value)
-        {
-            if (bw.BigEndian)
-            {
-                if (version == 0x11)
-                {
-                    bw.BigEndian = false;
-                    bw.WriteInt32(value);
-                    bw.BigEndian = true;
-                    return;
-                }
-            }
-
-            bw.WriteInt32(value);
-        }
-
-        internal static void FillVarEndian32(BinaryWriterEx bw, int version, string reservation, int value)
-        {
-            if (bw.BigEndian)
-            {
-                if (version == 0x11)
-                {
-                    bw.BigEndian = false;
-                    bw.FillInt32(reservation, value);
-                    bw.BigEndian = true;
-                    return;
-                }
-            }
-
-            bw.FillInt32(reservation, value);
-        }
-
-        #endregion
 
         /// <summary>
         /// General metadata about a FLVER0.

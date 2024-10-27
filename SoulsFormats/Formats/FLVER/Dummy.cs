@@ -66,7 +66,7 @@ namespace SoulsFormats
             public int Unk34 { get; set; }
 
             /// <summary>
-            /// Creates a new Dummy point with default values.
+            /// Creates a new <see cref="Dummy"/> point with default values.
             /// </summary>
             public Dummy()
             {
@@ -75,7 +75,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Clone an existing Dummy.
+            /// Clone an existing <see cref="Dummy"/>.
             /// </summary>
             public Dummy(Dummy dummy)
             {
@@ -93,7 +93,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Read a new Dummy from a stream.
+            /// Read a new <see cref="Dummy"/> from a stream.
             /// </summary>
             internal Dummy(BinaryReaderEx br, int version)
             {
@@ -117,7 +117,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Write this Dummy to a stream.
+            /// Write this <see cref="Dummy"/> to a stream.
             /// </summary>
             internal void Write(BinaryWriterEx bw, int version)
             {

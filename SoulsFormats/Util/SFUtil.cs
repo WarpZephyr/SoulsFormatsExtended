@@ -848,6 +848,15 @@ namespace SoulsFormats
         internal static uint RotateRight(uint value, int offset)
             => (value >> offset) | (value << (32 - offset));
 
+        /// <summary>
+        /// Reverses a primitive value - performs an endianness swap
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static int ReverseEndianness(int value) => (int)ReverseEndianness((uint)value);
+
+        /// <summary>
+        /// Reverses a primitive value - performs an endianness swap
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static uint ReverseEndianness(uint value)
         {

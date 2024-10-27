@@ -13,7 +13,7 @@ namespace SoulsFormats
             /// The index of this member into the current layout.<br/>
             /// Used to combine members into a single layout.
             /// </summary>
-            public int MemberIndex { get; set; }
+            public int GroupIndex { get; set; }
 
             /// <summary>
             /// Format used to store this member.
@@ -42,13 +42,13 @@ namespace SoulsFormats
                         case LayoutType.EdgeCompressed:
                             return 1;
 
-                        case LayoutType.Byte4_10:
-                        case LayoutType.Byte4_11:
-                        case LayoutType.Byte4_12:
-                        case LayoutType.Byte4_13:
-                        case LayoutType.Byte4_14:
+                        case LayoutType.Byte4A:
+                        case LayoutType.Byte4B:
+                        case LayoutType.Short2toFloat2:
+                        case LayoutType.Byte4C:
+                        case LayoutType.Byte4D:
                         case LayoutType.UV:
-                        case LayoutType.Byte4_2F:
+                        case LayoutType.Byte4E:
                             return 4;
 
                         case LayoutType.Float2:
@@ -75,7 +75,7 @@ namespace SoulsFormats
             /// </summary>
             public LayoutMember(LayoutType type, LayoutSemantic semantic, int index = 0, int memberIndex = 0)
             {
-                MemberIndex = memberIndex;
+                GroupIndex = memberIndex;
                 Type = type;
                 Semantic = semantic;
                 Index = index;
@@ -86,7 +86,7 @@ namespace SoulsFormats
             /// </summary>
             public LayoutMember(LayoutMember layoutMember)
             {
-                MemberIndex = layoutMember.MemberIndex;
+                GroupIndex = layoutMember.GroupIndex;
                 Type = layoutMember.Type;
                 Semantic = layoutMember.Semantic;
                 Index = layoutMember.Index;
@@ -94,7 +94,7 @@ namespace SoulsFormats
 
             internal LayoutMember(BinaryReaderEx br, int structOffset)
             {
-                MemberIndex = br.ReadInt32();
+                GroupIndex = br.ReadInt32();
                 br.AssertInt32(structOffset);
                 Type = br.ReadEnum32<LayoutType>();
                 Semantic = br.ReadEnum32<LayoutSemantic>();
@@ -103,7 +103,7 @@ namespace SoulsFormats
 
             internal void Write(BinaryWriterEx bw, int structOffset)
             {
-                bw.WriteInt32(MemberIndex);
+                bw.WriteInt32(GroupIndex);
                 bw.WriteInt32(structOffset);
                 bw.WriteUInt32((uint)Type);
                 bw.WriteUInt32((uint)Semantic);
@@ -142,27 +142,27 @@ namespace SoulsFormats
             /// <summary>
             /// Four bytes or two shorts?
             /// </summary>
-            Byte4_10 = 0x10,
+            Byte4A = 0x10,
 
             /// <summary>
             /// Four bytes or two shorts?
             /// </summary>
-            Byte4_11 = 0x11,
+            Byte4B = 0x11,
 
             /// <summary>
             /// Four bytes or two shorts?
             /// </summary>
-            Byte4_12 = 0x12,
+            Short2toFloat2 = 0x12,
 
             /// <summary>
             /// Four bytes.
             /// </summary>
-            Byte4_13 = 0x13,
+            Byte4C = 0x13,
 
             /// <summary>
             /// Four bytes.
             /// </summary>
-            Byte4_14 = 0x14,
+            Byte4D = 0x14,
 
             /// <summary>
             /// Two shorts.
@@ -187,17 +187,12 @@ namespace SoulsFormats
             /// <summary>
             /// Unknown.
             /// </summary>
-            Unk2D = 0x2D,
-
-            /// <summary>
-            /// Unknown.
-            /// </summary>
             Short4toFloat4B = 0x2E,
 
             /// <summary>
             /// Unknown.
             /// </summary>
-            Byte4_2F = 0x2F,
+            Byte4E = 0x2F,
 
             /// <summary>
             /// Edge compression specified by edge members in face sets.

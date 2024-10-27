@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 
 namespace SoulsFormats
 {
@@ -13,7 +11,7 @@ namespace SoulsFormats
         public class VertexBuffer
         {
             /// <summary>
-            /// Whether or not the data is edge compressed.
+            /// Whether or not the buffer is edge compressed.
             /// </summary>
             public bool EdgeCompressed { get; set; }
 
@@ -61,7 +59,7 @@ namespace SoulsFormats
                 BufferOffset = br.ReadInt32();
             }
 
-            internal void ReadBuffer(BinaryReaderEx br, List<BufferLayout> layouts, List<FLVER.Vertex> vertices, int dataOffset, FLVERHeader header)
+            internal void ReadBuffer(BinaryReaderEx br, List<BufferLayout> layouts, List<FLVER.Vertex> vertices, EdgeIndexBuffers edgeIndexBuffers, int dataOffset, int version, bool posfilled)
             {
                 BufferLayout layout = layouts[LayoutIndex];
                 if (VertexSize != layout.Size)
@@ -69,16 +67,28 @@ namespace SoulsFormats
 
                 br.StepIn(dataOffset + BufferOffset);
                 {
-                    float uvFactor = 1024;
-                    if (header.Version >= 0x2000F)
-                        uvFactor = 2048;
-
-                    if (EdgeCompressed)
+                    // Only decompress the edge vertexes if we need a fallback
+                    // It seems edge compressed FLVER models may always have an uncompressed copy of positions
+                    // But this is here just in case
+                    if (EdgeCompressed && !posfilled)
                     {
-                        // TODO: Read edge information passed from facesets to mesh to buffer reading.
+                        int vertexIndex = 0;
+                        var edgeVertexBuffers = edgeIndexBuffers.ReadEdgeVertexBuffers(br);
+                        foreach (EdgeVertexBuffer vertexBuffer in edgeVertexBuffers)
+                        {
+                            foreach (var position in vertexBuffer.Vertices)
+                            {
+                                vertices[vertexIndex].Position = position.Decompress(vertexBuffer.Multiplier, vertexBuffer.Offset);
+                                vertexIndex++;
+                            }
+                        }
                     }
                     else
                     {
+                        float uvFactor = 1024;
+                        if (version >= 0x2000E)
+                            uvFactor = 2048;
+
                         for (int i = 0; i < vertices.Count; i++)
                             vertices[i].Read(br, layout, uvFactor);
                     }

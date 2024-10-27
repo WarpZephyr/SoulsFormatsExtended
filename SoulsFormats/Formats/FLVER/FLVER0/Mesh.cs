@@ -286,7 +286,7 @@ namespace SoulsFormats
             /// <param name="index">The index of this Mesh for reserving offset values to be filled later.</param>
             internal void WriteVertexBufferHeader(BinaryWriterEx bw, FLVER0 flv, int index)
             {
-                FillVarEndian32(bw, flv.Header.Version, $"VertexBufferListOffset{index}", (int)bw.Position);
+                bw.FillInt32($"VertexBufferListOffset{index}", (int)bw.Position);
 
                 bw.WriteInt32(1); //bufferCount
                 bw.ReserveInt32($"VertexBufferInfoOffset{index}");
@@ -331,10 +331,12 @@ namespace SoulsFormats
             /// <summary>
             /// Get a list of faces as index arrays.
             /// </summary>
-            /// <param name="version">The version of the model.</param>
-            public List<int[]> GetFaceIndices(int version)
+            /// <param name="version">The FLVER version.</param>
+            /// <param name="doCheckFlip">Whether or not to do the check flip fix.</param>
+            /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            public List<int[]> GetFaceIndices(int version, bool doCheckFlip, bool includeDegenerateFaces)
             {
-                List<int> indices = Triangulate(version);
+                List<int> indices = Triangulate(version, doCheckFlip, includeDegenerateFaces);
                 var faces = new List<int[]>();
                 for (int i = 0; i < indices.Count; i += 3)
                 {
@@ -349,38 +351,55 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Get a list of faces as vertex arrays.
+            /// Get an approximate triangle count for the mesh indices.
             /// </summary>
-            /// <param name="version">The version of the model.</param>
-            public List<FLVER.Vertex[]> GetFaces(int version)
+            /// <param name="version">The FLVER version.</param>
+            /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            /// <returns>An approximate triangle count.</returns>
+            public int GetTriangleCount(int version, bool includeDegenerateFaces)
             {
-                List<int> indices = Triangulate(version);
-                var faces = new List<FLVER.Vertex[]>();
-                for (int i = 0; i < indices.Count; i += 3)
+                if (version >= 0x15 && UseTriangleStrips == false)
                 {
-                    faces.Add(new FLVER.Vertex[]
-                    {
-                        Vertices[indices[i + 0]],
-                        Vertices[indices[i + 1]],
-                        Vertices[indices[i + 2]]
-                    });
+                    // No triangle strip
+                    var alignedValue = VertexIndices.Count + (3 - (VertexIndices.Count % 3));
+                    return alignedValue / 3;
                 }
-                return faces;
+
+                // Triangle strip
+                int counter = 0;
+                for (int i = 0; i < VertexIndices.Count - 2; i++)
+                {
+                    int vi1 = VertexIndices[i];
+                    int vi2 = VertexIndices[i + 1];
+                    int vi3 = VertexIndices[i + 2];
+
+                    bool notRestart = vi1 != 0xFFFF && vi2 != 0xFFFF && vi3 != 0xFFFF;
+                    bool included = includeDegenerateFaces || (vi1 != vi2 && vi1 != vi3 && vi2 != vi3);
+                    if (notRestart && included)
+                    {
+                        counter++;
+                    }
+                }
+
+                return counter;
             }
 
             /// <summary>
-            /// Get a triangulated list of the VertexIndices.
+            /// Triangulate the mesh face indices.
             /// </summary>
-            /// <param name="version">The version of the model.</param>
-            public List<int> Triangulate(int version)
+            /// <param name="version">The FLVER version.</param>
+            /// <param name="doCheckFlip">Whether or not to do the check flip fix.</param>
+            /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            /// <returns>A list of triangulated mesh face indices.</returns>
+            public List<int> Triangulate(int version, bool doCheckFlip, bool includeDegenerateFaces)
             {
-                var triangles = new List<int>();
                 if (version >= 0x15 && UseTriangleStrips == false)
                 {
-                    triangles = new List<int>(VertexIndices);
+                    return VertexIndices;
                 }
                 else
                 {
+                    var triangles = new List<int>();
                     bool checkFlip = false;
                     bool flip = false;
                     for (int i = 0; i < VertexIndices.Count - 2; i++)
@@ -392,11 +411,10 @@ namespace SoulsFormats
                         if (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF)
                         {
                             checkFlip = true;
+                            flip = false;
                         }
                         else
                         {
-                            // On a few ACFA skybox models of version 0x12, degenerate faces must be included or faces will get flipped
-                            bool includeDegenerateFaces = version == 0x12;
                             if (includeDegenerateFaces || (vi1 != vi2 && vi1 != vi3 && vi2 != vi3))
                             {
                                 // Every time the triangle strip restarts, compare the average vertex normal to the face normal
@@ -405,7 +423,9 @@ namespace SoulsFormats
                                 // as you'd expect. But on some, I can't discern any logic to it, thus this approach.
                                 // It's probably hideously slow because I don't know anything about math.
                                 // Feel free to hit me with a PR. :slight_smile:
-                                if (checkFlip)
+
+                                // Some ACFA map model faces will mess up using this, so an argument has been added to disable it
+                                if (doCheckFlip && checkFlip)
                                 {
                                     FLVER.Vertex v1 = Vertices[vi1];
                                     FLVER.Vertex v2 = Vertices[vi2];
@@ -436,8 +456,9 @@ namespace SoulsFormats
                             flip = !flip;
                         }
                     }
+
+                    return triangles;
                 }
-                return triangles;
             }
 
             /// <summary>

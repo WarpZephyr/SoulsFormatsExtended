@@ -96,7 +96,9 @@ namespace SoulsFormats
                     br.StepIn(layoutHeaderOffset);
                     {
                         int layoutCount = ReadVarEndianInt32(br, version);
-                        AssertVarEndianInt32(br, version, (int)br.Position + 0xC);
+
+                        int offsetAssert = (int)br.Position + 0xC;
+                        br.AssertInt32(offsetAssert, SFUtil.ReverseEndianness(offsetAssert));
                         br.AssertInt32(0);
                         br.AssertInt32(0);
                         Layouts = new List<BufferLayout>(layoutCount);
@@ -183,9 +185,9 @@ namespace SoulsFormats
                 }
 
                 // Write Layout Header
-                FillVarEndian32(bw, version, $"LayoutHeaderOffset{index}", (int)bw.Position);
-                WriteVarEndian32(bw, version, Layouts.Count);
-                WriteVarEndian32(bw, version, (int)bw.Position + 0xC);
+                bw.FillInt32($"LayoutHeaderOffset{index}", (int)bw.Position);
+                bw.WriteInt32(Layouts.Count);
+                bw.WriteInt32((int)bw.Position + 0xC);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
 
@@ -199,7 +201,7 @@ namespace SoulsFormats
                 bw.FillInt32($"LayoutsOffset{index}", (int)bw.Position);
                 for (int i = 0; i < Layouts.Count; i++)
                 {
-                    FillVarEndian32(bw, version, $"LayoutOffset_{index}_{i}", (int)bw.Position);
+                    bw.FillInt32($"LayoutOffset_{index}_{i}", (int)bw.Position);
                     bw.WriteUInt16((ushort)Layouts[i].Count);
                     bw.WriteUInt16((ushort)Layouts[i].Size);
                     bw.WriteInt32(0);

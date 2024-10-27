@@ -72,7 +72,7 @@ namespace SoulsFormats
             /// <summary>
             /// Edge compression information useful for edge compressed vertex buffers.
             /// </summary>
-            internal EdgeMemberInfoGroup EdgeMembers { get; private set; }
+            internal EdgeIndexBuffers EdgeIndexBuffers { get; private set; }
 
             /// <summary>
             /// Creates a new FaceSet with default values and no indices.
@@ -83,7 +83,7 @@ namespace SoulsFormats
                 TriangleStrip = false;
                 CullBackfaces = true;
                 Indices = new List<int>();
-                EdgeMembers = null;
+                EdgeIndexBuffers = null;
             }
 
             /// <summary>
@@ -96,7 +96,7 @@ namespace SoulsFormats
                 CullBackfaces = cullBackfaces;
                 Unk06 = unk06;
                 Indices = indices;
-                EdgeMembers = null;
+                EdgeIndexBuffers = null;
             }
 
             internal FaceSet(BinaryReaderEx br, FLVERHeader header, int headerIndexSize, int dataOffset)
@@ -128,7 +128,7 @@ namespace SoulsFormats
                     br.StepIn(dataOffset + indicesOffset);
                     {
                         Indices = new List<int>();
-                        EdgeMembers = new EdgeMemberInfoGroup(br, Indices);
+                        EdgeIndexBuffers = new EdgeIndexBuffers(br, Indices);
                     }
                     br.StepOut();
                 }
