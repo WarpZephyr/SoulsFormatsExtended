@@ -73,7 +73,7 @@ namespace SoulsFormats
             /// <summary>
             /// Indexes of the vertices of this mesh.
             /// </summary>
-            public List<int> VertexIndices { get; set; }
+            public List<int> Indices { get; set; }
 
             /// <summary>
             /// Vertices in this mesh.
@@ -97,7 +97,7 @@ namespace SoulsFormats
                 UseTriangleStrips = false;
                 DefaultBoneIndex = 0;
                 BoneIndices = new short[28];
-                VertexIndices = new List<int>();
+                Indices = new List<int>();
                 Vertices = new List<FLVER.Vertex>();
                 for (int i = 0; i < 28; i++)
                     BoneIndices[i] = -1;
@@ -114,14 +114,14 @@ namespace SoulsFormats
                 UseTriangleStrips = mesh.UseTriangleStrips;
                 DefaultBoneIndex = mesh.DefaultBoneIndex;
                 BoneIndices = new short[28];
-                VertexIndices = new List<int>();
+                Indices = new List<int>();
                 Vertices = new List<FLVER.Vertex>();
                 for (int i = 0; i < 28; i++)
                     BoneIndices[i] = mesh.BoneIndices[i];
 
                 Unk46 = mesh.Unk46;
-                for (int i = 0; i < mesh.VertexIndices.Count; i++)
-                    VertexIndices[i] = mesh.VertexIndices[i];
+                for (int i = 0; i < mesh.Indices.Count; i++)
+                    Indices[i] = mesh.Indices[i];
                 for (int i = 0; i < mesh.Vertices.Count; i++)
                     Vertices[i] = new FLVER.Vertex(mesh.Vertices[i]);
 
@@ -157,13 +157,13 @@ namespace SoulsFormats
 
                 if (flv.Header.VertexIndexSize == 16)
                 {
-                    VertexIndices = new List<int>(vertexCount);
+                    Indices = new List<int>(vertexCount);
                     foreach (ushort index in br.GetUInt16s(dataOffset + vertexIndicesOffset, vertexIndexCount))
-                        VertexIndices.Add(index);
+                        Indices.Add(index);
                 }
                 else if (flv.Header.VertexIndexSize == 32)
                 {
-                    VertexIndices = new List<int>(br.GetInt32s(dataOffset + vertexIndicesOffset, vertexIndexCount));
+                    Indices = new List<int>(br.GetInt32s(dataOffset + vertexIndicesOffset, vertexIndexCount));
                 }
 
                 VertexBuffer buffer;
@@ -238,12 +238,12 @@ namespace SoulsFormats
                 bw.WriteBoolean(CullBackfaces);
                 bw.WriteBoolean(UseTriangleStrips);
 
-                bw.WriteInt32(VertexIndices.Count);
+                bw.WriteInt32(Indices.Count);
                 bw.WriteInt32(Vertices.Count);
                 bw.WriteInt16(DefaultBoneIndex);
                 bw.WriteInt16s(BoneIndices);
                 bw.WriteInt16(Unk46);
-                bw.WriteInt32(VertexIndices.Count * 2);
+                bw.WriteInt32(Indices.Count * 2);
                 bw.ReserveInt32($"VertexIndicesOffset{index}");
                 bw.WriteInt32(material.Layouts[LayoutIndex].Size * Vertices.Count);
                 bw.ReserveInt32($"VertexBufferOffset{index}");
@@ -264,16 +264,16 @@ namespace SoulsFormats
                 bw.FillInt32($"VertexIndicesOffset{index}", (int)bw.Position - dataOffset);
                 if (vertexIndexSize == 16)
                 {
-                    for (int i = 0; i < VertexIndices.Count; i++)
+                    for (int i = 0; i < Indices.Count; i++)
                     {
-                        bw.WriteUInt16((ushort)VertexIndices[i]);
+                        bw.WriteUInt16((ushort)Indices[i]);
                     }
                 }
                 else if (vertexIndexSize == 32)
                 {
-                    for (int i = 0; i < VertexIndices.Count; i++)
+                    for (int i = 0; i < Indices.Count; i++)
                     {
-                        bw.WriteInt32(VertexIndices[i]);
+                        bw.WriteInt32(Indices[i]);
                     }
                 }
             }
@@ -356,22 +356,22 @@ namespace SoulsFormats
             /// <param name="version">The FLVER version.</param>
             /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
             /// <returns>An approximate triangle count.</returns>
-            public int GetTriangleCount(int version, bool includeDegenerateFaces)
+            public int GetFaceCount(int version, bool includeDegenerateFaces)
             {
                 if (version >= 0x15 && UseTriangleStrips == false)
                 {
                     // No triangle strip
-                    var alignedValue = VertexIndices.Count + (3 - (VertexIndices.Count % 3));
+                    var alignedValue = Indices.Count + (3 - (Indices.Count % 3));
                     return alignedValue / 3;
                 }
 
                 // Triangle strip
                 int counter = 0;
-                for (int i = 0; i < VertexIndices.Count - 2; i++)
+                for (int i = 0; i < Indices.Count - 2; i++)
                 {
-                    int vi1 = VertexIndices[i];
-                    int vi2 = VertexIndices[i + 1];
-                    int vi3 = VertexIndices[i + 2];
+                    int vi1 = Indices[i];
+                    int vi2 = Indices[i + 1];
+                    int vi3 = Indices[i + 2];
 
                     bool notRestart = vi1 != 0xFFFF && vi2 != 0xFFFF && vi3 != 0xFFFF;
                     bool included = includeDegenerateFaces || (vi1 != vi2 && vi1 != vi3 && vi2 != vi3);
@@ -395,18 +395,18 @@ namespace SoulsFormats
             {
                 if (version >= 0x15 && UseTriangleStrips == false)
                 {
-                    return VertexIndices;
+                    return new List<int>(Indices);
                 }
                 else
                 {
                     var triangles = new List<int>();
                     bool checkFlip = false;
                     bool flip = false;
-                    for (int i = 0; i < VertexIndices.Count - 2; i++)
+                    for (int i = 0; i < Indices.Count - 2; i++)
                     {
-                        int vi1 = VertexIndices[i];
-                        int vi2 = VertexIndices[i + 1];
-                        int vi3 = VertexIndices[i + 2];
+                        int vi1 = Indices[i];
+                        int vi2 = Indices[i + 1];
+                        int vi3 = Indices[i + 2];
 
                         if (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF)
                         {
@@ -467,7 +467,7 @@ namespace SoulsFormats
             /// <returns>The vertex index size in bits.</returns>
             public int GetVertexIndexSize()
             {
-                foreach (int index in VertexIndices)
+                foreach (int index in Indices)
                     if (index > ushort.MaxValue + 1)
                         return 32;
                 return 16;

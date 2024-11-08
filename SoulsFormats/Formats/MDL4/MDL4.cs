@@ -102,8 +102,15 @@ namespace SoulsFormats
             bw.WriteInt32(Meshes.Count); // Vertex Buffer Count Probably
             bw.WriteVector3(Header.BoundingBoxMin);
             bw.WriteVector3(Header.BoundingBoxMax);
-            bw.WriteInt32(GetFaceCount()); // Not entirely accurate but oh well
-            bw.WriteInt32(GetIndiceCount()); // Not entirely accurate but oh well
+
+            int faceCount = 0;
+            foreach (var mesh in Meshes)
+                faceCount += mesh.GetFaceCount(true, true);
+
+            int indexCount = faceCount * 3;
+            bw.WriteInt32(faceCount); // Not entirely accurate but oh well
+            bw.WriteInt32(indexCount); // Not entirely accurate but oh well
+
             bw.WritePattern(0x3C, 0x00);
 
             foreach (Dummy dummy in Dummies)
@@ -125,7 +132,7 @@ namespace SoulsFormats
             {
                 int vertexIndexStart = (int)bw.Position - dataStart;
                 bw.FillInt32($"VertexIndicesOffset_{i}", vertexIndexStart);
-                bw.WriteUInt16s(Meshes[i].VertexIndices);
+                bw.WriteUInt16s(Meshes[i].Indices);
                 int vertexIndexEnd = (int)bw.Position - dataStart;
 
                 bw.FillInt32($"VertexIndicesLength_{i}", vertexIndexEnd - vertexIndexStart);
@@ -142,42 +149,38 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Get the total indice count from the VertexIndices of all Meshes in this model.
+        /// Compute the world transform for a bone.
         /// </summary>
-        public int GetIndiceCount()
+        /// <param name="index">The index of the bone to compute the world transform of.</param>
+        /// <returns>A matrix representing the world transform of the bone.</returns>
+        public Matrix4x4 ComputeBoneWorldMatrix(int index)
         {
-            int count = 0;
-            foreach (Mesh mesh in Meshes)
+            var bone = Bones[index];
+            Matrix4x4 matrix = bone.ComputeLocalTransform();
+            while (bone.ParentIndex != -1)
             {
-                count += mesh.VertexIndices.Length;
+                bone = Bones[bone.ParentIndex];
+                matrix *= bone.ComputeLocalTransform();
             }
-            return count;
+
+            return matrix;
         }
 
         /// <summary>
-        /// Get the total calculated face count from the VertexIndices of all Meshes in this model.
+        /// Compute the world transform for a bone.
         /// </summary>
-        public int GetFaceCount()
+        /// <param name="bone">The bone to compute the world transform of.</param>
+        /// <returns>A matrix representing the world transform of the bone.</returns>
+        public Matrix4x4 ComputeBoneWorldMatrix(Bone bone)
         {
-            int count = 0;
-            foreach (Mesh mesh in Meshes)
+            Matrix4x4 matrix = bone.ComputeLocalTransform();
+            while (bone.ParentIndex != -1)
             {
-                count += mesh.GetFaceCount();
+                bone = Bones[bone.ParentIndex];
+                matrix *= bone.ComputeLocalTransform();
             }
-            return count;
-        }
 
-        /// <summary>
-        /// Get the total calculated strip count from the VertexIndices of all Meshes in this model.
-        /// </summary>
-        public int GetStripCount()
-        {
-            int count = 0;
-            foreach (Mesh mesh in Meshes)
-            {
-                count += mesh.GetStripCount();
-            }
-            return count;
+            return matrix;
         }
 
         /// <summary>

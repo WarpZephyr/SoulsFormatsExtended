@@ -170,6 +170,12 @@
                 bw.WriteInt16(StabilizerLowX);
                 bw.WriteInt16(StabilizerLowY);
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

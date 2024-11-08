@@ -206,6 +206,12 @@
                 bw.WriteUInt16(TuneMaxMissileLockSpeed);
                 bw.WriteUInt16(TuneEfficiencyMissileLockSpeed);
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

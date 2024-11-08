@@ -94,6 +94,12 @@
                 bw.WriteByte(DisplayType);
                 bw.WriteUInt16(Unk56);
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

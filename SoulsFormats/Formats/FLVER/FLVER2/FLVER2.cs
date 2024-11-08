@@ -104,7 +104,7 @@ namespace SoulsFormats
             // BB:  20013, 20014
             // DS3: 20013, 20014
             // SDT: 2001A, 20016 (test chr)
-            Header.Version = br.AssertInt32(0x20005, 0x20007, 0x20009, 0x2000B, 0x2000C, 0x2000D, 0x2000E, 0x2000F, 0x20010, 0x20013, 0x20014, 0x20016, 0x2001A);
+            Header.Version = br.AssertInt32(0x20005, 0x20007, 0x20009, 0x2000B, 0x2000C, 0x2000D, 0x2000E, 0x2000F, 0x20010, 0x20013, 0x20014, 0x20016, 0x2001A, 0x2001B);
 
             int dataOffset = br.ReadInt32();
             br.ReadInt32(); // Data length
@@ -428,6 +428,41 @@ namespace SoulsFormats
             bw.FillInt32("DataSize", (int)bw.Position - dataStart);
             if (Header.Version == 0x2000F || Header.Version == 0x20010)
                 bw.Pad(0x20);
+        }
+
+        /// <summary>
+        /// Compute the world transform for a bone.
+        /// </summary>
+        /// <param name="index">The index of the bone to compute the world transform of.</param>
+        /// <returns>A matrix representing the world transform of the bone.</returns>
+        public Matrix4x4 ComputeBoneWorldMatrix(int index)
+        {
+            var bone = Bones[index];
+            Matrix4x4 matrix = bone.ComputeLocalTransform();
+            while (bone.ParentIndex != -1)
+            {
+                bone = Bones[bone.ParentIndex];
+                matrix *= bone.ComputeLocalTransform();
+            }
+
+            return matrix;
+        }
+
+        /// <summary>
+        /// Compute the world transform for a bone.
+        /// </summary>
+        /// <param name="bone">The bone to compute the world transform of.</param>
+        /// <returns>A matrix representing the world transform of the bone.</returns>
+        public Matrix4x4 ComputeBoneWorldMatrix(FLVER.Bone bone)
+        {
+            Matrix4x4 matrix = bone.ComputeLocalTransform();
+            while (bone.ParentIndex != -1)
+            {
+                bone = Bones[bone.ParentIndex];
+                matrix *= bone.ComputeLocalTransform();
+            }
+
+            return matrix;
         }
 
         /// <summary>

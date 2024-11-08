@@ -27,6 +27,11 @@ namespace SoulsFormats
             public byte BoneIndexBitSize { get; set; }
 
             /// <summary>
+            /// How many bone indices there are per vertex.
+            /// </summary>
+            public byte BoneIndicesPerVertex { get; set; }
+
+            /// <summary>
             /// The vertices in this buffer. 
             /// </summary>
             public FIXEDc3[] Vertices { get; set; }
@@ -49,7 +54,7 @@ namespace SoulsFormats
                 int edgeVertexBufferLength = br.ReadInt32(); // The length of vertices + padding + header
                 int edgeVertexBufferTotalLength = br.ReadInt32(); // The total length of the buffer including bone indices.
                 BoneIndexBitSize = br.ReadByte();
-                br.ReadByte(); // Unknown
+                BoneIndicesPerVertex = br.ReadByte();
                 br.AssertUInt16(0);
                 br.AssertUInt32(0);
 

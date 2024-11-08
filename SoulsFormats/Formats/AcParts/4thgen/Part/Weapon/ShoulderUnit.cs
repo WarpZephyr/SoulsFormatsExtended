@@ -214,6 +214,12 @@
                     WeaponBoosterComponent.Write(bw);
                 }
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

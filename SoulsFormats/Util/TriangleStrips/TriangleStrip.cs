@@ -34,7 +34,6 @@ namespace SoulsFormats
 
             for (int i = 0; i < indices.Count - 2; i++)
             {
-
                 int indexA;
                 int indexB;
                 int indexC;

@@ -23,19 +23,19 @@ namespace SoulsFormats
             public byte MaterialIndex;
 
             /// <summary>
-            /// Whether triangles can be seen through from behind.
+            /// Unknown.
             /// </summary>
-            public bool CullBackfaces;
+            public bool Unk02;
 
             /// <summary>
-            /// Whether vertices are defined as a triangle strip or individual triangles.
+            /// Unknown.
             /// </summary>
-            public bool UseTriangleStrips;
+            public bool Unk03;
 
             /// <summary>
-            /// Apparently does nothing. Usually points to a dummy bone named after the model, possibly just for labelling.
+            /// Unknown.
             /// </summary>
-            public short DefaultBoneIndex;
+            public short Unk08;
 
             /// <summary>
             /// Indexes of bones in the bone collection which may be used by vertices in this mesh.
@@ -68,7 +68,7 @@ namespace SoulsFormats
             /// <summary>
             /// Indexes of the vertices of this mesh.
             /// </summary>
-            public ushort[] VertexIndices;
+            public List<ushort> Indices;
 
             /// <summary>
             /// Vertices in this mesh.
@@ -87,10 +87,10 @@ namespace SoulsFormats
             {
                 VertexFormat = br.AssertByte(0, 1, 2);
                 MaterialIndex = br.ReadByte();
-                CullBackfaces = br.ReadBoolean();
-                UseTriangleStrips = br.ReadBoolean();
+                Unk02 = br.ReadBoolean();
+                Unk03 = br.ReadBoolean();
                 ushort vertexIndexCount = br.ReadUInt16();
-                DefaultBoneIndex = br.ReadInt16();
+                Unk08 = br.ReadInt16();
                 BoneIndices = br.ReadInt16s(28);
                 int vertexIndicesLength = br.ReadInt32();
                 int vertexIndicesOffset = br.ReadInt32();
@@ -108,7 +108,7 @@ namespace SoulsFormats
                     }
                 }
 
-                VertexIndices = br.GetUInt16s(dataOffset + vertexIndicesOffset, vertexIndexCount);
+                Indices = new List<ushort>(br.GetUInt16s(dataOffset + vertexIndicesOffset, vertexIndexCount));
 
                 br.StepIn(dataOffset + bufferOffset);
                 {
@@ -142,128 +142,108 @@ namespace SoulsFormats
             {
                 bw.WriteByte(VertexFormat);
                 bw.WriteByte(MaterialIndex);
-                bw.WriteBoolean(CullBackfaces);
-                bw.WriteBoolean(UseTriangleStrips);
-                bw.WriteUInt16((ushort)VertexIndices.Length); // Vertex Index Count
-                bw.WriteInt16(DefaultBoneIndex);
+                bw.WriteBoolean(Unk02);
+                bw.WriteBoolean(Unk03);
+                bw.WriteUInt16((ushort)Indices.Count); // Vertex Index Count
+                bw.WriteInt16(Unk08);
                 bw.WriteInt16s(BoneIndices);
                 bw.ReserveInt32($"VertexIndicesLength_{index}");
                 bw.ReserveInt32($"VertexIndicesOffset_{index}");
                 bw.ReserveInt32($"BufferLength_{index}");
                 bw.ReserveInt32($"BufferOffset_{index}");
-            }   
-
-            /// <summary>
-            /// Get the calculated face count from the VertexIndices of this Mesh.
-            /// </summary>
-            public int GetFaceCount()
-            {
-                return GetFaceIndices().Count;
-            }
-
-            /// <summary>
-            /// Get the calculated strip count from the VertexIndices of this Mesh.
-            /// </summary>
-            public int GetStripCount()
-            {
-                return new TriangleStripCollection(VertexIndices, 65535).StripCount;
             }
 
             /// <summary>
             /// Get a list of faces as index arrays.
             /// </summary>
-            public List<int[]> GetFaceIndices()
+            /// <param name="allowPrimitiveRestarts">Whether or not to allow primitive restarts.</param>
+            /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            /// <returns>A list of triangle arrays.</returns>
+            public List<ushort[]> GetFaceIndices(bool allowPrimitiveRestarts, bool includeDegenerateFaces)
             {
-                ushort[] indices = Triangulate();
-                var faces = new List<int[]>();
-                for (int i = 0; i < indices.Length; i += 3)
-                {
-                    faces.Add(new int[]
-                    {
-                        indices[i + 0],
-                        indices[i + 1],
-                        indices[i + 2],
-                    });
-                }
-                return faces;
-            }
-
-            /// <summary>
-            /// Get a list of faces as index arrays.
-            /// </summary>
-            public List<ushort[]> GetFaceIndicesUShort()
-            {
-                ushort[] indices = Triangulate();
+                List<ushort> indices = Triangulate(allowPrimitiveRestarts, includeDegenerateFaces);
                 var faces = new List<ushort[]>();
-                for (int i = 0; i < indices.Length; i += 3)
+                for (int i = 0; i < indices.Count; i += 3)
                 {
                     faces.Add(new ushort[]
                     {
                         indices[i + 0],
                         indices[i + 1],
-                        indices[i + 2],
+                        indices[i + 2]
                     });
                 }
                 return faces;
             }
 
             /// <summary>
-            /// Get a list of faces as vertex arrays.
+            /// Get an approximate triangle count for the mesh indices.
             /// </summary>
-            public List<Vertex[]> GetFaces()
+            /// <param name="allowPrimitiveRestarts">Whether or not to allow primitive restarts.</param>
+            /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            /// <returns>An approximate triangle count.</returns>
+            public int GetFaceCount(bool allowPrimitiveRestarts, bool includeDegenerateFaces)
             {
-                ushort[] indices = Triangulate();
-                var faces = new List<Vertex[]>();
-                for (int i = 0; i < indices.Length; i += 3)
+                // Triangle strip
+                int counter = 0;
+                for (int i = 0; i < Indices.Count - 2; i++)
                 {
-                    faces.Add(new Vertex[]
+                    int vi1 = Indices[i];
+                    int vi2 = Indices[i + 1];
+                    int vi3 = Indices[i + 2];
+
+                    bool notRestart = allowPrimitiveRestarts || (vi1 != 0xFFFF && vi2 != 0xFFFF && vi3 != 0xFFFF);
+                    bool included = includeDegenerateFaces || (vi1 != vi2 && vi1 != vi3 && vi2 != vi3);
+                    if (notRestart && included)
                     {
-                        Vertices[indices[i + 0]],
-                        Vertices[indices[i + 1]],
-                        Vertices[indices[i + 2]],
-                    });
+                        counter++;
+                    }
                 }
-                return faces;
+
+                return counter;
             }
 
             /// <summary>
-            /// Get a triangulated face index list.
+            /// Attempt to triangulate the mesh face indices.
             /// </summary>
-            public ushort[] Triangulate()
+            /// <param name="allowPrimitiveRestarts">Whether or not to allow primitive restarts.</param>
+            /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            /// <returns>A triangulated list of face indices.</returns>
+            public List<ushort> Triangulate(bool allowPrimitiveRestarts, bool includeDegenerateFaces)
             {
                 var triangles = new List<ushort>();
-                bool flip = false;
-                for (int i = 0; i < VertexIndices.Length - 2; i++)
+                bool flip = true;
+                for (int i = 0; i < Indices.Count - 2; i++)
                 {
-                    ushort vi1 = VertexIndices[i];
-                    ushort vi2 = VertexIndices[i + 1];
-                    ushort vi3 = VertexIndices[i + 2];
+                    ushort vi1 = Indices[i];
+                    ushort vi2 = Indices[i + 1];
+                    ushort vi3 = Indices[i + 2];
 
-                    if (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF)
+                    if (allowPrimitiveRestarts && (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF))
                     {
-                        flip = false;
+                        flip = true;
                     }
                     else
                     {
-                        if (vi1 != vi2 && vi1 != vi3 && vi2 != vi3)
+                        if (includeDegenerateFaces || (vi1 != vi2 && vi2 != vi3 && vi3 != vi1))
                         {
-                            if (!flip)
+                            if (flip)
                             {
-                                triangles.Add(vi1);
-                                triangles.Add(vi2);
                                 triangles.Add(vi3);
+                                triangles.Add(vi2);
+                                triangles.Add(vi1);
                             }
                             else
                             {
-                                triangles.Add(vi3);
-                                triangles.Add(vi2);
                                 triangles.Add(vi1);
+                                triangles.Add(vi2);
+                                triangles.Add(vi3);
                             }
                         }
                         flip = !flip;
                     }
                 }
-                return triangles.ToArray();
+
+                return triangles;
             }
         }
     }

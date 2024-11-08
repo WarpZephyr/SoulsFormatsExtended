@@ -139,6 +139,12 @@
                 bw.WriteUInt16(ActiveSE);
                 bw.WriteUInt16(Unk22);
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

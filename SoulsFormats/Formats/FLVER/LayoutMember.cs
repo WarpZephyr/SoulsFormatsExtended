@@ -110,6 +110,17 @@ namespace SoulsFormats
                 bw.WriteInt32(Index);
             }
 
+            /// <inheritdoc/>
+            public override int GetHashCode()
+            {
+                int hashCode = 19;
+                hashCode += GroupIndex.GetHashCode() * 37;
+                hashCode += Type.GetHashCode() * 37;
+                hashCode += Semantic.GetHashCode() * 37;
+                hashCode += Index.GetHashCode() * 37;
+                return hashCode;
+            }
+
             /// <summary>
             /// Returns the value type and semantic of this member.
             /// </summary>

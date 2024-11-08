@@ -180,6 +180,12 @@
                     bw.WriteUInt32(Unk3C);
                 }
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

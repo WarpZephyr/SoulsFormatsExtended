@@ -49,6 +49,12 @@
                 PartComponent.Write(bw, version);
                 StabilizerComponent.Write(bw);
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

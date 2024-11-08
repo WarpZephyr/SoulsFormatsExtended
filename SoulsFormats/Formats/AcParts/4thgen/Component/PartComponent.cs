@@ -269,6 +269,12 @@
                     bw.WriteFixStr(Explain, 0xFC, 0x20);
                 }
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return Name;
+            }
         }
     }
 }

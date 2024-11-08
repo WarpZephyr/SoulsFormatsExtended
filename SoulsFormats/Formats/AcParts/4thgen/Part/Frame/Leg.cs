@@ -468,6 +468,12 @@
                 bw.WriteInt16(StabilizerLowRightX);
                 bw.WriteInt16(StabilizerLowRightY);
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

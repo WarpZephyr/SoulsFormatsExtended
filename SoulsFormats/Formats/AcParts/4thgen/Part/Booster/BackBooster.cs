@@ -85,6 +85,12 @@
                     bw.WriteUInt16(Unk32);
                 }
             }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                return PartComponent.ToString();
+            }
         }
     }
 }

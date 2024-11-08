@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace SoulsFormats
@@ -68,6 +67,17 @@ namespace SoulsFormats
                     member.Write(bw, structOffset);
                     structOffset += member.Size;
                 }
+            }
+
+            /// <inheritdoc/>
+            public override int GetHashCode()
+            {
+                int hashCode = 71;
+                foreach (FLVER.LayoutMember member in this)
+                {
+                    hashCode += member.GetHashCode() * 47;
+                }
+                return hashCode;
             }
         }
     }

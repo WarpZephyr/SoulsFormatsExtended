@@ -167,8 +167,8 @@ namespace SoulsFormats
             bool includeDegenerateFaces = Header.Version >= 0x12 && Header.Version <= 0x14;
             for (int i = 0; i < Meshes.Count; i++)
             {
-                triCount += Meshes[i].GetTriangleCount(Header.Version, includeDegenerateFaces);
-                indicesCount += Meshes[i].VertexIndices.Count;
+                triCount += Meshes[i].GetFaceCount(Header.Version, includeDegenerateFaces);
+                indicesCount += Meshes[i].Indices.Count;
             }
             bw.WriteInt32(triCount);
             bw.WriteInt32(indicesCount); // Not technically correct, but should be valid for the buffer size

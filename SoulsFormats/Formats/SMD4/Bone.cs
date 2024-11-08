@@ -40,14 +40,14 @@ namespace SoulsFormats
             public Vector3 BoundingBoxMax { get; set; }
 
             /// <summary>
-            /// Index of the parent in this FLVER's bone collection, or -1 for none.
+            /// Index of the parent in the bone collection, or -1 for none.
             /// </summary>
             public short ParentIndex { get; set; }
 
             /// <summary>
-            /// Index of the first child in this FLVER's bone collection, or -1 for none.
+            /// Index of the first child in the bone collection, or -1 for none.
             /// </summary>
-            public short ChildIndex { get; set; }
+            public short FirstChildIndex { get; set; }
 
             /// <summary>
             /// Index of the next child of this bone's parent, or -1 for none.
@@ -80,14 +80,14 @@ namespace SoulsFormats
             public int[] Unk70 { get; private set; }
 
             /// <summary>
-            /// Create a new Bone with default values.
+            /// Create a new <see cref="Bone"/> with default values.
             /// </summary>
             public Bone()
             {
-                Name = "";
+                Name = string.Empty;
                 Scale = Vector3.One;
                 ParentIndex = -1;
-                ChildIndex = -1;
+                FirstChildIndex = -1;
                 NextSiblingIndex = -1;
                 PreviousSiblingIndex = -1;
                 Unk64 = 0;
@@ -97,7 +97,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Clone an existing Bone.
+            /// Clone an existing <see cref="Bone"/>.
             /// </summary>
             public Bone(Bone bone)
             {
@@ -108,7 +108,7 @@ namespace SoulsFormats
                 BoundingBoxMin = bone.BoundingBoxMin;
                 BoundingBoxMax = bone.BoundingBoxMax;
                 ParentIndex = bone.ParentIndex;
-                ChildIndex = bone.ChildIndex;
+                FirstChildIndex = bone.FirstChildIndex;
                 NextSiblingIndex = bone.NextSiblingIndex;
                 PreviousSiblingIndex = bone.PreviousSiblingIndex;
                 Unk64 = bone.Unk64;
@@ -120,8 +120,9 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Read a Bone from a stream.
+            /// Read a <see cref="Bone"/> from a stream.
             /// </summary>
+            /// <param name="br">The stream reader.</param>
             internal Bone(BinaryReaderEx br)
             {
                 Name = br.ReadASCII(32);
@@ -131,7 +132,7 @@ namespace SoulsFormats
                 BoundingBoxMin = br.ReadVector3();
                 BoundingBoxMax = br.ReadVector3();
                 ParentIndex = br.ReadInt16();
-                ChildIndex = br.ReadInt16();
+                FirstChildIndex = br.ReadInt16();
                 NextSiblingIndex = br.ReadInt16();
                 PreviousSiblingIndex = br.ReadInt16();
                 Unk64 = br.ReadInt32();
@@ -141,8 +142,9 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Write a Bone to a stream.
+            /// Write a <see cref="Bone"/> to a stream.
             /// </summary>
+            /// <param name="bw">The stream writer.</param>
             internal void Write(BinaryWriterEx bw)
             {
                 bw.WriteFixStr(Name, 32);
@@ -152,7 +154,7 @@ namespace SoulsFormats
                 bw.WriteVector3(BoundingBoxMin);
                 bw.WriteVector3(BoundingBoxMax);
                 bw.WriteInt16(ParentIndex);
-                bw.WriteInt16(ChildIndex);
+                bw.WriteInt16(FirstChildIndex);
                 bw.WriteInt16(NextSiblingIndex);
                 bw.WriteInt16(PreviousSiblingIndex);
                 bw.WriteInt32(Unk64);
@@ -173,9 +175,7 @@ namespace SoulsFormats
                     * Matrix4x4.CreateTranslation(Translation);
             }
 
-            /// <summary>
-            /// Returns a string representation of the bone.
-            /// </summary>
+            /// <inheritdoc/>
             public override string ToString()
             {
                 return Name;
