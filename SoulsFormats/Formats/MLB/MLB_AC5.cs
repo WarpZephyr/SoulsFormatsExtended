@@ -84,14 +84,7 @@ namespace SoulsFormats
                 switch (Type)
                 {
                     case ResourceType.Model:
-                        if (resource is Model model)
-                        {
-                            model.Write(bw);
-                        }
-                        else
-                        {
-                            throw new NotSupportedException($"Specified {nameof(ResourceType)} as {Type} but {nameof(Resources)}[{i}] was not a {nameof(Model)}.");
-                        }
+                        resource.Write(bw);
                         break;
                     default:
                         throw new NotSupportedException($"{nameof(ResourceType)} {Type} is not supported or is invalid.");
@@ -639,7 +632,7 @@ namespace SoulsFormats
                 public string Name { get; set; }
 
                 /// <summary>
-                /// Unknown; Only present on normal model bones.
+                /// Unknown; Only present on normal and break model bones.
                 /// </summary>
                 public BoneBreakConfig BreakConfig { get; set; }
 
@@ -758,7 +751,7 @@ namespace SoulsFormats
                 #region Configs
 
                 /// <summary>
-                /// Unknown; Only present on normal model bones.
+                /// Unknown; Only present on normal and break model bones.
                 /// </summary>
                 public class BoneBreakConfig
                 {

@@ -785,7 +785,7 @@ namespace SoulsFormats
                 public UnkConfig1 Config1 { get; set; }
 
                 /// <summary>
-                /// Unknown; Only present on normal model bones.
+                /// Unknown; Only present on normal and break model bones.
                 /// </summary>
                 public BoneBreakConfig BreakConfig { get; set; }
 
@@ -979,7 +979,7 @@ namespace SoulsFormats
                 }
 
                 /// <summary>
-                /// Unknown; Only present on normal model bones.
+                /// Unknown; Only present on normal and break model bones.
                 /// </summary>
                 public class BoneBreakConfig
                 {
