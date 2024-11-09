@@ -5,7 +5,8 @@ using System.Linq;
 namespace SoulsFormats
 {
     /// <summary>
-    /// A 3d resource list of some kind that also contains metadata.
+    /// A 3d resource list of some kind that also contains metadata.<br/>
+    /// This variant is used in AC4 and ACFA.
     /// </summary>
     public class MLB_AC4 : SoulsFile<MLB_AC4>
     {
@@ -213,9 +214,19 @@ namespace SoulsFormats
 
         #region Bone Order
 
+        /// <summary>
+        /// A struct for holding bone ordering information during reading.
+        /// </summary>
         private struct BoneOrderIndex
         {
+            /// <summary>
+            /// The index of the bone.
+            /// </summary>
             public int Index;
+
+            /// <summary>
+            /// The offset of the bone.
+            /// </summary>
             public int Offset;
         }
 
@@ -812,6 +823,7 @@ namespace SoulsFormats
                     Config1 = new UnkConfig1();
                     BreakConfig = new BoneBreakConfig();
                     CollisionConfig = new BoneCollisionConfig();
+                    HasConfig1 = false;
                     HasBreakConfig = false;
                     HasCollisionConfig = false;
                     IsDummy = false;
