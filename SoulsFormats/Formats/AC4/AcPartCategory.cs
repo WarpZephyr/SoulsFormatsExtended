@@ -83,12 +83,12 @@
         /// <summary>
         /// The right hanger.
         /// </summary>
-        HangerR = 15,
+        HangerRight = 15,
 
         /// <summary>
         /// The left hanger.
         /// </summary>
-        HangerL = 16,
+        HangerLeft = 16,
 
         /// <summary>
         /// The head top stabilizer.
