@@ -81,14 +81,14 @@
         ShoulderUnit = 14,
 
         /// <summary>
-        /// The right side of an unknown arm part.
+        /// The right hanger.
         /// </summary>
-        ArmUnkRight = 15,
+        HangerR = 15,
 
         /// <summary>
-        /// The left side of an unknown arm part.
+        /// The left hanger.
         /// </summary>
-        ArmUnkLeft = 16,
+        HangerL = 16,
 
         /// <summary>
         /// The head top stabilizer.
