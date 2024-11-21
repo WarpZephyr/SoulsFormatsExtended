@@ -8,7 +8,7 @@ namespace SoulsFormats
     /// A 3d resource list of some kind that also contains metadata.<br/>
     /// This variant is used in AC4 and ACFA.
     /// </summary>
-    public class MLB_AC4 : SoulsFile<MLB_AC4>
+    public class MLB_AC4 : SoulsFile<MLB_AC4>, IMLB
     {
         /// <summary>
         /// The type of resource referenced by the MLB.
@@ -18,7 +18,7 @@ namespace SoulsFormats
         /// <summary>
         /// The resources referenced by this MLB.
         /// </summary>
-        public List<IResource> Resources { get; set; }
+        public List<IMlbResource> Resources { get; set; }
 
         /// <summary>
         /// Whether or not the resources are animations.<br/>
@@ -33,7 +33,7 @@ namespace SoulsFormats
         public MLB_AC4()
         {
             Type = ResourceType.Model;
-            Resources = new List<IResource>();
+            Resources = new List<IMlbResource>();
             IsAnimation = false;
         }
 
@@ -53,7 +53,7 @@ namespace SoulsFormats
 
             bool prevIsAnimation = false;
             bool determinedAnimation = false;
-            Resources = new List<IResource>(entriesCount);
+            Resources = new List<IMlbResource>(entriesCount);
             for (int i = 0; i < entriesCount; i++)
             {
                 int entryOffset = entryOffsets[i];
@@ -194,22 +194,6 @@ namespace SoulsFormats
             Texture = 4
         }
 
-        /// <summary>
-        /// An interface for resources in the MLB.
-        /// </summary>
-        public interface IResource
-        {
-            /// <summary>
-            /// The full path to the resource.
-            /// </summary>
-            public string Path { get; set; }
-
-            /// <summary>
-            /// The relative path to the resource.
-            /// </summary>
-            public string RelativePath { get; set; }
-        }
-
         #endregion
 
         #region Bone Order
@@ -237,7 +221,7 @@ namespace SoulsFormats
         /// <summary>
         /// A model resource.
         /// </summary>
-        public class Model : IResource
+        public class Model : IMlbResource
         {
             /// <inheritdoc/>
             public string Path { get; set; }
@@ -2074,7 +2058,7 @@ namespace SoulsFormats
         /// <summary>
         /// An animation resource.
         /// </summary>
-        public class Animation : IResource
+        public class Animation : IMlbResource
         {
             /// <inheritdoc/>
             public string Path { get; set; }
@@ -2421,7 +2405,7 @@ namespace SoulsFormats
         /// <summary>
         /// A texture resource.
         /// </summary>
-        public class Texture : IResource
+        public class Texture : IMlbResource
         {
             /// <inheritdoc/>
             public string Path { get; set; }
@@ -2516,7 +2500,7 @@ namespace SoulsFormats
         /// <summary>
         /// A resource type for empty entries in MLB, not a part of the MLB spec.
         /// </summary>
-        public class Dummy : IResource
+        public class Dummy : IMlbResource
         {
             /// <summary>
             /// Required for the interface, not supported.

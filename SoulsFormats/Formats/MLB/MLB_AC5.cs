@@ -7,7 +7,7 @@ namespace SoulsFormats
     /// A 3d resource list of some kind that also contains metadata.<br/>
     /// This variant is used in ACV and ACVD.
     /// </summary>
-    public class MLB_AC5 : SoulsFile<MLB_AC5>
+    public class MLB_AC5 : SoulsFile<MLB_AC5>, IMLB
     {
         /// <summary>
         /// The type of resource referenced by the MLB.
@@ -17,7 +17,7 @@ namespace SoulsFormats
         /// <summary>
         /// The resources referenced by this MLB.
         /// </summary>
-        public List<Model> Resources { get; set; }
+        public List<IMlbResource> Resources { get; set; }
 
         /// <summary>
         /// Create a new <see cref="MLB_AC4"/>.
@@ -25,7 +25,7 @@ namespace SoulsFormats
         public MLB_AC5()
         {
             Type = ResourceType.Model;
-            Resources = new List<Model>();
+            Resources = new List<IMlbResource>();
         }
 
         #region Read
@@ -42,7 +42,7 @@ namespace SoulsFormats
             br.Position = entriesOffset;
             int[] entryOffsets = br.ReadInt32s(entriesCount);
 
-            Resources = new List<Model>(entriesCount);
+            Resources = new List<IMlbResource>(entriesCount);
             for (int i = 0; i < entriesCount; i++)
             {
                 int entryOffset = entryOffsets[i];
@@ -84,7 +84,14 @@ namespace SoulsFormats
                 switch (Type)
                 {
                     case ResourceType.Model:
-                        resource.Write(bw);
+                        if (resource is Model model)
+                        {
+                            model.Write(bw);
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"{nameof(IMlbResource)} {resource.GetType().Name} is not supported or is invalid.");
+                        }
                         break;
                     default:
                         throw new NotSupportedException($"{nameof(ResourceType)} {Type} is not supported or is invalid.");
@@ -114,7 +121,7 @@ namespace SoulsFormats
         /// <summary>
         /// A model resource.
         /// </summary>
-        public class Model
+        public class Model : IMlbResource
         {
             /// <summary>
             /// The full path to the resource.
