@@ -211,7 +211,7 @@ namespace SoulsFormats
             public List<ushort> Triangulate(bool allowPrimitiveRestarts, bool includeDegenerateFaces)
             {
                 var triangles = new List<ushort>();
-                bool flip = true;
+                bool flip = false;
                 for (int i = 0; i < Indices.Count - 2; i++)
                 {
                     ushort vi1 = Indices[i];

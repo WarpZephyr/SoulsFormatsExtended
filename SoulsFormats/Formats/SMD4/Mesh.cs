@@ -243,24 +243,35 @@ namespace SoulsFormats
             public List<ushort> Triangulate(bool allowPrimitiveRestarts, bool includeDegenerateFaces)
             {
                 var triangles = new List<ushort>();
+                bool flip = false;
                 for (int i = 0; i < Indices.Count - 2; i++)
                 {
                     ushort vi1 = Indices[i];
                     ushort vi2 = Indices[i + 1];
                     ushort vi3 = Indices[i + 2];
 
-                    if (!(allowPrimitiveRestarts && (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF)))
+                    if (allowPrimitiveRestarts && (vi1 == 0xFFFF || vi2 == 0xFFFF || vi3 == 0xFFFF))
+                    {
+                        flip = true;
+                    }
+                    else
                     {
                         if (includeDegenerateFaces || (vi1 != vi2 && vi2 != vi3 && vi3 != vi1))
                         {
-                            // Output both sides for now
-                            triangles.Add(vi1);
-                            triangles.Add(vi2);
-                            triangles.Add(vi3);
-                            triangles.Add(vi3);
-                            triangles.Add(vi2);
-                            triangles.Add(vi1);
+                            if (flip)
+                            {
+                                triangles.Add(vi3);
+                                triangles.Add(vi2);
+                                triangles.Add(vi1);
+                            }
+                            else
+                            {
+                                triangles.Add(vi1);
+                                triangles.Add(vi2);
+                                triangles.Add(vi3);
+                            }
                         }
+                        flip = !flip;
                     }
                 }
 
