@@ -13,22 +13,24 @@ namespace SoulsFormats
         public class Mesh
         {
             /// <summary>
-            /// Determines vertex size and if UnkBlocks is present.
+            /// The format of vertices in this mesh.
             /// </summary>
             public byte VertexFormat;
 
             /// <summary>
-            /// Index of the material used by all triangles in this mesh.
+            /// The index of the material used by all triangles in this mesh.
             /// </summary>
             public byte MaterialIndex;
 
             /// <summary>
-            /// Unknown.
+            /// Unknown.<br/>
+            /// Cullbackfaces?
             /// </summary>
             public bool Unk02;
 
             /// <summary>
-            /// Unknown.
+            /// Unknown.<br/>
+            /// TriangleStrip?
             /// </summary>
             public bool Unk03;
 
@@ -38,32 +40,12 @@ namespace SoulsFormats
             public short Unk08;
 
             /// <summary>
-            /// Indexes of bones in the bone collection which may be used by vertices in this mesh.
+            /// The indexes of bones used by this mesh.
             /// </summary>
             /// <remarks>
             /// Always has 28 indices; Unused indices are set to -1.
             /// </remarks>
             public short[] BoneIndices;
-
-            /// <summary>
-            /// Get the number of used bone indices.
-            /// </summary>
-            public int BoneCount
-            {
-                get
-                {
-                    int count = 0;
-                    for (int i = 0; i < 28; i++)
-                    {
-                        short index = BoneIndices[i];
-                        if (index != -1)
-                        {
-                            count++;
-                        }
-                    }
-                    return count;
-                }
-            }
 
             /// <summary>
             /// Indexes of the vertices of this mesh.

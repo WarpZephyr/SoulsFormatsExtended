@@ -7,55 +7,55 @@ namespace SoulsFormats
         /// <summary>
         /// A joint available for vertices to be attached to.
         /// </summary>
-        public class Bone
+        public class Node
         {
             /// <summary>
-            /// Corresponds to the name of a bone in the parent skeleton, if present.
+            /// The name of this <see cref="Node"/>.
             /// </summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Translation of this bone.
+            /// The translation of this <see cref="Node"/>.
             /// </summary>
             public Vector3 Translation { get; set; }
 
             /// <summary>
-            /// Rotation of this bone; euler radians in XZY order.
+            /// The rotation of this <see cref="Node"/>; euler radians in XZY order.
             /// </summary>
             public Vector3 Rotation { get; set; }
 
             /// <summary>
-            /// Scale of this bone.
+            /// The scale of this <see cref="Node"/>.
             /// </summary>
             public Vector3 Scale { get; set; }
 
             /// <summary>
-            /// Minimum extent of the vertices weighted to this bone.
+            /// The minimum extent of the vertices weighted to this <see cref="Node"/>.
             /// </summary>
             public Vector3 BoundingBoxMin { get; set; }
 
             /// <summary>
-            /// Maximum extent of the vertices weighted to this bone.
+            /// The maximum extent of the vertices weighted to this <see cref="Node"/>.
             /// </summary>
             public Vector3 BoundingBoxMax { get; set; }
 
             /// <summary>
-            /// Index of the parent in the bone collection, or -1 for none.
+            /// The index of the parent of this <see cref="Node"/>, or -1 for none.
             /// </summary>
             public short ParentIndex { get; set; }
 
             /// <summary>
-            /// Index of the first child in the bone collection, or -1 for none.
+            /// The index of the first child of this <see cref="Node"/>, or -1 for none.
             /// </summary>
             public short FirstChildIndex { get; set; }
 
             /// <summary>
-            /// Index of the next child of this bone's parent, or -1 for none.
+            /// The index of the next child of the parent of this <see cref="Node"/>, or -1 for none.
             /// </summary>
             public short NextSiblingIndex { get; set; }
 
             /// <summary>
-            /// Index of the previous child of this bone's parent, or -1 for none.
+            /// The index of the previous child of the parent of this <see cref="Node"/>, or -1 for none.
             /// </summary>
             public short PreviousSiblingIndex { get; set; }
 
@@ -80,9 +80,9 @@ namespace SoulsFormats
             public int[] Unk70 { get; private set; }
 
             /// <summary>
-            /// Create a new <see cref="Bone"/> with default values.
+            /// Create a new <see cref="Node"/> with default values.
             /// </summary>
-            public Bone()
+            public Node()
             {
                 Name = string.Empty;
                 Scale = Vector3.One;
@@ -97,9 +97,9 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Clone an existing <see cref="Bone"/>.
+            /// Clone an existing <see cref="Node"/>.
             /// </summary>
-            public Bone(Bone bone)
+            public Node(Node bone)
             {
                 Name = bone.Name;
                 Translation = bone.Translation;
@@ -120,10 +120,10 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Read a <see cref="Bone"/> from a stream.
+            /// Read a <see cref="Node"/> from a stream.
             /// </summary>
             /// <param name="br">The stream reader.</param>
-            internal Bone(BinaryReaderEx br)
+            internal Node(BinaryReaderEx br)
             {
                 Name = br.ReadASCII(32);
                 Translation = br.ReadVector3();
@@ -142,7 +142,7 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Write a <see cref="Bone"/> to a stream.
+            /// Write a <see cref="Node"/> to a stream.
             /// </summary>
             /// <param name="bw">The stream writer.</param>
             internal void Write(BinaryWriterEx bw)

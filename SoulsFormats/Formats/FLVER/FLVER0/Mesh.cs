@@ -30,7 +30,7 @@ namespace SoulsFormats
             /// <summary>
             /// Whether vertices are defined as a triangle strip or individual triangles.
             /// </summary>
-            public bool UseTriangleStrips { get; set; }
+            public bool TriangleStrip { get; set; }
 
             /// <summary>
             /// Apparently does nothing. Usually points to a dummy bone named after the model, possibly just for labelling.
@@ -87,14 +87,14 @@ namespace SoulsFormats
             public int LayoutIndex { get; set; }
 
             /// <summary>
-            /// Create a new and empty Mesh with default values.
+            /// Create a new <see cref="Mesh"/>.
             /// </summary>
             public Mesh()
             {
                 Dynamic = 0;
                 MaterialIndex = 0;
                 CullBackfaces = true;
-                UseTriangleStrips = false;
+                TriangleStrip = false;
                 DefaultBoneIndex = 0;
                 BoneIndices = new short[28];
                 Indices = new List<int>();
@@ -104,14 +104,14 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Clone an existing Mesh.
+            /// Clone an existing <see cref="Mesh"/>.
             /// </summary>
             public Mesh(Mesh mesh)
             {
                 Dynamic = mesh.Dynamic;
                 MaterialIndex = mesh.MaterialIndex;
                 CullBackfaces = mesh.CullBackfaces;
-                UseTriangleStrips = mesh.UseTriangleStrips;
+                TriangleStrip = mesh.TriangleStrip;
                 DefaultBoneIndex = mesh.DefaultBoneIndex;
                 BoneIndices = new short[28];
                 Indices = new List<int>();
@@ -129,18 +129,18 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Read a Mesh from a stream.
+            /// Read a <see cref="Mesh"/> from a stream.
             /// </summary>
-            /// <param name="br">The stream.</param>
-            /// <param name="flv">The model so the materials list can be retrieved.</param>
+            /// <param name="br">The stream reader.</param>
+            /// <param name="model">The model so version and layouts can be retrieved.</param>
             /// <param name="dataOffset">The starting offset of data in the model.</param>
-            /// <exception cref="NotSupportedException">There were more than one vertex buffer.</exception>
-            internal Mesh(BinaryReaderEx br, FLVER0 flv, int dataOffset)
+            /// <exception cref="NotSupportedException">There was more than one vertex buffer.</exception>
+            internal Mesh(BinaryReaderEx br, FLVER0 model, int dataOffset)
             {
                 Dynamic = br.ReadByte();
                 MaterialIndex = br.ReadByte();
                 CullBackfaces = br.ReadBoolean();
-                UseTriangleStrips = br.ReadBoolean();
+                TriangleStrip = br.ReadBoolean();
 
                 int vertexIndexCount = br.ReadInt32();
                 int vertexCount = br.ReadInt32();
@@ -151,17 +151,17 @@ namespace SoulsFormats
                 int vertexIndicesOffset = br.ReadInt32();
                 int bufferDataLength = br.ReadInt32();
                 int bufferDataOffset = br.ReadInt32();
-                int vertexBuffersOffset1 = ReadVarEndianInt32(br, flv.Header.Version);
-                int vertexBuffersOffset2 = ReadVarEndianInt32(br, flv.Header.Version);
+                int vertexBuffersOffset1 = ReadVarEndianInt32(br, model.Header.Version);
+                int vertexBuffersOffset2 = ReadVarEndianInt32(br, model.Header.Version);
                 br.AssertInt32(0);
 
-                if (flv.Header.VertexIndexSize == 16)
+                if (model.Header.VertexIndexSize == 16)
                 {
                     Indices = new List<int>(vertexCount);
                     foreach (ushort index in br.GetUInt16s(dataOffset + vertexIndicesOffset, vertexIndexCount))
                         Indices.Add(index);
                 }
-                else if (flv.Header.VertexIndexSize == 32)
+                else if (model.Header.VertexIndexSize == 32)
                 {
                     Indices = new List<int>(br.GetInt32s(dataOffset + vertexIndicesOffset, vertexIndexCount));
                 }
@@ -181,7 +181,7 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersOffset1);
                     {
-                        List<VertexBuffer> vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br, flv.Header.Version);
+                        List<VertexBuffer> vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br, model.Header.Version);
                         if (vertexBuffers1.Count == 0)
                             throw new NotSupportedException("First vertex buffer list is expected to contain at least 1 buffer.");
                         for (int i = 1; i < vertexBuffers1.Count; i++)
@@ -196,7 +196,7 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersOffset2);
                     {
-                        List<VertexBuffer> vertexBuffers2 = VertexBuffer.ReadVertexBuffers(br, flv.Header.Version);
+                        List<VertexBuffer> vertexBuffers2 = VertexBuffer.ReadVertexBuffers(br, model.Header.Version);
                         if (vertexBuffers2.Count != 0)
                             throw new NotSupportedException("Second vertex buffer list is expected to contain exactly 0 buffers.");
                     }
@@ -206,11 +206,11 @@ namespace SoulsFormats
                 br.StepIn(dataOffset + buffer.BufferOffset);
                 {
                     LayoutIndex = buffer.LayoutIndex;
-                    BufferLayout layout = flv.Materials[MaterialIndex].Layouts[LayoutIndex];
+                    BufferLayout layout = model.Materials[MaterialIndex].Layouts[LayoutIndex];
 
                     float uvFactor = 1024;
                     // NB hack
-                    if (flv.Header.Version == 0x12|| !br.BigEndian)
+                    if (model.Header.Version == 0x12 || !br.BigEndian)
                         uvFactor = 2048;
 
                     Vertices = new List<FLVER.Vertex>(vertexCount);
@@ -236,7 +236,7 @@ namespace SoulsFormats
                 bw.WriteByte(Dynamic);
                 bw.WriteByte(MaterialIndex);
                 bw.WriteBoolean(CullBackfaces);
-                bw.WriteBoolean(UseTriangleStrips);
+                bw.WriteBoolean(TriangleStrip);
 
                 bw.WriteInt32(Indices.Count);
                 bw.WriteInt32(Vertices.Count);
@@ -358,7 +358,7 @@ namespace SoulsFormats
             /// <returns>An approximate triangle count.</returns>
             public int GetFaceCount(int version, bool includeDegenerateFaces)
             {
-                if (version >= 0x15 && UseTriangleStrips == false)
+                if (version >= 0x15 && TriangleStrip == false)
                 {
                     // No triangle strip
                     var alignedValue = Indices.Count + (3 - (Indices.Count % 3));
@@ -387,13 +387,13 @@ namespace SoulsFormats
             /// <summary>
             /// Triangulate the mesh face indices.
             /// </summary>
-            /// <param name="version">The FLVER version.</param>
-            /// <param name="doCheckFlip">Whether or not to do the check flip fix.</param>
+            /// <param name="version">The model version.</param>
             /// <param name="includeDegenerateFaces">Whether or not to include degenerate faces.</param>
+            /// <param name="doCheckFlip">Whether or not to do the check flip fix.</param>
             /// <returns>A list of triangulated mesh face indices.</returns>
-            public List<int> Triangulate(int version, bool doCheckFlip, bool includeDegenerateFaces)
+            public List<int> Triangulate(int version, bool includeDegenerateFaces, bool doCheckFlip)
             {
-                if (version >= 0x15 && UseTriangleStrips == false)
+                if (version >= 0x15 && TriangleStrip == false)
                 {
                     return new List<int>(Indices);
                 }

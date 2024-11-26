@@ -23,9 +23,9 @@ namespace SoulsFormats
             public int MaterialIndex { get; set; }
 
             /// <summary>
-            /// Apparently does nothing. Usually points to a dummy bone named after the model, possibly just for labelling.
+            /// Index of the node representing this mesh in the <see cref="Nodes"/> list.
             /// </summary>
-            public int DefaultBoneIndex { get; set; }
+            public int NodeIndex { get; set; }
 
             /// <summary>
             /// Indexes of bones in the bone collection which may be used by vertices in this mesh.
@@ -66,7 +66,7 @@ namespace SoulsFormats
             /// </summary>
             public Mesh()
             {
-                DefaultBoneIndex = -1;
+                NodeIndex = -1;
                 BoneIndices = new List<int>();
                 FaceSets = new List<FaceSet>();
                 VertexBuffers = new List<VertexBuffer>();
@@ -83,7 +83,7 @@ namespace SoulsFormats
                 MaterialIndex = br.ReadInt32();
                 br.AssertInt32(0);
                 br.AssertInt32(0);
-                DefaultBoneIndex = br.ReadInt32();
+                NodeIndex = br.ReadInt32();
                 int boneCount = br.ReadInt32();
                 int boundingBoxOffset = br.ReadInt32();
                 int boneOffset = br.ReadInt32();
@@ -189,7 +189,7 @@ namespace SoulsFormats
                 bw.WriteInt32(MaterialIndex);
                 bw.WriteInt32(0);
                 bw.WriteInt32(0);
-                bw.WriteInt32(DefaultBoneIndex);
+                bw.WriteInt32(NodeIndex);
                 bw.WriteInt32(BoneIndices.Count);
                 bw.ReserveInt32($"MeshBoundingBox{index}");
                 bw.ReserveInt32($"MeshBoneIndices{index}");

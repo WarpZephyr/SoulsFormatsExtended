@@ -3,14 +3,14 @@
 namespace SoulsFormats
 {
     /// <summary>
-    /// A common interface for the basic features of FLVER0 and FLVER2.
+    /// A common interface for the basic features of <see cref="FLVER0"/> and <see cref="FLVER2"/>.
     /// </summary>
     public interface IFlver
     {
         /// <summary>
         /// Joints available for vertices and dummy points to be attached to.
         /// </summary>
-        IReadOnlyList<FLVER.Bone> Bones { get; }
+        IReadOnlyList<FLVER.Node> Nodes { get; }
 
         /// <summary>
         /// Dummy points used to determine hitboxes, particle effects, etc.

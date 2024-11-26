@@ -113,8 +113,11 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Read a new Mesh from a stream.
+            /// Read a <see cref="Mesh"/> from a stream.
             /// </summary>
+            /// <param name="br">The stream reader.</param>
+            /// <param name="dataOffset">The offset of the mesh data.</param>
+            /// <param name="version">The version of the model.</param>
             internal Mesh(BinaryReaderEx br, int dataOffset, int version)
             {
                 VertexFormat = br.ReadByte();
@@ -124,7 +127,7 @@ namespace SoulsFormats
                 ushort vertexIndexCount = br.ReadUInt16();
                 Unk06 = br.ReadInt16();
                 BoneIndices = br.ReadInt16s(28);
-                int vertexIndicesLength = br.AssertInt32(vertexIndexCount * 2);
+                br.AssertInt32(vertexIndexCount * 2); // Vertex indices length
                 int vertexIndicesOffset = br.ReadInt32();
                 int vertexBufferLength = br.ReadInt32();
                 int vertexBufferOffset = br.ReadInt32();
@@ -142,8 +145,11 @@ namespace SoulsFormats
             }
 
             /// <summary>
-            /// Write this Mesh to a stream.
+            /// Write this <see cref="Mesh"/> to a stream.
             /// </summary>
+            /// <param name="bw">The stream writer.</param>
+            /// <param name="index">The index of this <see cref="Mesh"/> in written data.</param>
+            /// <param name="version">The version of the model.</param>
             internal void Write(BinaryWriterEx bw, int index, int version)
             {
                 bw.WriteByte(VertexFormat);
@@ -154,13 +160,13 @@ namespace SoulsFormats
                 bw.WriteInt16(Unk06);
                 bw.WriteInt16s(BoneIndices);
                 bw.WriteInt32(Indices.Count * 2);
-                bw.ReserveInt32($"vertexIndicesOffset_{index}");
+                bw.ReserveInt32($"VertexIndicesOffset_{index}");
                 bw.WriteInt32(Vertices.Count * GetVertexSize(version));
-                bw.ReserveInt32($"vertexBufferOffset_{index}");
+                bw.ReserveInt32($"VertexBufferOffset_{index}");
             }
 
             /// <summary>
-            /// Get the size of each Vertex.
+            /// Get the size of each <see cref="Vertex"/>.
             /// </summary>
             internal int GetVertexSize(int version)
             {
@@ -176,7 +182,7 @@ namespace SoulsFormats
                     }
                     else
                     {
-                        throw new NotSupportedException($"VertexFormat {VertexFormat} is not currently supported for Version {version}.");
+                        throw new NotSupportedException($"{nameof(VertexFormat)} {VertexFormat} is not currently supported for version {version}.");
                     }
                 }
                 else

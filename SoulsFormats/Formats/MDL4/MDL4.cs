@@ -14,24 +14,24 @@ namespace SoulsFormats
         public MDLHeader Header { get; set; }
 
         /// <summary>
-        /// Dummy polygons in this model.
+        /// The dummy polygons in this model.
         /// </summary>
-        public List<Dummy> Dummies;
+        public List<Dummy> Dummies { get; set; }
 
         /// <summary>
-        /// Materials in this model, usually one per mesh.
+        /// The materials in this model, usually one per mesh.
         /// </summary>
-        public List<Material> Materials;
+        public List<Material> Materials { get; set; }
 
         /// <summary>
-        /// Bones used by this model, may or may not be the full skeleton.
+        /// Joints available for vertices and dummy points to be attached to.
         /// </summary>
-        public List<Bone> Bones;
+        public List<Node> Nodes { get; set; }
 
         /// <summary>
         /// Individual chunks of the model.
         /// </summary>
-        public List<Mesh> Meshes;
+        public List<Mesh> Meshes { get; set; }
 
         /// <summary>
         /// Returns true if the data appears to be an MDL4 model.
@@ -46,8 +46,9 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads an MDL4 from a BinaryReaderEx.
+        /// Read an <see cref="MDL4"/> from a stream.
         /// </summary>
+        /// <param name="br">The stream reader.</param>
         protected override void Read(BinaryReaderEx br)
         {
             br.BigEndian = true;
@@ -56,16 +57,16 @@ namespace SoulsFormats
             Header = new MDLHeader();
             Header.Version = br.AssertInt32(0x40001, 0x40002);
             int dataOffset = br.ReadInt32();
-            int dataLength = br.ReadInt32();
+            br.ReadInt32(); // Data length
             int dummyCount = br.ReadInt32();
             int materialCount = br.ReadInt32();
             int boneCount = br.ReadInt32();
             int meshCount = br.ReadInt32();
-            int vertexBufferCount = br.ReadInt32(); // Vertex Buffer Count Probably
+            br.ReadInt32(); // Vertex Buffer Count?
             Header.BoundingBoxMin = br.ReadVector3();
             Header.BoundingBoxMax = br.ReadVector3();
-            int trueFaceCount = br.ReadInt32();
-            int totalFaceCount = br.ReadInt32();
+            br.ReadInt32(); // True face count
+            br.ReadInt32(); // Total face count
             br.AssertPattern(0x3C, 0x00);
 
             Dummies = new List<Dummy>(dummyCount);
@@ -76,9 +77,9 @@ namespace SoulsFormats
             for (int i = 0; i < materialCount; i++)
                 Materials.Add(new Material(br));
 
-            Bones = new List<Bone>(boneCount);
+            Nodes = new List<Node>(boneCount);
             for (int i = 0; i < boneCount; i++)
-                Bones.Add(new Bone(br));
+                Nodes.Add(new Node(br));
 
             Meshes = new List<Mesh>(meshCount);
             for (int i = 0; i < meshCount; i++)
@@ -86,8 +87,9 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Writes MDL4 data to a BinaryWriterEx.
+        /// Write an <see cref="MDL4"/> to a stream.
         /// </summary>
+        /// <param name="bw">The stream writer.</param>
         protected override void Write(BinaryWriterEx bw)
         {
             bw.BigEndian = true;
@@ -97,9 +99,9 @@ namespace SoulsFormats
             bw.ReserveInt32("DataLength");
             bw.WriteInt32(Dummies.Count);
             bw.WriteInt32(Materials.Count);
-            bw.WriteInt32(Bones.Count);
+            bw.WriteInt32(Nodes.Count);
             bw.WriteInt32(Meshes.Count);
-            bw.WriteInt32(Meshes.Count); // Vertex Buffer Count Probably
+            bw.WriteInt32(Meshes.Count); // Vertex Buffer Count?
             bw.WriteVector3(Header.BoundingBoxMin);
             bw.WriteVector3(Header.BoundingBoxMax);
 
@@ -119,7 +121,7 @@ namespace SoulsFormats
             foreach (Material material in Materials)
                 material.Write(bw);
 
-            foreach (Bone bone in Bones)
+            foreach (Node bone in Nodes)
                 bone.Write(bw);
 
             for (int i = 0; i < Meshes.Count; i++)
@@ -155,11 +157,11 @@ namespace SoulsFormats
         /// <returns>A matrix representing the world transform of the bone.</returns>
         public Matrix4x4 ComputeBoneWorldMatrix(int index)
         {
-            var bone = Bones[index];
+            var bone = Nodes[index];
             Matrix4x4 matrix = bone.ComputeLocalTransform();
             while (bone.ParentIndex != -1)
             {
-                bone = Bones[bone.ParentIndex];
+                bone = Nodes[bone.ParentIndex];
                 matrix *= bone.ComputeLocalTransform();
             }
 
@@ -171,12 +173,12 @@ namespace SoulsFormats
         /// </summary>
         /// <param name="bone">The bone to compute the world transform of.</param>
         /// <returns>A matrix representing the world transform of the bone.</returns>
-        public Matrix4x4 ComputeBoneWorldMatrix(Bone bone)
+        public Matrix4x4 ComputeBoneWorldMatrix(Node bone)
         {
             Matrix4x4 matrix = bone.ComputeLocalTransform();
             while (bone.ParentIndex != -1)
             {
-                bone = Bones[bone.ParentIndex];
+                bone = Nodes[bone.ParentIndex];
                 matrix *= bone.ComputeLocalTransform();
             }
 
@@ -184,27 +186,27 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// An MDL4 header containing general values for this model.
+        /// An <see cref="MDL4"/> header containing general values for this model.
         /// </summary>
         public class MDLHeader
         {
             /// <summary>
-            /// Version of the format indicating presence of various features.
+            /// The version of the format indicating presence of various features.
             /// </summary>
-            public int Version;
+            public int Version { get; set; }
 
             /// <summary>
-            /// Minimum extent of the entire model.
+            /// The minimum extent of the entire model.
             /// </summary>
-            public Vector3 BoundingBoxMin;
+            public Vector3 BoundingBoxMin { get; set; }
 
             /// <summary>
-            /// Maximum extent of the entire model.
+            /// The maximum extent of the entire model.
             /// </summary>
-            public Vector3 BoundingBoxMax;
+            public Vector3 BoundingBoxMax { get; set; }
 
             /// <summary>
-            /// Creates a MDLHeader with default values.
+            /// Creates a <see cref="MDLHeader"/> with default values.
             /// </summary>
             public MDLHeader()
             {

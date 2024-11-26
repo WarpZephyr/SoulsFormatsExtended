@@ -203,7 +203,7 @@ namespace SoulsFormats
                     if (format == 0)
                     {
                         bw.WriteVector3(Position);
-                        WriteSByteVector4(bw, Normal);
+                        WriteSByteVector4Normal(bw, Normal);
                         WriteSByteVector4(bw, Tangent);
                         Color.WriteByteARGB(bw);
                         WriteShortUV(bw, UVs[0]);
@@ -216,15 +216,6 @@ namespace SoulsFormats
                         throw new NotImplementedException($"Vertex format {format} not implemented for version {version}.");
                     }
                 }
-            }
-
-            private static Vector4 ReadByteVector4(BinaryReaderEx br)
-            {
-                byte w = br.ReadByte();
-                byte z = br.ReadByte();
-                byte y = br.ReadByte();
-                byte x = br.ReadByte();
-                return new Vector4((x - 127) / 127f, (y - 127) / 127f, (z - 127) / 127f, (w - 127) / 127f);
             }
 
             private static Vector4 ReadSByteVector4(BinaryReaderEx br)
@@ -262,17 +253,17 @@ namespace SoulsFormats
                 return new Vector4((float)Math.Round(x / 511f), (float)Math.Round(y / 511f), (float)Math.Round(z / 511f), w);
             }
 
-            private static void WriteByteVector4(BinaryWriterEx bw, Vector4 vector)
-            {
-                bw.WriteByte((byte)((vector.W + 127) * 127f));
-                bw.WriteByte((byte)((vector.Z + 127) * 127f));
-                bw.WriteByte((byte)((vector.Y + 127) * 127f));
-                bw.WriteByte((byte)((vector.X + 127) * 127f));
-            }
-
             private static void WriteSByteVector4(BinaryWriterEx bw, Vector4 vector)
             {
                 bw.WriteSByte((sbyte)(vector.W * 127f));
+                bw.WriteSByte((sbyte)(vector.Z * 127f));
+                bw.WriteSByte((sbyte)(vector.Y * 127f));
+                bw.WriteSByte((sbyte)(vector.X * 127f));
+            }
+
+            private static void WriteSByteVector4Normal(BinaryWriterEx bw, Vector4 vector)
+            {
+                bw.WriteSByte((sbyte)vector.W);
                 bw.WriteSByte((sbyte)(vector.Z * 127f));
                 bw.WriteSByte((sbyte)(vector.Y * 127f));
                 bw.WriteSByte((sbyte)(vector.X * 127f));

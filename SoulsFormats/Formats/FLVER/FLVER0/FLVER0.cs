@@ -27,10 +27,10 @@ namespace SoulsFormats
         IReadOnlyList<IFlverMaterial> IFlver.Materials => Materials;
 
         /// <summary>
-        /// Bones used by this model, may or may not be the full skeleton.
+        /// Joints available for vertices and dummy points to be attached to.
         /// </summary>
-        public List<FLVER.Bone> Bones { get; set; }
-        IReadOnlyList<FLVER.Bone> IFlver.Bones => Bones;
+        public List<FLVER.Node> Nodes { get; set; }
+        IReadOnlyList<FLVER.Node> IFlver.Nodes => Nodes;
 
         /// <summary>
         /// Individual chunks of the model.
@@ -46,7 +46,7 @@ namespace SoulsFormats
             Header = new FLVERHeader();
             Dummies = new List<FLVER.Dummy>();
             Materials = new List<Material>();
-            Bones = new List<FLVER.Bone>();
+            Nodes = new List<FLVER.Node>();
             Meshes = new List<Mesh>();
         }
 
@@ -58,15 +58,15 @@ namespace SoulsFormats
             Header = new FLVERHeader(flver0.Header);
             Dummies = new List<FLVER.Dummy>();
             Materials = new List<Material>();
-            Bones = new List<FLVER.Bone>();
+            Nodes = new List<FLVER.Node>();
             Meshes = new List<Mesh>();
 
             foreach(var dummy in flver0.Dummies)
                 Dummies.Add(new FLVER.Dummy(dummy));
             foreach (var material in flver0.Materials)
                 Materials.Add(new Material(material));
-            foreach (var bone in flver0.Bones)
-                Bones.Add(new FLVER.Bone(bone));
+            foreach (var bone in flver0.Nodes)
+                Nodes.Add(new FLVER.Node(bone));
             foreach (var mesh in flver0.Meshes)
                 Meshes.Add(new Mesh(mesh));
         }
@@ -133,9 +133,9 @@ namespace SoulsFormats
             for (int i = 0; i < materialCount; i++)
                 Materials.Add(new Material(br, Header.Unicode, Header.Version));
 
-            Bones = new List<FLVER.Bone>(boneCount);
+            Nodes = new List<FLVER.Node>(boneCount);
             for (int i = 0; i < boneCount; i++)
-                Bones.Add(new FLVER.Bone(br, Header.Unicode));
+                Nodes.Add(new FLVER.Node(br, Header.Unicode));
 
             Meshes = new List<Mesh>(meshCount);
             for (int i = 0; i < meshCount; i++)
@@ -156,7 +156,7 @@ namespace SoulsFormats
             bw.ReserveInt32("DataSize");
             bw.WriteInt32(Dummies.Count);
             bw.WriteInt32(Materials.Count);
-            bw.WriteInt32(Bones.Count);
+            bw.WriteInt32(Nodes.Count);
             bw.WriteInt32(Meshes.Count);
             bw.WriteInt32(Meshes.Count); // Vertex buffer count. Currently based on reads, there should only be one per mesh
             bw.WriteVector3(Header.BoundingBoxMin);
@@ -202,8 +202,8 @@ namespace SoulsFormats
             for (int i = 0; i < Materials.Count; i++)
                 Materials[i].Write(bw, i);
 
-            for (int i = 0; i < Bones.Count; i++)
-                Bones[i].Write(bw, i);
+            for (int i = 0; i < Nodes.Count; i++)
+                Nodes[i].Write(bw, i);
 
             for (int i = 0; i < Meshes.Count; i++)
                 Meshes[i].Write(bw, this, i);
@@ -211,8 +211,8 @@ namespace SoulsFormats
             for (int i = 0; i < Materials.Count; i++)
                 Materials[i].WriteSubStructs(bw, Header.Unicode, i, Header.Version);
 
-            for (int i = 0; i < Bones.Count; i++)
-                Bones[i].WriteStrings(bw, Header.Unicode, i);
+            for (int i = 0; i < Nodes.Count; i++)
+                Nodes[i].WriteStrings(bw, Header.Unicode, i);
 
             for (int i = 0; i < Meshes.Count; i++)
                 Meshes[i].WriteVertexBufferHeader(bw, this, i);
@@ -239,11 +239,11 @@ namespace SoulsFormats
         /// <returns>A matrix representing the world transform of the bone.</returns>
         public Matrix4x4 ComputeBoneWorldMatrix(int index)
         {
-            var bone = Bones[index];
+            var bone = Nodes[index];
             Matrix4x4 matrix = bone.ComputeLocalTransform();
             while (bone.ParentIndex != -1)
             {
-                bone = Bones[bone.ParentIndex];
+                bone = Nodes[bone.ParentIndex];
                 matrix *= bone.ComputeLocalTransform();
             }
 
@@ -255,12 +255,12 @@ namespace SoulsFormats
         /// </summary>
         /// <param name="bone">The bone to compute the world transform of.</param>
         /// <returns>A matrix representing the world transform of the bone.</returns>
-        public Matrix4x4 ComputeBoneWorldMatrix(FLVER.Bone bone)
+        public Matrix4x4 ComputeBoneWorldMatrix(FLVER.Node bone)
         {
             Matrix4x4 matrix = bone.ComputeLocalTransform();
             while (bone.ParentIndex != -1)
             {
-                bone = Bones[bone.ParentIndex];
+                bone = Nodes[bone.ParentIndex];
                 matrix *= bone.ComputeLocalTransform();
             }
 

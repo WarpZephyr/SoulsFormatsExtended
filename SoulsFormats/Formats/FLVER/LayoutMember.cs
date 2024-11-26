@@ -73,9 +73,9 @@ namespace SoulsFormats
             /// <summary>
             /// Creates a LayoutMember with the specified values.
             /// </summary>
-            public LayoutMember(LayoutType type, LayoutSemantic semantic, int index = 0, int memberIndex = 0)
+            public LayoutMember(LayoutType type, LayoutSemantic semantic, int index = 0, int groupIndex = 0)
             {
-                GroupIndex = memberIndex;
+                GroupIndex = groupIndex;
                 Type = type;
                 Semantic = semantic;
                 Index = index;
