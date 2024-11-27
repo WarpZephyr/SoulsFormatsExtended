@@ -53,11 +53,6 @@ namespace SoulsFormats
             /// </summary>
             public BoundingBoxes BoundingBox { get; set; }
 
-            /// <summary>
-            /// Whether or not an edge compressed vertex buffer is present.
-            /// </summary>
-            public bool EdgeCompressed { get; set; }
-
             private int[] faceSetIndices;
             private int[] vertexBufferIndices;
 
@@ -163,19 +158,26 @@ namespace SoulsFormats
                 int uvCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.UV).Count();
                 int tanCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.Tangent).Count();
                 int colorCap = layoutMembers.Where(m => m.Semantic == FLVER.LayoutSemantic.VertexColor).Count();
+                bool posfilled = layoutMembers.Any(m => m.Semantic == FLVER.LayoutSemantic.Position && m.Type != FLVER.LayoutType.EdgeCompressed);
 
                 int vertexCount = VertexBuffers[0].VertexCount;
                 Vertices = new List<FLVER.Vertex>(vertexCount);
                 for (int i = 0; i < vertexCount; i++)
                     Vertices.Add(new FLVER.Vertex(uvCap, tanCap, colorCap));
 
-                bool posfilled = layoutMembers.Any(m => m.Semantic == FLVER.LayoutSemantic.Position && m.Type != FLVER.LayoutType.EdgeCompressed);
                 foreach (VertexBuffer buffer in VertexBuffers)
                 {
-                    EdgeCompressed |= buffer.EdgeCompressed;
+                    // TODO: EdgeGeom
+                    // The other facesets repeat the same edge vertex information so the first one may be all that is needed
+                    var edgeIndexGroups = FaceSets.Count > 0 ? FaceSets[0].EdgeIndexGroups : new List<EdgeIndexGroup>();
+                    buffer.ReadBuffer(br, layouts, Vertices, edgeIndexGroups, dataOffset, header.Version, posfilled);
+                }
 
-                    // The other facesets repeat the same edge vertex information so the first one is all that is needed
-                    buffer.ReadBuffer(br, layouts, Vertices, FaceSets[0].EdgeIndexBuffers, dataOffset, header.Version, posfilled);
+                // TODO: EdgeGeom
+                // Destroy unused edge index groups for now
+                foreach (var faceset in FaceSets)
+                {
+                    faceset.EdgeIndexGroups = null;
                 }
             }
 

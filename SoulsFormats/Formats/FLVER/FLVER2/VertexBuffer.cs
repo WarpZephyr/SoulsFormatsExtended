@@ -59,7 +59,7 @@ namespace SoulsFormats
                 BufferOffset = br.ReadInt32();
             }
 
-            internal void ReadBuffer(BinaryReaderEx br, List<BufferLayout> layouts, List<FLVER.Vertex> vertices, EdgeIndexBuffers edgeIndexBuffers, int dataOffset, int version, bool posfilled)
+            internal void ReadBuffer(BinaryReaderEx br, List<BufferLayout> layouts, List<FLVER.Vertex> vertices, List<EdgeIndexGroup> edgeIndexBufferGroups, int dataOffset, int version, bool posfilled)
             {
                 BufferLayout layout = layouts[LayoutIndex];
                 if (VertexSize != layout.Size)
@@ -69,19 +69,25 @@ namespace SoulsFormats
                 {
                     if (EdgeCompressed)
                     {
+                        // TODO: EdgeGeom
                         // Only decompress the edge vertexes if we need a fallback
                         // It seems edge compressed FLVER models may always have an uncompressed copy of positions
                         // But this is here just in case
                         if (!posfilled)
                         {
                             int vertexIndex = 0;
-                            var edgeVertexBuffers = edgeIndexBuffers.ReadEdgeVertexBuffers(br);
-                            foreach (EdgeVertexBuffer vertexBuffer in edgeVertexBuffers)
+
+                            long start = br.Position;
+                            foreach (var group in edgeIndexBufferGroups)
                             {
-                                foreach (var position in vertexBuffer.Vertices)
+                                var edgeVertexBuffers = group.ReadEdgeVertexBuffers(br, start);
+                                foreach (EdgeVertexBuffer vertexBuffer in edgeVertexBuffers)
                                 {
-                                    vertices[vertexIndex].Position = position.Decompress(vertexBuffer.Multiplier, vertexBuffer.Offset);
-                                    vertexIndex++;
+                                    foreach (var position in vertexBuffer.Vertices)
+                                    {
+                                        vertices[vertexIndex].Position = position.Decompress(vertexBuffer.Multiplier, vertexBuffer.Offset);
+                                        vertexIndex++;
+                                    }
                                 }
                             }
                         }
@@ -109,7 +115,8 @@ namespace SoulsFormats
             {
                 BufferLayout layout = layouts[LayoutIndex];
 
-                bw.WriteInt32(EdgeCompressed ? bufferIndex | 0x60000000 : bufferIndex);
+                // TODO: EdgeGeom
+                bw.WriteInt32(/* EdgeCompressed ? bufferIndex | 0x60000000 : */ bufferIndex);
                 bw.WriteInt32(LayoutIndex);
                 bw.WriteInt32(layout.Size);
                 bw.WriteInt32(vertexCount);
@@ -128,7 +135,7 @@ namespace SoulsFormats
                 if (header.Version >= 0x2000F)
                     uvFactor = 2048;
 
-                // TODO: Edge vertex Compression
+                // TODO: EdgeGeom vertices
 
                 foreach (FLVER.Vertex vertex in Vertices)
                     vertex.Write(bw, layout, uvFactor);

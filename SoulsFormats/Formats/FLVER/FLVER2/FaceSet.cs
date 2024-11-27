@@ -77,7 +77,8 @@ namespace SoulsFormats
             /// <summary>
             /// Edge compression information useful for edge compressed vertex buffers.
             /// </summary>
-            internal EdgeIndexBuffers EdgeIndexBuffers { get; private set; }
+            // TODO: EdgeGeom
+            internal List<EdgeIndexGroup> EdgeIndexGroups { get; set; }
 
             /// <summary>
             /// Creates a new FaceSet with default values and no indices.
@@ -88,7 +89,6 @@ namespace SoulsFormats
                 TriangleStrip = false;
                 CullBackfaces = true;
                 Indices = new List<int>();
-                EdgeIndexBuffers = null;
             }
 
             /// <summary>
@@ -101,7 +101,6 @@ namespace SoulsFormats
                 CullBackfaces = cullBackfaces;
                 Unk06 = unk06;
                 Indices = indices;
-                EdgeIndexBuffers = null;
             }
 
             internal FaceSet(BinaryReaderEx br, FLVERHeader header, int headerIndexSize, int dataOffset)
@@ -132,8 +131,7 @@ namespace SoulsFormats
 
                     br.StepIn(dataOffset + indicesOffset);
                     {
-                        Indices = new List<int>();
-                        EdgeIndexBuffers = new EdgeIndexBuffers(br, Indices);
+                        ReadEdgeIndices(br, indexCount);
                     }
                     br.StepOut();
                 }
@@ -186,6 +184,40 @@ namespace SoulsFormats
                 else
                 {
                     throw new NotImplementedException($"Unsupported index size: {indexSize}");
+                }
+            }
+
+            internal void ReadEdgeIndices(BinaryReaderEx br, int indexBufferLength)
+            {
+                int indexCount = 0;
+                EdgeIndexGroups = new List<EdgeIndexGroup>();
+
+                long start = br.Position;
+                long end = start + indexBufferLength;
+                bool hasNextGroup = true;
+                while (hasNextGroup)
+                {
+                    if (br.Position >= end)
+                        break;
+
+                    var group = new EdgeIndexGroup(br);
+                    EdgeIndexGroups.Add(group);
+                    hasNextGroup = group.HasNextGroup;
+                    if (hasNextGroup)
+                    {
+                        br.Position += group.NextGroupOffset;
+                    }
+
+                    foreach (var buffer in group.IndexBuffers)
+                    {
+                        indexCount += buffer.SpuConfigInfo.NumIndexes;
+                    }
+                }
+
+                Indices = new List<int>(indexCount);
+                foreach (var group in EdgeIndexGroups)
+                {
+                    group.ReadFaceIndices(br, Indices, start);
                 }
             }
 

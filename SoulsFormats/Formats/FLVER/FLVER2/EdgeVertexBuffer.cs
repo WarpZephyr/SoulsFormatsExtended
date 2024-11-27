@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Numerics;
-using System.Runtime.InteropServices;
 
 namespace SoulsFormats
 {
@@ -34,7 +33,7 @@ namespace SoulsFormats
             /// <summary>
             /// The vertices in this buffer. 
             /// </summary>
-            public FIXEDc3[] Vertices { get; set; }
+            public EdgeGeom.FIXEDc3[] Vertices { get; set; }
 
             /// <summary>
             /// The bit-packed bone indices in this buffer.
@@ -69,37 +68,13 @@ namespace SoulsFormats
                 }
 
                 long pos = br.Position;
-                Vertices = new FIXEDc3[vertexCount];
+                Vertices = new EdgeGeom.FIXEDc3[vertexCount];
                 for (int i = 0; i < vertexCount; i++)
                 {
-                    Vertices[i] = new FIXEDc3(br);
+                    Vertices[i] = new EdgeGeom.FIXEDc3(br);
                 }
                 br.Position = pos + (edgeVertexBufferLength - 48);
-
                 BoneIndexBytes = br.ReadBytes(edgeVertexBufferTotalLength - edgeVertexBufferLength);
-            }
-
-            [StructLayout(LayoutKind.Explicit)]
-            public struct FIXEDc3
-            {
-                [FieldOffset(0)]
-                public ushort X;
-
-                [FieldOffset(2)]
-                public ushort Y;
-
-                [FieldOffset(4)]
-                public ushort Z;
-
-                internal FIXEDc3(BinaryReaderEx br)
-                {
-                    X = br.ReadUInt16();
-                    Y = br.ReadUInt16();
-                    Z = br.ReadUInt16();
-                }
-
-                public readonly Vector3 Decompress(Vector4 multiplier, Vector4 offset)
-                    => new Vector3((X * multiplier.X) + offset.X, (Y * multiplier.Y) + offset.Y, (Z * multiplier.Z) + offset.Z);
             }
         }
     }
