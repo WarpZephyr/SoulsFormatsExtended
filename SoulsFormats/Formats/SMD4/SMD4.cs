@@ -14,9 +14,9 @@ namespace SoulsFormats
         public SMDHeader Header { get; set; }
 
         /// <summary>
-        /// Unknown indices of some kind.
+        /// Unknown.
         /// </summary>
-        public List<int> UnkIndices { get; set; }
+        public List<Unk10> Unk10s { get; set; }
 
         /// <summary>
         /// Joints available for vertices to be attached to.
@@ -34,7 +34,7 @@ namespace SoulsFormats
         public SMD4()
         {
             Header = new SMDHeader();
-            UnkIndices = new List<int>();
+            Unk10s = new List<Unk10>();
             Nodes = new List<Node>();
             Meshes = new List<Mesh>();
         }
@@ -45,7 +45,7 @@ namespace SoulsFormats
         public SMD4(SMD4 smd)
         {
             Header = new SMDHeader();
-            UnkIndices = new List<int>();
+            Unk10s = new List<Unk10>();
             Nodes = new List<Node>();
             Meshes = new List<Mesh>();
 
@@ -53,8 +53,8 @@ namespace SoulsFormats
             Header.BoundingBoxMin = smd.Header.BoundingBoxMin;
             Header.BoundingBoxMax = smd.Header.BoundingBoxMax;
 
-            for (int i = 0; i < smd.UnkIndices.Count; i++)
-                UnkIndices.Add(smd.UnkIndices[i]);
+            for (int i = 0; i < smd.Unk10s.Count; i++)
+                Unk10s.Add(new Unk10(smd.Unk10s[i]));
             foreach (Node bone in smd.Nodes)
                 Nodes.Add(new Node(bone));
             foreach (Mesh mesh in smd.Meshes)
@@ -84,7 +84,7 @@ namespace SoulsFormats
             Header.Version = br.ReadInt32();
             int dataOffset = br.ReadInt32();
             int dataSize = br.ReadInt32();
-            int unkIndicesCount = br.ReadInt32();
+            int countUnk10 = br.ReadInt32();
             int boneCount = br.ReadInt32();
             int meshCount = br.ReadInt32();
             br.AssertInt32(meshCount); // Vertex Buffer Count?
@@ -95,16 +95,13 @@ namespace SoulsFormats
             int totalFaceCount = br.ReadInt32();
             br.AssertPattern(32, 0);
 
-            UnkIndices = new List<int>();
+            Unk10s = new List<Unk10>();
             Nodes = new List<Node>();
             Meshes = new List<Mesh>();
 
-            for (int i = 0; i < unkIndicesCount; i++)
+            for (int i = 0; i < countUnk10; i++)
             {
-                br.BigEndian = false;
-                UnkIndices.Add(br.ReadInt32());
-                br.AssertPattern(32, 0);
-                br.BigEndian = true;
+                Unk10s.Add(new Unk10(br));
             }
 
             for (int i = 0; i < boneCount; i++)
@@ -124,7 +121,7 @@ namespace SoulsFormats
             bw.WriteInt32(Header.Version);
             bw.ReserveInt32("DataOffset");
             bw.ReserveInt32("DataSize");
-            bw.WriteInt32(UnkIndices.Count);
+            bw.WriteInt32(Unk10s.Count);
             bw.WriteInt32(Nodes.Count);
             bw.WriteInt32(Meshes.Count);
             bw.WriteInt32(Meshes.Count); // Vertex Buffer Count?
@@ -141,14 +138,8 @@ namespace SoulsFormats
             bw.WriteInt32(indexCount); // Not entirely accurate but oh well
             bw.WritePattern(32, 0);
 
-            for (int i = 0; i < UnkIndices.Count; i++)
-            {
-                bw.BigEndian = false;
-                bw.WriteInt32(UnkIndices[i]);
-                bw.WritePattern(32, 0);
-                bw.BigEndian = true;
-            }
-
+            for (int i = 0; i < Unk10s.Count; i++)
+                Unk10s[i].Write(bw);
             foreach (Node bone in Nodes)
                 bone.Write(bw);
             for (int i = 0; i < Meshes.Count; i++)

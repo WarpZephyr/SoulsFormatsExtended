@@ -176,6 +176,10 @@ namespace SoulsFormats
                     {
                         return 16;
                     }
+                    else if (VertexFormat == 1)
+                    {
+                        return 24;
+                    }
                     else if (VertexFormat == 2)
                     {
                         return 36;
