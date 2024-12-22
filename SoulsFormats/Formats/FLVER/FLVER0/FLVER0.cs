@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace SoulsFormats
@@ -37,6 +38,14 @@ namespace SoulsFormats
         /// </summary>
         public List<Mesh> Meshes { get; set; }
         IReadOnlyList<IFlverMesh> IFlver.Meshes => Meshes;
+
+        // Helps store previous offsets for bad endianness detection
+        private int PreviousLayoutHeaderOffset = -1;
+        private int PreviousLayoutOffset = -1;
+        private int PreviousVertexBuffersOffset1 = -1;
+        private int PreviousVertexBuffersOffset2 = -1;
+        private int PreviousBufferOffset = -1;
+        private int PreviousBuffersOffset = -1;
 
         /// <summary>
         /// Create a new and empty <see cref="FLVER0"/>.
@@ -131,7 +140,7 @@ namespace SoulsFormats
 
             Materials = new List<Material>(materialCount);
             for (int i = 0; i < materialCount; i++)
-                Materials.Add(new Material(br, Header.Unicode, Header.Version));
+                Materials.Add(new Material(br, this));
 
             Nodes = new List<FLVER.Node>(boneCount);
             for (int i = 0; i < boneCount; i++)
@@ -272,15 +281,32 @@ namespace SoulsFormats
         /// </summary>
         /// <param name="br">The stream reader.</param>
         /// <param name="version">The FLVER version.</param>
+        /// <param name="minExpected">The expected minimum the value could be.</param>
+        /// <param name="alignmentExpected">The expected alignment of the value.</param>
         /// <returns>The read value.</returns>
-        internal static int ReadVarEndianInt32(BinaryReaderEx br, int version)
+        internal static int ReadVarEndianInt32(BinaryReaderEx br, int version, int minExpected = 0, int alignmentExpected = 1)
         {
             int value = br.ReadInt32();
             if (version != 0x11 || !br.BigEndian)
                 return value;
 
             int leValue = SFUtil.ReverseEndianness(value);
-            return (int)Math.Min((uint)value, (uint)leValue);
+            bool IsBadValue(int value)
+                => value < 0 || value % alignmentExpected != 0 || value < minExpected;
+
+            // Check some obvious things first
+            if (IsBadValue(value))
+                return leValue;
+            else if (IsBadValue(leValue))
+                return value;
+
+            // Check arbitrarily high number
+            const int maxThreshold = 10000000;
+            if (value > maxThreshold || leValue > maxThreshold)
+                return Math.Min(value, leValue);
+
+            // Just return big endian value
+            return value;
         }
 
         /// <summary>

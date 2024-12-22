@@ -151,8 +151,10 @@ namespace SoulsFormats
                 int vertexIndicesOffset = br.ReadInt32();
                 int bufferDataLength = br.ReadInt32();
                 int bufferDataOffset = br.ReadInt32();
-                int vertexBuffersOffset1 = ReadVarEndianInt32(br, model.Header.Version);
-                int vertexBuffersOffset2 = ReadVarEndianInt32(br, model.Header.Version);
+                int vertexBuffersOffset1 = ReadVarEndianInt32(br, model.Header.Version, model.PreviousVertexBuffersOffset1, 4);
+                int vertexBuffersOffset2 = ReadVarEndianInt32(br, model.Header.Version, model.PreviousVertexBuffersOffset2, 4);
+                model.PreviousVertexBuffersOffset1 = vertexBuffersOffset1;
+                model.PreviousVertexBuffersOffset2 = vertexBuffersOffset2;
                 br.AssertInt32(0);
 
                 if (model.Header.VertexIndexSize == 16)
@@ -181,7 +183,7 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersOffset1);
                     {
-                        List<VertexBuffer> vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br, model.Header.Version);
+                        List<VertexBuffer> vertexBuffers1 = VertexBuffer.ReadVertexBuffers(br, model);
                         if (vertexBuffers1.Count == 0)
                             throw new NotSupportedException("First vertex buffer list is expected to contain at least 1 buffer.");
                         for (int i = 1; i < vertexBuffers1.Count; i++)
@@ -196,7 +198,7 @@ namespace SoulsFormats
                 {
                     br.StepIn(vertexBuffersOffset2);
                     {
-                        List<VertexBuffer> vertexBuffers2 = VertexBuffer.ReadVertexBuffers(br, model.Header.Version);
+                        List<VertexBuffer> vertexBuffers2 = VertexBuffer.ReadVertexBuffers(br, model);
                         if (vertexBuffers2.Count != 0)
                             throw new NotSupportedException("Second vertex buffer list is expected to contain exactly 0 buffers.");
                     }

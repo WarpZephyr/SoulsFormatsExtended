@@ -60,14 +60,18 @@ namespace SoulsFormats
             /// <summary>
             /// Read a Material from a stream.
             /// </summary>
-            internal Material(BinaryReaderEx br, bool useUnicode, int version)
+            internal Material(BinaryReaderEx br, FLVER0 model)
             {
+                int version = model.Header.Version;
+                bool useUnicode = model.Header.Unicode;
+
                 int nameOffset = br.ReadInt32();
                 int mtdOffset = br.ReadInt32();
                 int texturesOffset = br.ReadInt32();
                 int layoutsOffset = br.ReadInt32();
                 br.ReadInt32(); // Data length from name offset to end of buffer layouts
-                int layoutHeaderOffset = ReadVarEndianInt32(br, version);
+                int layoutHeaderOffset = ReadVarEndianInt32(br, version, model.PreviousLayoutHeaderOffset, 4);
+                model.PreviousLayoutHeaderOffset = layoutHeaderOffset;
 
                 br.AssertInt32(0);
                 br.AssertInt32(0);
@@ -104,7 +108,9 @@ namespace SoulsFormats
                         Layouts = new List<BufferLayout>(layoutCount);
                         for (int i = 0; i < layoutCount; i++)
                         {
-                            int layoutOffset = ReadVarEndianInt32(br, version);
+                            int layoutOffset = ReadVarEndianInt32(br, version, model.PreviousLayoutOffset);
+                            model.PreviousLayoutOffset = layoutOffset;
+
                             br.StepIn(layoutOffset);
                             {
                                 Layouts.Add(new BufferLayout(br));
