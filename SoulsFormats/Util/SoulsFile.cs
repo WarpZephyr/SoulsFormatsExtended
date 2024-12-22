@@ -172,6 +172,7 @@ namespace SoulsFormats
         /// </summary>
         private static bool IsReadInternal(BinaryReaderEx br, out TFormat file)
         {
+            var oldPos = br.Position;
             var dummy = new TFormat();
             
             if (DCX.Is(br))
@@ -200,6 +201,7 @@ namespace SoulsFormats
                 return true;
             }
 
+            br.Position = oldPos;
             file = null;
             return false;
         }
@@ -216,7 +218,7 @@ namespace SoulsFormats
         /// </summary>
         public static bool IsRead(Stream stream, out TFormat file)
         {
-            using BinaryReaderEx br = new BinaryReaderEx(false, stream);
+            using BinaryReaderEx br = new BinaryReaderEx(false, stream, true);
             return IsReadInternal(br, out file);
         }
 

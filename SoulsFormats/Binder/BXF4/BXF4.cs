@@ -82,11 +82,14 @@ namespace SoulsFormats
         #region Read
 
         /// <summary>
-        /// Reads two arrays of bytes as the header and data.
+        /// Reads a <see cref="BXF4"/> using paths.
         /// </summary>
-        public static BXF4 Read(byte[] bhdBytes, byte[] bdtBytes)
+        /// <param name="bhdPath">The header path.</param>
+        /// <param name="bdtBytes">The data path.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(string bhdPath, string bdtBytes)
         {
-            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdPath);
             using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
             using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
             using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
@@ -94,20 +97,11 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads an array of bytes as the header and a file as the data.
+        /// Reads a <see cref="BXF4"/> using a path and bytes.
         /// </summary>
-        public static BXF4 Read(byte[] bhdBytes, string bdtPath)
-        {
-            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
-            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtPath);
-            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
-            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
-            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
-        }
-
-        /// <summary>
-        /// Reads a file as the header and an array of bytes as the data.
-        /// </summary>
+        /// <param name="bhdPath">The header path.</param>
+        /// <param name="bdtBytes">The data bytes.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
         public static BXF4 Read(string bhdPath, byte[] bdtBytes)
         {
             using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdPath);
@@ -118,12 +112,105 @@ namespace SoulsFormats
         }
 
         /// <summary>
-        /// Reads a file as the header and a file as the data.
+        /// Reads a <see cref="BXF4"/> using a path and a stream.
         /// </summary>
-        public static BXF4 Read(string bhdPath, string bdtPath)
+        /// <param name="bhdPath">The header path.</param>
+        /// <param name="bdtStream">The data stream.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(string bhdPath, Stream bdtStream)
         {
             using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdPath);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtStream, true);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BXF4"/> using bytes.
+        /// </summary>
+        /// <param name="bhdBytes">The header bytes.</param>
+        /// <param name="bdtBytes">The data bytes.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(byte[] bhdBytes, byte[] bdtBytes)
+        {
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BXF4"/> using bytes and a path.
+        /// </summary>
+        /// <param name="bhdBytes">The header bytes.</param>
+        /// <param name="bdtPath">The data path.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(byte[] bhdBytes, string bdtPath)
+        {
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
             using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtPath);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BXF4"/> using bytes and a stream.
+        /// </summary>
+        /// <param name="bhdBytes">The header bytes.</param>
+        /// <param name="bdtStream">The data stream.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(byte[] bhdBytes, Stream bdtStream)
+        {
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdBytes);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtStream, true);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BXF4"/> using streams.
+        /// </summary>
+        /// <param name="bhdStream">The header stream.</param>
+        /// <param name="bdtStream">The data stream.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(Stream bhdStream, Stream bdtStream)
+        {
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdStream, true);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtStream, true);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BXF4"/> using a stream and a path.
+        /// </summary>
+        /// <param name="bhdStream">The header stream.</param>
+        /// <param name="bdtPath">The data path.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(Stream bhdStream, string bdtPath)
+        {
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdStream, true);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtPath);
+            using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
+            using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
+            return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
+        }
+
+        /// <summary>
+        /// Reads a <see cref="BXF4"/> using a stream and bytes.
+        /// </summary>
+        /// <param name="bhdStream">The header stream.</param>
+        /// <param name="bdtBytes">The data bytes.</param>
+        /// <returns>A new <see cref="BXF4"/>.</returns>
+        public static BXF4 Read(Stream bhdStream, byte[] bdtBytes)
+        {
+            using BinaryReaderEx bhdReader = new BinaryReaderEx(false, bhdStream, true);
+            using BinaryReaderEx bdtReader = new BinaryReaderEx(false, bdtBytes);
             using BinaryReaderEx bhdReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bhdReader, out DCX.Type _);
             using BinaryReaderEx bdtReaderDecompressed = SFUtil.GetDecompressedBinaryReader(bdtReader, out DCX.Type _);
             return new BXF4(bhdReaderDecompressed, bdtReaderDecompressed);
