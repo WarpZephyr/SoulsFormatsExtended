@@ -15,7 +15,8 @@ namespace SoulsFormats.Other.PlayStation3
             {
                 return false;
             }
-            string magic = br.ReadASCII(4);
+
+            string magic = br.GetASCII(0, 4);
             return magic == "\0PSF";
         }
 
@@ -37,7 +38,7 @@ namespace SoulsFormats.Other.PlayStation3
 
         protected override void Write(BinaryWriterEx bw)
         {
-            bw.BigEndian = true;
+            bw.BigEndian = false;
             bw.WriteASCII("\0PSF", false);
             Version.Write(bw);
             bw.ReserveUInt32("KeyTableStart");
@@ -59,7 +60,7 @@ namespace SoulsFormats.Other.PlayStation3
             for (int i = 0; i < count; i++)
             {
                 bw.FillUInt16($"KeyOffset_{i}", (ushort)(bw.Position - keyTableStart));
-                bw.WriteASCII(keys[i], true);
+                bw.WriteUTF8(keys[i], true);
             }
             bw.Pad(4);
 
@@ -73,11 +74,15 @@ namespace SoulsFormats.Other.PlayStation3
                 switch (format)
                 {
                     case DataFormat.UTF8S:
-                        bw.WriteASCII(parameter.Data, false);
+                        long textStartPos = bw.Position;
+                        bw.WriteUTF8(parameter.Data, false);
+                        bw.FillUInt32($"DataLength_{i}", (uint)(bw.Position - textStartPos));
                         bw.WritePattern((int)(parameter.DataMaxLength - parameter.Data.Length), 0);
                         break;
                     case DataFormat.UTF8:
-                        bw.WriteASCII(parameter.Data, true);
+                        textStartPos = bw.Position;
+                        bw.WriteUTF8(parameter.Data, true);
+                        bw.FillUInt32($"DataLength_{i}", (uint)(bw.Position - textStartPos));
                         bw.WritePattern((int)(parameter.DataMaxLength - (parameter.Data.Length + 1)), 0);
                         break;
                     case DataFormat.UInt32:
@@ -125,16 +130,16 @@ namespace SoulsFormats.Other.PlayStation3
 
                 long end = br.Position;
                 br.Position = keyTableStart + keyOffset;
-                string key = br.ReadASCII();
+                string key = br.ReadUTF8();
 
                 br.Position = dataTableStart + dataOffset;
                 switch (Format)
                 {
                     case DataFormat.UTF8S:
-                        Data = br.ReadASCII((int)dataLength);
+                        Data = br.ReadUTF8((int)dataLength);
                         break;
                     case DataFormat.UTF8:
-                        Data = br.ReadASCII();
+                        Data = br.ReadUTF8();
                         break;
                     case DataFormat.UInt32:
                         Data = br.ReadUInt32().ToString();
@@ -159,7 +164,7 @@ namespace SoulsFormats.Other.PlayStation3
                 }
                 else
                 {
-                    bw.WriteUInt32((uint)Data.Length);
+                    bw.ReserveInt32($"DataLength_{index}");
                     bw.WriteUInt32(DataMaxLength);
                 }
 

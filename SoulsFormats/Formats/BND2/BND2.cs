@@ -354,7 +354,7 @@ namespace SoulsFormats
 
             WriteHeader(this, bw, fileHeaders);
             for (int i = 0; i < Files.Count; i++)
-                fileHeaders[i].WriteBinder2FileData(bw, bw, i, Files[i].Bytes);
+                fileHeaders[i].WriteBinder2FileData(bw, bw, i, AlignmentSize, Files[i].Bytes);
 
             bw.FillInt32("fileSize", (int)bw.Position);
         }

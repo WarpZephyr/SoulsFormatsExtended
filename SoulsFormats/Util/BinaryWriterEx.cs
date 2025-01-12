@@ -718,6 +718,14 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Writes a UTF8 string, with null terminator if specified.
+        /// </summary>
+        public void WriteUTF8(string text, bool terminate = false)
+        {
+            WriteChars(text, SFEncoding.UTF8, terminate);
+        }
+
+        /// <summary>
         /// Writes a Shift JIS string, with null terminator if specified.
         /// </summary>
         public void WriteShiftJIS(string text, bool terminate = false)

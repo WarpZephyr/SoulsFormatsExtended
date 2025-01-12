@@ -986,6 +986,62 @@ namespace SoulsFormats
         }
 
         /// <summary>
+        /// Reads a null-terminated UTF8 string.
+        /// </summary>
+        public string ReadUTF8()
+        {
+            return ReadCharsTerminated(SFEncoding.UTF8);
+        }
+
+        /// <summary>
+        /// Reads a UTF8 string with the specified length in bytes.
+        /// </summary>
+        public string ReadUTF8(int length)
+        {
+            return ReadChars(SFEncoding.UTF8, length);
+        }
+
+        /// <summary>
+        /// Reads a null-terminated UTF8 string from the specified position without advancing the stream.
+        /// </summary>
+        public string GetUTF8(long offset)
+        {
+            StepIn(offset);
+            string result = ReadUTF8();
+            StepOut();
+            return result;
+        }
+
+        /// <summary>
+        /// Reads a UTF8 string with the specified length in bytes from the specified position without advancing the stream.
+        /// </summary>
+        public string GetUTF8(long offset, int length)
+        {
+            StepIn(offset);
+            string result = ReadUTF8(length);
+            StepOut();
+            return result;
+        }
+
+        /// <summary>
+        /// Reads as many UTF8 characters as are in the specified value and throws an exception if they do not match.
+        /// </summary>
+        public string AssertUTF8(params string[] values)
+        {
+            string s = ReadUTF8(values[0].Length);
+            bool valid = false;
+            foreach (string value in values)
+                if (s == value)
+                    valid = true;
+
+            if (!valid)
+                throw new InvalidDataException(string.Format(
+                    "Read UTF8: {0} | Expected UTF8: {1}", s, string.Join(", ", values)));
+
+            return s;
+        }
+
+        /// <summary>
         /// Reads a null-terminated Shift JIS string.
         /// </summary>
         public string ReadShiftJIS()

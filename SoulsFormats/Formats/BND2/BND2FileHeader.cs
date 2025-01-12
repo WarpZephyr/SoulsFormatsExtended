@@ -116,9 +116,9 @@ namespace SoulsFormats
             bw.WriteBytes(bytes);
         }
 
-        internal void WriteBinder2FileData(BinaryWriterEx bwHeader, BinaryWriterEx bwData, int index, byte[] bytes)
+        internal void WriteBinder2FileData(BinaryWriterEx bwHeader, BinaryWriterEx bwData, int index, ushort alignmentSize, byte[] bytes)
         {
-            bwData.Pad(0x800);
+            bwData.Pad(alignmentSize);
             WriteFileData(bwData, bytes);
             bwHeader.FillInt32($"fileOffset_{index}", Offset);
             bwHeader.FillInt32($"fileSize_{index}", Size);

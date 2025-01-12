@@ -13,6 +13,11 @@ namespace SoulsFormats
         public static readonly Encoding ASCII;
 
         /// <summary>
+        /// UTF8 encoding.
+        /// </summary>
+        public static readonly Encoding UTF8;
+
+        /// <summary>
         /// Shift-JIS encoding.
         /// </summary>
         public static readonly Encoding ShiftJIS;
@@ -33,6 +38,7 @@ namespace SoulsFormats
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
             ASCII = Encoding.ASCII;
+            UTF8 = Encoding.UTF8;
             ShiftJIS = Encoding.GetEncoding("shift-jis");
             UTF16 = Encoding.Unicode;
             UTF16BE = Encoding.BigEndianUnicode;
