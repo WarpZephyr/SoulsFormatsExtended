@@ -71,7 +71,7 @@ namespace SoulsFormats
                 Cells = cells;
 }
 
-            internal Row(BinaryReaderEx br, PARAM parent, ref long actualStringsOffset, bool unnamedRows)
+            internal Row(BinaryReaderEx br, PARAM parent, ref long actualStringsOffset)
             {
                 long nameOffset;
                 if (parent.Format2D.HasFlag(FormatFlags1.LongDataOffset))
@@ -80,7 +80,7 @@ namespace SoulsFormats
                     br.ReadInt32(); // I would like to assert 0, but some of the generatordbglocation params in DS2S have garbage here
                     DataOffset = br.ReadInt64();
 
-                    if (!unnamedRows)
+                    if (!parent.UnnamedRows)
                         nameOffset = br.ReadInt64();
                     else
                         nameOffset = -1;
@@ -90,14 +90,14 @@ namespace SoulsFormats
                     ID = br.ReadInt32();
                     DataOffset = br.ReadUInt32();
 
-                    if (!unnamedRows)
+                    if (!parent.UnnamedRows)
                         nameOffset = br.ReadUInt32();
                     else
                         nameOffset = -1;
                 }
 
 
-                if (!unnamedRows && nameOffset != 0 && nameOffset != br.Length)
+                if (!parent.UnnamedRows && nameOffset != 0 && nameOffset != br.Length)
                 {
                     if (actualStringsOffset == 0 || nameOffset < actualStringsOffset)
                         actualStringsOffset = nameOffset;
@@ -107,6 +107,13 @@ namespace SoulsFormats
                     else
                         Name = br.GetShiftJIS(nameOffset);
                 }
+            }
+
+            // Only for headerless rows
+            internal Row(int id, long dataOffset)
+            {
+                ID = id;
+                DataOffset = dataOffset;
             }
 
             internal void ReadCells(BinaryReaderEx br, PARAMDEF paramdef)
@@ -222,22 +229,30 @@ namespace SoulsFormats
                     bw.WriteInt32(ID);
                     bw.WriteInt32(0);
                     bw.ReserveInt64($"RowOffset{i}");
-                    bw.ReserveInt64($"NameOffset{i}");
+
+                    // Likely won't be nameless at this point anyways
+                    if (!parent.UnnamedRows)
+                        bw.ReserveInt64($"NameOffset{i}");
                 }
                 else
                 {
                     bw.WriteInt32(ID);
                     bw.ReserveUInt32($"RowOffset{i}");
-                    bw.ReserveUInt32($"NameOffset{i}");
+
+                    if (!parent.UnnamedRows)
+                        bw.ReserveUInt32($"NameOffset{i}");
                 }
             }
 
             internal void WriteCells(BinaryWriterEx bw, PARAM parent, int index)
             {
-                if (parent.Format2D.HasFlag(FormatFlags1.LongDataOffset))
-                    bw.FillInt64($"RowOffset{index}", bw.Position);
-                else
-                    bw.FillUInt32($"RowOffset{index}", (uint)bw.Position);
+                if (!parent.HeaderlessRows)
+                {
+                    if (parent.Format2D.HasFlag(FormatFlags1.LongDataOffset))
+                        bw.FillInt64($"RowOffset{index}", bw.Position);
+                    else
+                        bw.FillUInt32($"RowOffset{index}", (uint)bw.Position);
+                }
 
                 int bitOffset = -1;
                 DefType bitType = DefType.u8;

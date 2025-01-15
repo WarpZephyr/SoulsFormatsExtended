@@ -33,6 +33,7 @@ namespace SoulsFormats
         /// <summary>
         /// Determines format of the file.
         /// </summary>
+        //   0 - Armored Core Formula Front PS2, possibly not used yet
         // 101 - Enchanted Arms, Chromehounds, Armored Core 4/For Answer/V/Verdict Day, Shadow Assault: Tenchu
         // 102 - Demon's Souls
         // 103 - Ninja Blade, Another Century's Episode: R
@@ -58,6 +59,12 @@ namespace SoulsFormats
         /// different layout that the latest params if the XML paramdef supports it.
         /// </summary>
         public bool VersionAware { get; set; } = false;
+
+        /// <summary>
+        /// Only basic fields are present.<br/>
+        /// This is used for Armored Core Formula Front.
+        /// </summary>
+        public bool BasicFields { get; set; }
 
         /// <summary>
         /// Creates a PARAMDEF formatted for DS1.
@@ -108,15 +115,18 @@ namespace SoulsFormats
 
             br.AssertSByte(0, -1); // Big-endian
             Unicode = br.ReadBoolean();
-            br.AssertInt16(101, 102, 103, 104, 106, 201, 202, 203); // Format version
+            br.AssertInt16(0, 101, 102, 103, 104, 106, 201, 202, 203); // Format version
             if (FormatVersion >= 200)
                 br.AssertInt64(0x38);
 
             if (!(FormatVersion < 200 && headerSize == 0x30 || FormatVersion >= 200 && headerSize == 0xFF))
                 throw new InvalidDataException($"Unexpected header size 0x{headerSize:X} for version {FormatVersion}.");
 
+            BasicFields = FormatVersion == 0 && fieldSize == 0x68;
+
             // Please note that for version 103 this value is wrong.
-            if (!(FormatVersion == 101 && fieldSize == 0x8C 
+            if (!(BasicFields
+                || FormatVersion == 101 && fieldSize == 0x8C 
                 || FormatVersion == 102 && fieldSize == 0xAC 
                 || FormatVersion == 103 && fieldSize == 0x6C
                 || FormatVersion == 104 && fieldSize == 0xB0

@@ -59,6 +59,19 @@ namespace SoulsFormats
         /// </summary>
         public PARAMDEF AppliedParamdef { get; private set; }
 
+        /// <summary>
+        /// Whether or not rows do not support names.<br/>
+        /// This applies to Chromehounds.
+        /// </summary>
+        public bool UnnamedRows { get; set; }
+
+        /// <summary>
+        /// Whether or not rows are headerless.<br/>
+        /// This applies to Armored Core Formula Front.
+        /// </summary>
+        public bool HeaderlessRows { get; set; }
+
+        private Dictionary<string, long> StringOffsetDictionary;
         private BinaryReaderEx RowReader;
 
         /// <summary>
@@ -80,13 +93,14 @@ namespace SoulsFormats
             // The strings offset in the header is highly unreliable; only use it as a last resort
             long actualStringsOffset = 0;
             long stringsOffset = br.ReadUInt32();
+            long dataStartHeader = -1;
             if (Format2D.HasFlag(FormatFlags1.Flag01) && Format2D.HasFlag(FormatFlags1.IntDataOffset) || Format2D.HasFlag(FormatFlags1.LongDataOffset))
             {
                 br.AssertInt16(0);
             }
             else
             {
-                br.ReadUInt16(); // Data start
+                dataStartHeader = br.ReadUInt16();
             }
             Unk06 = br.ReadInt16();
             ParamdefDataVersion = br.ReadInt16();
@@ -108,50 +122,83 @@ namespace SoulsFormats
             br.Skip(4); // Format
             if (Format2D.HasFlag(FormatFlags1.Flag01) && Format2D.HasFlag(FormatFlags1.IntDataOffset))
             {
-                br.ReadInt32(); // Data start
+                dataStartHeader = br.ReadInt32();
                 br.AssertInt32(0);
                 br.AssertInt32(0);
                 br.AssertInt32(0);
             }
             else if (Format2D.HasFlag(FormatFlags1.LongDataOffset))
             {
-                br.ReadInt64(); // Data start
+                dataStartHeader = br.ReadInt64();
                 br.AssertInt64(0);
             }
 
+            // Run some heuristics to detect nameless and headerless rows
             long rowsStart = br.Position;
-            long dataOffsetTest;
-            if (Format2D.HasFlag(FormatFlags1.LongDataOffset))
+            long GetRowDataOffset(long position)
             {
-                dataOffsetTest = br.GetInt64(br.Position + 8);
-            }
-            else
-            {
-                dataOffsetTest = br.GetUInt32(br.Position + 4);
-            }
+                long rowDataOffset;
+                if (Format2D.HasFlag(FormatFlags1.LongDataOffset))
+                {
+                    rowDataOffset = br.GetInt64(position + 8);
+                }
+                else
+                {
+                    rowDataOffset = br.GetUInt32(position + 4);
+                }
 
-            bool unnamedRows = false;
-            long rowsSize = dataOffsetTest - rowsStart;
-            if (rowsSize < (rowCount * 12))
-            {
-                unnamedRows = true;
+                return rowDataOffset;
             }
 
-            Rows = new List<Row>(rowCount);
-            for (int i = 0; i < rowCount; i++)
-                Rows.Add(new Row(br, this, ref actualStringsOffset, unnamedRows));
+            // Detect if row header has no name offset
+            long rowDataOffset1 = GetRowDataOffset(rowsStart);
+            long rowsSize = rowDataOffset1 - rowsStart;
+            int rowHeaderSize = 12;
+            if (rowsSize < (rowCount * rowHeaderSize))
+            {
+                UnnamedRows = true;
+                rowHeaderSize = 8;
+            }
 
-            if (Rows.Count > 1)
-                DetectedRowSize = Rows[1].DataOffset - Rows[0].DataOffset;
-            else if (Rows.Count == 1)
-                DetectedRowSize = (actualStringsOffset == 0 ? stringsOffset : actualStringsOffset) - Rows[0].DataOffset;
-            else
-                DetectedRowSize = -1;
+            // Detect if rows have no header at all
+            if (dataStartHeader != -1)
+            {
+                if (rowsStart == dataStartHeader || (rowsStart + rowHeaderSize) > dataStartHeader)
+                {
+                    HeaderlessRows = true;
+                    UnnamedRows = true;
+                }
+            }
 
             long dataStart = 0;
-            if (Rows.Count > 0)
+            Rows = new List<Row>(rowCount);
+            if (HeaderlessRows)
             {
-                dataStart = Rows.Min(row => row.DataOffset);
+                dataStart = rowsStart;
+                DetectedRowSize = (br.Length - rowsStart) / rowCount;
+                long rowOffset = rowsStart;
+                for (int i = 0; i < rowCount; i++)
+                {
+                    Rows.Add(new Row(i, rowOffset));
+                    rowOffset += DetectedRowSize;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < rowCount; i++)
+                    Rows.Add(new Row(br, this, ref actualStringsOffset));
+
+                if (Rows.Count > 1)
+                    DetectedRowSize = Rows[1].DataOffset - Rows[0].DataOffset;
+                else if (Rows.Count == 1)
+                    DetectedRowSize = (actualStringsOffset == 0 ? stringsOffset : actualStringsOffset) - Rows[0].DataOffset;
+                else
+                    DetectedRowSize = -1;
+
+                if (Rows.Count > 0)
+                {
+                    dataStart = Rows.Min(row => row.DataOffset);
+                }
             }
 
             if (Format2D.HasFlag(FormatFlags1.OffsetParamType))
@@ -199,7 +246,13 @@ namespace SoulsFormats
             else
             {
                 // This padding heuristic isn't completely accurate, not that it matters
-                bw.WriteFixStr(ParamType, 0x20, (byte)(Format2D.HasFlag(FormatFlags1.Flag01) ? 0x20 : 0x00));
+                byte padding = (byte)(Format2D.HasFlag(FormatFlags1.Flag01) ? 0x20 : 0x00);
+                if (HeaderlessRows)
+                {
+                    padding = 0x20;
+                }
+
+                bw.WriteFixStr(ParamType, 0x20, padding);
             }
             bw.WriteByte((byte)(BigEndian ? 0xFF : 0x00));
             bw.WriteByte((byte)Format2D);
@@ -218,8 +271,9 @@ namespace SoulsFormats
                 bw.WriteInt64(0);
             }
 
-            for (int i = 0; i < Rows.Count; i++)
-                Rows[i].WriteHeader(bw, this, i);
+            if (!HeaderlessRows)
+                for (int i = 0; i < Rows.Count; i++)
+                    Rows[i].WriteHeader(bw, this, i);
 
             // This is probably pretty stupid
             if (Format2D == FormatFlags1.Flag01)
@@ -247,15 +301,17 @@ namespace SoulsFormats
             {
                 {"", bw.Position}
             };
-            bw.WriteInt16(0); // null string
-            
-            for (int i = 0; i < Rows.Count; i++)
-                Rows[i].WriteName(bw, this, i);
-            // DeS and BB sometimes (but not always) include some useless padding here
-            bw.WriteInt16(0); // useless padding at the end
+
+            if (!UnnamedRows && !HeaderlessRows)
+            {
+                bw.WriteInt16(0); // null string
+                for (int i = 0; i < Rows.Count; i++)
+                    Rows[i].WriteName(bw, this, i);
+
+                // DeS and BB sometimes (but not always) include some useless padding here
+                bw.WriteInt16(0); // useless padding at the end
+            }
         }
-        
-        public Dictionary<string, long> StringOffsetDictionary;
 
         /// <summary>
         /// Interprets row data according to the given paramdef and stores it for later writing.
@@ -299,7 +355,8 @@ namespace SoulsFormats
         /// </summary>
         public bool ApplyParamdefSomewhatCarefully(PARAMDEF paramdef)
         {
-            if ((ParamType == paramdef.ParamType || string.IsNullOrEmpty(ParamType)) && ParamdefDataVersion == paramdef.DataVersion)
+            // Using headerless rows as a heuristic here may be a bad idea
+            if ((ParamType == paramdef.ParamType || string.IsNullOrEmpty(ParamType)) && (HeaderlessRows || (ParamdefDataVersion == paramdef.DataVersion)))
             {
                 ApplyParamdef(paramdef);
                 return true;
