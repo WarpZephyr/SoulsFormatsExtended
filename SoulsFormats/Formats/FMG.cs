@@ -30,6 +30,11 @@ namespace SoulsFormats
         public bool Unicode { get; set; }
 
         /// <summary>
+        /// Whether or not to reuse offsets to save space on duplicate entries.
+        /// </summary>
+        public bool ReuseOffsets { get; set; }
+
+        /// <summary>
         /// Creates an empty FMG configured for DS1/DS2.
         /// </summary>
         public FMG()
@@ -172,6 +177,21 @@ namespace SoulsFormats
                 bw.ReserveVarint($"StringOffset{i}");
             }
 
+            if (ReuseOffsets)
+            {
+                WriteStringsReuseOffsets(bw);
+            }
+            else
+            {
+                WriteStrings(bw);
+            }
+
+            bw.FillInt32("FileSize", (int)bw.Position);
+        }
+
+        private void WriteStringsReuseOffsets(BinaryWriterEx bw)
+        {
+            var offsetDict = new Dictionary<string, long>();
             for (int i = 0; i < Entries.Count; i++)
             {
                 string text = Entries[i].Text;
@@ -181,7 +201,40 @@ namespace SoulsFormats
                 }
                 else
                 {
-                    bw.FillVarint($"StringOffset{i}",bw.Position);
+                    if (!offsetDict.TryGetValue(text, out long offset))
+                    {
+                        offset = bw.Position;
+                        offsetDict.Add(text, offset);
+                        bw.FillVarint($"StringOffset{i}", offset);
+                        if (Unicode)
+                        {
+                            bw.WriteUTF16(Entries[i].Text, true);
+                        }
+                        else
+                        {
+                            bw.WriteShiftJIS(Entries[i].Text, true);
+                        }
+                    }
+                    else
+                    {
+                        bw.FillVarint($"StringOffset{i}", offset);
+                    }
+                }
+            }
+        }
+
+        private void WriteStrings(BinaryWriterEx bw)
+        {
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                string text = Entries[i].Text;
+                if (text is null)
+                {
+                    bw.FillVarint($"StringOffset{i}", 0);
+                }
+                else
+                {
+                    bw.FillVarint($"StringOffset{i}", bw.Position);
                     if (Unicode)
                     {
                         bw.WriteUTF16(Entries[i].Text, true);
@@ -191,11 +244,7 @@ namespace SoulsFormats
                         bw.WriteShiftJIS(Entries[i].Text, true);
                     }
                 }
-
-                    
             }
-
-            bw.FillInt32("FileSize", (int)bw.Position);
         }
 
         /// <summary>
