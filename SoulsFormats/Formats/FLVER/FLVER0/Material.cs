@@ -102,7 +102,7 @@ namespace SoulsFormats
                         int layoutCount = ReadVarEndianInt32(br, version);
 
                         int offsetAssert = (int)br.Position + 0xC;
-                        br.AssertInt32(offsetAssert, SFUtil.ReverseEndianness(offsetAssert));
+                        br.AssertInt32(offsetAssert, EndianHelper.ReverseEndianness(offsetAssert));
                         br.AssertInt32(0);
                         br.AssertInt32(0);
                         Layouts = new List<BufferLayout>(layoutCount);

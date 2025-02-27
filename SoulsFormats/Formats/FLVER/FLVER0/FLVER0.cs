@@ -290,7 +290,7 @@ namespace SoulsFormats
             if (version != 0x11 || !br.BigEndian)
                 return value;
 
-            int leValue = SFUtil.ReverseEndianness(value);
+            int leValue = EndianHelper.ReverseEndianness(value);
             bool IsBadValue(int value)
                 => value < 0 || value % alignmentExpected != 0 || value < minExpected;
 
