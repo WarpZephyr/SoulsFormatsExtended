@@ -76,12 +76,12 @@ namespace SoulsFormats
             /// <summary>
             /// The part ID.
             /// </summary>
-            public short PartID { get; set; }
+            public ushort PartID { get; set; }
 
             /// <summary>
             /// The blocked part ID.
             /// </summary>
-            public short BlockedPartID { get; set; }
+            public ushort BlockedPartID { get; set; }
 
             /// <summary>
             /// Create a new <see cref="ConflictEntry"/>.
@@ -102,9 +102,9 @@ namespace SoulsFormats
             {
                 Category = br.ReadEnum8<AcPartCategory>();
                 BlockedCategory = br.ReadEnum8<AcPartCategory>();
-                PartID = br.ReadInt16();
-                BlockedPartID = br.ReadInt16();
-                br.AssertInt16(0);
+                PartID = br.ReadUInt16();
+                BlockedPartID = br.ReadUInt16();
+                br.AssertUInt16(0);
             }
 
             /// <summary>
@@ -115,9 +115,9 @@ namespace SoulsFormats
             {
                 bw.WriteByte((byte)Category);
                 bw.WriteByte((byte)BlockedCategory);
-                bw.WriteInt16(PartID);
-                bw.WriteInt16(BlockedPartID);
-                bw.WriteInt16(0);
+                bw.WriteUInt16(PartID);
+                bw.WriteUInt16(BlockedPartID);
+                bw.WriteUInt16(0);
             }
         }
     }
