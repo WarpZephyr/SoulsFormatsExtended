@@ -419,9 +419,10 @@ namespace SoulsFormats
                     BlendMode = br.ReadEnum8<BlendingMode>();
 
                     bool unk01 = false;
-
-                    if (version == DRBVersion.ArmoredCoreForAnswer) br.ReadByte();
-                    else unk01 = br.ReadBoolean();
+                    if (version == DRBVersion.ArmoredCoreForAnswer)
+                        br.ReadByte();
+                    else
+                        unk01 = br.ReadBoolean();
 
                     LineSpacing = br.ReadInt16();
                     PaletteColor = br.ReadInt32();
@@ -636,7 +637,6 @@ namespace SoulsFormats
                     PaletteColor = br.ReadInt32();
                     CustomColor = ReadColor(br);
                     bool unk0C = false;
-
                     if (version == DRBVersion.ArmoredCoreForAnswer)
                     {
                         br.ReadByte();
@@ -763,9 +763,10 @@ namespace SoulsFormats
                 internal GouraudFrame(BinaryReaderEx br, DRBVersion version) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-
-                    if (version == DRBVersion.ArmoredCoreForAnswer) br.ReadInt16();
-                    else br.AssertInt16(0);
+                    if (version == DRBVersion.ArmoredCoreForAnswer)
+                        br.ReadInt16();
+                    else
+                        br.AssertInt16(0);
 
                     Thickness = br.ReadByte();
                     TopLeftColor = ReadColor(br);
@@ -833,7 +834,6 @@ namespace SoulsFormats
                 internal GouraudRect(BinaryReaderEx br, DRBVersion version) : base(br, version)
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
-
                     if (version == DRBVersion.ArmoredCoreForAnswer)
                     {
                         br.ReadInt16();
@@ -1019,8 +1019,10 @@ namespace SoulsFormats
                 {
                     BlendMode = br.ReadEnum8<BlendingMode>();
 
-                    if (version == DRBVersion.ArmoredCoreForAnswer) br.ReadInt16();
-                    else br.AssertInt16(0);
+                    if (version == DRBVersion.ArmoredCoreForAnswer)
+                        br.ReadInt16();
+                    else
+                        br.AssertInt16(0);
 
                     Thickness = br.ReadByte();
                     PaletteColor = br.ReadInt32();
