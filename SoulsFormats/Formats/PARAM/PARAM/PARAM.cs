@@ -102,6 +102,7 @@ namespace SoulsFormats
             {
                 dataStartHeader = br.ReadUInt16();
             }
+
             Unk06 = br.ReadInt16();
             ParamdefDataVersion = br.ReadInt16();
             ushort rowCount = br.ReadUInt16();
@@ -119,6 +120,7 @@ namespace SoulsFormats
             {
                 ParamType = br.ReadFixStr(0x20);
             }
+
             br.Skip(4); // Format
             if (Format2D.HasFlag(FormatFlags1.Flag01) && Format2D.HasFlag(FormatFlags1.IntDataOffset))
             {

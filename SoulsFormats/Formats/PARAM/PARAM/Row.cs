@@ -96,7 +96,6 @@ namespace SoulsFormats
                         nameOffset = -1;
                 }
 
-
                 if (!parent.UnnamedRows && nameOffset != 0 && nameOffset != br.Length)
                 {
                     if (actualStringsOffset == 0 || nameOffset < actualStringsOffset)
