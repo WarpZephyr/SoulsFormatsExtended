@@ -42,20 +42,20 @@ namespace SoulsFormats
                         case LayoutType.EdgeCompressed:
                             return 1;
 
-                        case LayoutType.Byte4A:
-                        case LayoutType.Byte4B:
-                        case LayoutType.Short2toFloat2:
-                        case LayoutType.Byte4C:
-                        case LayoutType.Byte4D:
-                        case LayoutType.UV:
+                        case LayoutType.Color:
+                        case LayoutType.UByte4:
+                        case LayoutType.Byte4:
+                        case LayoutType.UByte4Norm:
+                        case LayoutType.Byte4Norm:
+                        case LayoutType.Short2:
                         case LayoutType.Byte4E:
                             return 4;
 
                         case LayoutType.Float2:
-                        case LayoutType.UVPair:
-                        case LayoutType.ShortBoneIndices:
-                        case LayoutType.Short4toFloat4A:
-                        case LayoutType.Short4toFloat4B:
+                        case LayoutType.Short4:
+                        case LayoutType.UShort4:
+                        case LayoutType.Short4Norm:
+                        case LayoutType.Half_4:
                             return 8;
 
                         case LayoutType.Float3:
@@ -136,79 +136,84 @@ namespace SoulsFormats
         public enum LayoutType : uint
         {
             /// <summary>
+            /// One single-precision float.
+            /// </summary>
+            Float1 = 0,
+
+            /// <summary>
             /// Two single-precision floats.
             /// </summary>
-            Float2 = 0x01,
+            Float2 = 1,
 
             /// <summary>
             /// Three single-precision floats.
             /// </summary>
-            Float3 = 0x02,
+            Float3 = 2,
 
             /// <summary>
             /// Four single-precision floats.
             /// </summary>
-            Float4 = 0x03,
-
-            /// <summary>
-            /// Four bytes or two shorts?
-            /// </summary>
-            Byte4A = 0x10,
-
-            /// <summary>
-            /// Four bytes or two shorts?
-            /// </summary>
-            Byte4B = 0x11,
-
-            /// <summary>
-            /// Four bytes or two shorts?
-            /// </summary>
-            Short2toFloat2 = 0x12,
+            Float4 = 3,
 
             /// <summary>
             /// Four bytes.
             /// </summary>
-            Byte4C = 0x13,
+            Color = 16,
+
+            /// <summary>
+            /// Four unsigned bytes.
+            /// </summary>
+            UByte4 = 17,
+
+            /// <summary>
+            /// Four signed bytes.
+            /// </summary>
+            Byte4 = 18,
 
             /// <summary>
             /// Four bytes.
             /// </summary>
-            Byte4D = 0x14,
+            UByte4Norm = 19,
+
+            /// <summary>
+            /// Four bytes.
+            /// </summary>
+            Byte4Norm = 20,
 
             /// <summary>
             /// Two shorts.
             /// </summary>
-            UV = 0x15,
-
-            /// <summary>
-            /// Two shorts and two shorts.
-            /// </summary>
-            UVPair = 0x16,
-
-            /// <summary>
-            /// Four shorts, maybe unsigned?
-            /// </summary>
-            ShortBoneIndices = 0x18,
+            Short2 = 21,
 
             /// <summary>
             /// Four shorts.
             /// </summary>
-            Short4toFloat4A = 0x1A,
+            Short4 = 22,
+
+            /// <summary>
+            /// Four unsigned shorts.
+            /// </summary>
+            UShort4 = 24,
+
+            /// <summary>
+            /// Four shorts.
+            /// </summary>
+            Short4Norm = 26,
 
             /// <summary>
             /// Unknown.
             /// </summary>
-            Short4toFloat4B = 0x2E,
+            Half_4 = 46,
 
             /// <summary>
             /// Unknown.
             /// </summary>
-            Byte4E = 0x2F,
+            Byte4E = 47,
 
             /// <summary>
             /// Edge compression specified by edge members in face sets.
             /// </summary>
-            EdgeCompressed = 0xF0,
+            EdgeCompressed = 240,
         }
 
         /// <summary>

@@ -132,7 +132,7 @@ namespace SoulsFormats
                 bw.FillInt32($"VertexBufferOffset{index}", (int)bw.Position - dataStart);
 
                 float uvFactor = 1024;
-                if (header.Version >= 0x2000F)
+                if (header.Version >= 0x2000E)
                     uvFactor = 2048;
 
                 // TODO: EdgeGeom vertices

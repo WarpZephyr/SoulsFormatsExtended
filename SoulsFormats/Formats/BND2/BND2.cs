@@ -508,6 +508,7 @@ namespace SoulsFormats
             public File(int id, byte[] bytes)
             {
                 ID = id;
+                Name = string.Empty;
                 Bytes = bytes;
             }
 
